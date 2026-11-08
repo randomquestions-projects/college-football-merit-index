@@ -17,7 +17,7 @@ const executor=new Function("scores","advanced","season","cutoff",
 model+"\n"+prelude+"\n"+
 "const rows=csvParse(scores),adv=csvParse(advanced);"+
 "const result=computeV4(rows,cutoff,season);state.raw=rows;attachEfficiencyV4(result.teams,adv);"+
-"const v4=result.teams.map(t=>({name:t.name,score:t.score,elo:t.elo,power:t.power,winpct:t.winpct,rank:t.rank}));"+
+"const v4=result.teams.map(t=>({name:t.name,score:t.score,elo:t.elo,power:t.power,powerScore:t.powerScore,powerRank:t.powerRank,winpct:t.winpct,rank:t.rank}));"+
 "const coverage={number:state.advCovered,denominator:state.advExpected,active:state.fullModel};"+
 "const legacyRows=rows.map(r=>({...r,season:'2026',completed:(r.completed==='TRUE'&&Date.parse(r.start_date)<cutoff?'TRUE':'FALSE')}));"+
 "const legacy=compute(legacyRows,'live');attachEfficiency(legacy.teams,adv);"+
@@ -33,7 +33,7 @@ function evaluate(year){
  const final=rows.filter(r=>r.completed==="TRUE"&&r.home_division==="fbs"&&r.away_division==="fbs"&&
    Number.isFinite(+r.home_points)&&Number.isFinite(+r.away_points)&&r.home_points!==""&&r.away_points!==""&&
    r.home_points!=="NA"&&r.away_points!=="NA"&&+r.home_points!==+r.away_points);
- const metrics={season:year,games:0,v4:0,v3:0,elo:0,power:0,naive:0,brierV4:0,brierV3:0,top25Overlap:0,top25CompareN:0};
+ const metrics={season:year,games:0,v4:0,v3:0,elo:0,power:0,predictivePower:0,naive:0,brierV4:0,brierV3:0,brierPredictivePower:0,top25Overlap:0,top25CompareN:0};
  const weeks=[],coverage=[];let prior=null;
  for(let week=5;week<=13;week++){
    const upcoming=final.filter(r=>+r.week===week);if(upcoming.length<5)continue;
@@ -53,6 +53,9 @@ function evaluate(year){
      metrics.games++;metrics.v4+=Number((d4>=0)===Boolean(actual));metrics.v3+=Number((d3>=0)===Boolean(actual));
      metrics.elo+=Number(((h.elo-a.elo)+(neutral?0:55)>=0)===Boolean(actual));
      metrics.power+=Number(((h.power-a.power)+(neutral?0:2.5)>=0)===Boolean(actual));
+     const pd=h.powerScore-a.powerScore+(neutral?0:1);
+     metrics.predictivePower+=Number((pd>=0)===Boolean(actual));
+     metrics.brierPredictivePower+=(sigmoid(pd/6)-actual)**2;
      metrics.naive+=Number(((h.winpct-a.winpct)+(neutral?0:.03)>=0)===Boolean(actual));
      metrics.brierV4+=(sigmoid(d4/6)-actual)**2;metrics.brierV3+=(sigmoid(d3/6)-actual)**2;
    }
@@ -60,15 +63,15 @@ function evaluate(year){
  if(metrics.games<100)throw Error("Insufficient heldout FBS games "+year+" "+metrics.games);
  const out={season:year,heldoutGames:metrics.games,weeks,
   accuracy:{v4:metrics.v4/metrics.games,v3:metrics.v3/metrics.games,elo:metrics.elo/metrics.games,
-    opponentPower:metrics.power/metrics.games,naiveWinPct:metrics.naive/metrics.games},
-  brier:{v4FixedScale:metrics.brierV4/metrics.games,v3FixedScale:metrics.brierV3/metrics.games},
+    opponentPower:metrics.power/metrics.games,predictivePower:metrics.predictivePower/metrics.games,naiveWinPct:metrics.naive/metrics.games},
+  brier:{v4FixedScale:metrics.brierV4/metrics.games,v3FixedScale:metrics.brierV3/metrics.games,predictivePowerFixedScale:metrics.brierPredictivePower/metrics.games},
   top25WeekToWeekOverlap:metrics.top25CompareN?metrics.top25Overlap/metrics.top25CompareN:null,
   coreEPACoverageByWeek:coverage
  };
  return out;
 }
 const results=[2024,2025].map(evaluate);
-const report={model:"CFMI V4.0",generatedAt:new Date().toISOString(),
+const report={model:"CFMI V4.1.0 — distinct Merit and Power",generatedAt:new Date().toISOString(),
 method:"Walk-forward historical held-out FBS games; each week's model uses previous completed regular-season games only. Predictions use rank score difference + 1 index-point home adjustment. No polls or preseason ratings. Brier uses fixed uncalibrated logistic 6-point scale; predictive hit rate is only one test of a merit ranking.",
 results};
 fs.writeFileSync(path.join(root,"data","backtest_v4.json"),JSON.stringify(report,null,2)+"\n");
