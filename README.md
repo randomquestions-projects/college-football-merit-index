@@ -1,7 +1,7 @@
 # College Football Merit Index — CFMI V5
 
 **Public dashboard:** https://randomquestions-projects.github.io/college-football-merit-index/  
-**Status:** V5 upgrade lives on feature branch \`feature/weekly-history-and-matchups\`; production currently stays on V4.1 until the full GitHub Actions evaluation and browser audit pass and the pull request merges.  
+**Status:** V5 upgrade lives on feature branch `feature/weekly-history-and-matchups`; production currently stays on V4.1 until the full GitHub Actions evaluation and browser audit pass and the pull request merges.  
 **Research design:** [CFMI V5 statistical methodology audit](docs/CFMI_V5_statistical_design_review.md)
 
 CFMI is a **season-only, brand-neutral college football assessment** with two different answers:
@@ -23,7 +23,7 @@ Neither final score uses AP/CFP votes, FPI, SP+, FEI, recruiting, preseason rank
 
 Per-game expected results already adjust venue and opponent strength. **V5 removes V4's arbitrary 1.52× road and 1.16× neutral signature-win multipliers** from scoring; diagnostic views may still display the old quality statistics, clearly labeled as such. Margin and advanced efficiency no longer dominate a result-focused résumé. Historical weekly benchmarks are recalculated using **only games before that week's cutoff**, rather than borrowing later game results.
 
-Merit factor score transformations are documented in \`site/model_v5.js\`. Its 75/15/10 weights are intentionally values-based **research assumptions**; they are not asserted to be mathematically optimal or calibrated against polls. There is no objectively observed “correct résumé rank” training label. Validation should emphasize transparent counterfactuals and blinded expert pairwise judgements, not next-game accuracy alone.
+Merit factor score transformations are documented in `site/model_v5.js`. Its 75/15/10 weights are intentionally values-based **research assumptions**; they are not asserted to be mathematically optimal or calibrated against polls. There is no objectively observed “correct résumé rank” training label. Validation should emphasize transparent counterfactuals and blinded expert pairwise judgements, not next-game accuracy alone.
 
 ### Power — predictive strength on an expected-points scale
 
@@ -31,7 +31,7 @@ A season-only neutral-start, regularized SRS + Elo power baseline estimates rela
 
 Conceptually:
 
-\`\`\`
+```
 Power margin vs. average FBS team (points)
   = fitted baseline coefficient × season-only SRS/Elo strength
     + clipped [EPA coefficient × adjusted net EPA
@@ -39,11 +39,11 @@ Power margin vs. average FBS team (points)
                + explosive coefficient × adjusted net explosive rate]
 
 Power Index (0–100) = clip(50 + 1.6 × Power points, 0, 100)
-\`\`\`
+```
 
 **A Power index point is not a win probability.** The matchmaking pipeline uses underlying points ratings (plus 2.5 points for the home venue when applicable), then a historical logistic calibration fitted on 2024 and evaluated on 2025. Only verified probabilities appear; otherwise the view shows a directional winner pick without a percentage.
 
-We fit ridge-regularized coefficients with constrained ranges to control highly correlated play-quality signals. If the holdout log loss does not beat the baseline, or margin error meaningfully worsens, the deployed parameters revert to the baseline rather than assuming additional complexity is always better. The published \`site/data/model_v5_params.json\` and \`site/data/backtest_v5.json\` include the objective validation results, accepted/rejected choice, sample sizes, data coverage, fitted parameters, and training/validation years. **Model selection on 2025 means 2025 is no longer a pristine final benchmark for any future V5 tuning**; a new season or later disjoint holdout is needed for an unbiased further assessment.
+We fit ridge-regularized coefficients with constrained ranges to control highly correlated play-quality signals. If the holdout log loss does not beat the baseline, or margin error meaningfully worsens, the deployed parameters revert to the baseline rather than assuming additional complexity is always better. The published `site/data/model_v5_params.json` and `site/data/backtest_v5.json` include the objective validation results, accepted/rejected choice, sample sizes, data coverage, fitted parameters, and training/validation years. **Model selection on 2025 means 2025 is no longer a pristine final benchmark for any future V5 tuning**; a new season or later disjoint holdout is needed for an unbiased further assessment.
 
 ### Data and uncertainty
 
@@ -67,14 +67,14 @@ We fit ridge-regularized coefficients with constrained ranges to control highly 
 
 ## Build and verification
 
-The [GitHub Actions workflow](.github/workflows/publish.yml) downloads 2026 public schedules and enriched advanced team-game data, validates historical seasons, fits/validates V5, produces weekly data and predictions, audits score/rank and cutoff invariants, runs V4 benchmarks and Chromium smoke checks, then publishes only after all gates succeed on \`main\`. A pull request invokes the same checks **without deploying** the site.
+The [GitHub Actions workflow](.github/workflows/publish.yml) downloads 2026 public schedules and enriched advanced team-game data, validates historical seasons, fits/validates V5, produces weekly data and predictions, audits score/rank and cutoff invariants, runs V4 benchmarks and Chromium smoke checks, then publishes only after all gates succeed on `main`. A pull request invokes the same checks **without deploying** the site.
 
-\`\`\`sh
+```sh
 # Run once source data from the normal data-refresh job are present:
 node scripts/train_v5.cjs
 node scripts/build_weekly_views.cjs
 node scripts/audit_dashboard.cjs
-\`\`\`
+```
 
 ---
 ## Archived CFMI V4.1 methodology (superseded after V5 deployment)
@@ -101,9 +101,9 @@ A reproducible, independent, season-only assessment of two distinct things: **Me
 - **FEI:** Brian Fremeau's opponent-adjusted non-garbage possession-efficiency ratings, same dated snapshots. [Original FEI](https://bcftoys.com/2026-fei/).
 - **AP and CFP:** separate official poll snapshots retrieved through the public ESPN rankings feed; **only Top 25** places are known. “NR” means outside that published Top 25, not outside every ranking system.
 
-The external snapshot CSV has separate \`snapshot_date\` and original \`source_date\` fields; we preserve both. These rankings might lag CFMI by days; do not assume the listed teams were evaluated through the same games. Ranking gaps measure **disagreement**, not proof that one model outperforms another. Historical held-out game predictions are the separate evaluation method.
+The external snapshot CSV has separate `snapshot_date` and original `source_date` fields; we preserve both. These rankings might lag CFMI by days; do not assume the listed teams were evaluated through the same games. Ranking gaps measure **disagreement**, not proof that one model outperforms another. Historical held-out game predictions are the separate evaluation method.
 
-The action \`scripts/update_external_rankings.py\` refreshes all three outside power ratings on every scheduled site build, validates 2026 season, numeric ranks, dates and national team coverage, and writes \`site/data/external_rankings_2026.json\`. If an external feed is temporarily inaccessible, the system keeps the last verified public external snapshot with its original dates (if available), rather than blocking CFMI's own refresh or inventing rankings.
+The action `scripts/update_external_rankings.py` refreshes all three outside power ratings on every scheduled site build, validates 2026 season, numeric ranks, dates and national team coverage, and writes `site/data/external_rankings_2026.json`. If an external feed is temporarily inaccessible, the system keeps the last verified public external snapshot with its original dates (if available), rather than blocking CFMI's own refresh or inventing rankings.
 
 ## Two different methodologies — NOT two weights on the same résumé
 
@@ -162,7 +162,7 @@ Within the 35-point on-field category:
 
 A season-only regularized margin **SRS/Massey-style** model iteratively considers every FBS opponent and opponents' opponents. Margin contributions are capped smoothly, with 2.5 points of home advantage. Ratings start at zero for every team.
 
-In parallel, a season-only **Elo** calculation starts every FBS program from the same neutral 1500 rating. Game results update Elo using the FIDE-like \`K × (outcome − expected)\` rule, a capped margin multiplier, 55 Elo home advantage and a modest K-factor reduction as the season progresses. No past-season ratings enter Elo.
+In parallel, a season-only **Elo** calculation starts every FBS program from the same neutral 1500 rating. Game results update Elo using the FIDE-like `K × (outcome − expected)` rule, a capped margin multiplier, 55 Elo home advantage and a modest K-factor reduction as the season progresses. No past-season ratings enter Elo.
 
 The internal opponent-strength baseline blends SRS margin power (78%) and neutral-start Elo results (22%). **“Top-25 opponent” in the Merit game ledger refers to this underlying independent opponent baseline**, not the public predictive Power composite, AP/CFP or brand reputation. Public Power adds opponent-adjusted EPA, success and explosiveness after Merit has been calculated. Conference labels are never model inputs.
 
@@ -199,9 +199,9 @@ The 2024 and 2025 live-data audit also saves `site/data/backtest_v4.json` on eve
 
 ## Scheduled refresh and publication
 
-The workflow [.github/workflows/publish.yml](.github/workflows/publish.yml) publishes a refreshed, validated static dataset and site on **Sunday at 9 AM America/New_York** (DST-aware), and checks for updated AP/CFP polls on Sunday evening and Tuesday night. Pushing changes to \`main\` also triggers publication. GitHub scheduled jobs may be delayed.
+The workflow [.github/workflows/publish.yml](.github/workflows/publish.yml) publishes a refreshed, validated static dataset and site on **Sunday at 9 AM America/New_York** (DST-aware), and checks for updated AP/CFP polls on Sunday evening and Tuesday night. Pushing changes to `main` also triggers publication. GitHub scheduled jobs may be delayed.
 
-Site and data are generated and deployed through GitHub Actions; no manual CSV imports, user registration, API keys or private chat data are needed. \`scripts/audit_dashboard.cjs\` verifies all team scores and the game feed using the same JavaScript engine as the browser.
+Site and data are generated and deployed through GitHub Actions; no manual CSV imports, user registration, API keys or private chat data are needed. `scripts/audit_dashboard.cjs` verifies all team scores and the game feed using the same JavaScript engine as the browser.
 
 ### Sources
 
@@ -216,7 +216,7 @@ The V4.1 implementation is an original blend. No SP+, FEI, FPI, AP or CFP numeri
 
 ## Development
 
-\`\`\`bash
+```bash
 python scripts/update_data.py
 python -m pip install numpy duckdb
 python scripts/train_neutral_wp.py
@@ -225,6 +225,6 @@ python scripts/update_polls.py
 python scripts/update_external_rankings.py
 node scripts/audit_dashboard.cjs
 python -m http.server --directory site 8000
-\`\`\`
+```
 
-Open http://localhost:8000/ after generating data. V4 data model is isolated in \`site/model_v4.js\` so methodology changes can be made without changing the permanent website URL. Audit output is saved in \`site/data/cfmi_ranking_audit.json\`.
+Open http://localhost:8000/ after generating data. V4 data model is isolated in `site/model_v4.js` so methodology changes can be made without changing the permanent website URL. Audit output is saved in `site/data/cfmi_ranking_audit.json`.
