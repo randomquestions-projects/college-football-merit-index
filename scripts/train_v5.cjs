@@ -108,7 +108,7 @@ function fitRidge(obs){
 const clamp=(x,lo,hi)=>Math.max(lo,Math.min(hi,x));
 function predictedEdge(g,p){
  const corr=clamp(p.epa*g.raw[0]+p.success*g.raw[1]+p.explosive*g.raw[2],-16,16);
- return p.baseScale*g.baseline+corr+g.venue;
+ return p.baseScale*g.baseline+corr+(g.neutral?0:(p.homePoints??2.5));
 }
 function trainCalibration(obs,p){
  // One-dimensional, monotonic link fitted on previous-season game outcomes.
@@ -140,6 +140,14 @@ function stats(obs,p,scale){
 const train=rawSnapshots(2024),test=rawSnapshots(2025);
 const baseline={baseScale:1,epa:0,success:0,explosive:0};
 const fitted=fitRidge(train.observations);
+const homeGames=train.observations.filter(g=>!g.neutral);
+const homeResidual=homeGames.reduce((total,g)=>total+g.homeMargin-
+  (fitted.baseScale*g.baseline+clamp(
+    fitted.epa*g.raw[0]+fitted.success*g.raw[1]+fitted.explosive*g.raw[2],-16,16)),0);
+// Empirical venue advantage with 100-pseudo-game shrinkage toward the neutral
+// 2.5-point literature-informed baseline, fitted on 2024 only.
+fitted.homePoints=clamp((homeResidual+100*2.5)/(homeGames.length+100),0,6);
+
 const calibratedCandidate=trainCalibration(train.observations,fitted);
 const calibratedBaseline=trainCalibration(train.observations,baseline);
 function pairedBlockBootstrap(obs,p1,s1,p0,s0){
@@ -187,7 +195,7 @@ const acceptable=advancedAvailable && candidateTest.logLoss<baselineTest.logLoss
 const deployed=acceptable?fitted:baseline,scale=acceptable?calibratedCandidate.scale:calibratedBaseline.scale;
 const evidence={
  version:'5.0.0',generatedAtUtc:new Date().toISOString(),
- methodology:'Train on 2024 weekly next-game FBS vs FBS margins; validate on previously untouched 2025 weeks 5-13. No 2026 outcomes in training; source advanced games always filtered to previous played game IDs. Fixed ridge priors and bounded corrections.',
+ methodology:'Train on 2024 weekly next-game FBS vs FBS margins; validate on previously untouched 2025 weeks 5-13. No 2026 outcomes in training; source advanced games always filtered to previous played game IDs. Fixed ridge priors and bounded corrections; the venue edge is estimated with 100 pseudo-games of shrinkage using 2024 only.',
  trainSeason:2024,validationSeason:2025,trainingGames:train.observations.length,
  validationGames:test.observations.length,
  advancedTrainingGames:train.observations.filter(x=>x.advancedAvailable).length,
@@ -196,7 +204,7 @@ const evidence={
   'Conservative baseline: efficiency improvement not established on untouched 2025 season.',
  parameters:{
   baseScale:deployed.baseScale,epa:deployed.epa,success:deployed.success,
-  explosive:deployed.explosive,homePoints:2.5,
+  explosive:deployed.explosive,homePoints:deployed.homePoints??2.5,
   logisticScale:scale,source:acceptable?'historical_2024_ridge_2025_validated':'historical_2024_baseline_2025_validated',
   trainedOn:[2024],validatedOn:[2025]
  },
