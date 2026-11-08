@@ -73,7 +73,8 @@ async function waitForServer(){
   await page.locator('#comparisonCount').selectOption('all');
   assert((await page.locator("#compareBody tr").count())>=130,"All-FBS comparison view incomplete");
   await page.locator('#comparisonQuery').fill('Georgia');
-  assert.equal(await page.locator('#compareBody tr[data-compare-team]').count(),1,"Team search did not filter comparisons");
+  const matchingTeams=await page.locator('#compareBody tr[data-compare-team]').evaluateAll(rows=>rows.map(r=>r.getAttribute('data-compare-team')));
+  assert(matchingTeams.length>=1&&matchingTeams.every(name=>name.toLowerCase().includes('georgia')),"Substring team search did not filter comparisons");
   await page.locator('#comparisonQuery').fill('');
   await page.locator('#comparisonReference').selectOption('sp_plus');
   assert((await page.locator('#meritDeltaHeader').innerText()).includes('SP+'),"Selectable rank deltas not reflected in table");
