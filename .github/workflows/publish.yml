@@ -29,6 +29,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Probe external 2026 rankings sources
+        run: python scripts/probe_external_rankings.py
       - name: Research possession and drive-source schemas
         run: python scripts/probe_drive_schema.py
       - name: Download 2026 scores and advanced statistics
