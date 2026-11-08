@@ -17,6 +17,7 @@ attachEfficiency(teams,advanced);
 return {teams:teams.map(t=>({
  rank:t.rank,team:t.name,score:t.score,record:t.won+'-'+t.lost,
  sorRank:t.sorRank,movRank:t.movRank,qualityRank:t.qualityComponentRank,
+ sorPct:t.sor,movPct:t.movPct,qualityPct:t.qualityComponent,effPct:t.effScore,
  efficiencyRank:t.effScoreRank,efficiencyScore:t.effScore,
  advancedGames:t.advGames.length,expectedAdvancedGames:t.fbsGames
 })),gameCount:games.length,advancedCoverage:{numerator:state.advCovered,denominator:state.advExpected},fourComponentModelActive:state.fullModel};
@@ -29,5 +30,12 @@ if(result.teams.length<130||result.gameCount<300||result.teams.some(t=>!Number.i
 const georgia=result.teams.find(t=>t.team==="Georgia");
 const oleMiss=csv.split(/\r?\n/).some(row=>row.includes('"Ole Miss"')&&row.includes('"Georgia"')&&row.includes(",2026,10,")&&row.includes(",42,"));
 console.log("CFMI LIVE AUDIT:",JSON.stringify({gameCount:result.gameCount,Georgia:georgia,advancedCoverage:result.advancedCoverage,fourComponentModelActive:result.fourComponentModelActive,GeorgiaOleMiss42_7InScores:oleMiss,Top25:result.teams.slice(0,25)},null,2));
+// Sensitivity is descriptive only; it never changes the published CFMI weights.
+const compareWeighting=(weights)=>{
+ const list=result.teams.map(t=>({...t,scenarioScore:weights[0]*t.sorPct/100+weights[1]*t.movPct/100+weights[2]*t.qualityPct/100+weights[3]*t.effPct/100})).sort((a,b)=>b.scenarioScore-a.scenarioScore);
+ return {georgiaRank:list.findIndex(t=>t.team==='Georgia')+1,top10:list.slice(0,10).map(t=>t.team)};
+};
+const sensitivity={current:compareWeighting([35,20,20,25]),onfield35:compareWeighting([30,20,15,35]),mov25:compareWeighting([30,25,20,25])};
+console.log('CFMI WEIGHT SENSITIVITY:',JSON.stringify(sensitivity,null,2));
 const dst=path.join(base,"data","cfmi_ranking_audit.json");
-fs.writeFileSync(dst,JSON.stringify({compiled_at:new Date().toISOString(),...result},null,2)+"\n");
+fs.writeFileSync(dst,JSON.stringify({compiled_at:new Date().toISOString(),...result,sensitivity},null,2)+"\n");
