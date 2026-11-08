@@ -23,7 +23,7 @@ jobs:
   refresh:
     name: Fetch and validate CFMI data
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -40,24 +40,29 @@ jobs:
           python -m pip install numpy==2.2.6 duckdb==1.4.2
           python scripts/train_neutral_wp.py
           python scripts/update_possessions.py
-      - name: Generate historical week-by-week ratings and next-week matchup inputs
-        run: node scripts/build_weekly_views.cjs
-      - name: Audit weekly ranking results and data coverage
-        run: node scripts/audit_dashboard.cjs
-      - name: Verify interactive dashboard in Chromium
-        run: |
-          npm install --no-save playwright@1.61.0
-          npx playwright install --with-deps chromium
-          node scripts/smoke_dashboard.cjs
-      - name: Historical V4 versus V3 walk-forward evaluation
+      - name: Generate 2024–2025 historical game-level evaluation feeds
         run: |
           CFMI_SEASON=2024 python scripts/update_data.py
           CFMI_SEASON=2024 python scripts/update_possessions.py
           CFMI_SEASON=2025 python scripts/update_data.py
           CFMI_SEASON=2025 python scripts/update_possessions.py
+      - name: Fit and verify V5 predictive coefficients on earlier seasons
+        run: node scripts/train_v5.cjs
+      - name: Reconstruct weekly V5 history and upcoming matchup predictions
+        run: node scripts/build_weekly_views.cjs
+      - name: Audit V5 model, weekly data quality and season cutoff invariants
+        run: node scripts/audit_dashboard.cjs
+      - name: Historical V4 versus V3 walk-forward benchmark (reference only)
+        run: |
           node scripts/backtest_v4.cjs
           node scripts/evaluate_power_candidates.cjs
-          rm -rf site/data/history # published analytics retain summary results, not old raw seasons
+      - name: Verify all six dashboard tabs in Chromium
+        run: |
+          npm install --no-save playwright@1.61.0
+          npx playwright install --with-deps chromium
+          node scripts/smoke_dashboard.cjs
+      - name: Remove raw historical feeds from the public site
+        run: rm -rf site/data/history
       - name: Upload validated site artifact
         uses: actions/upload-pages-artifact@v4
         with:
