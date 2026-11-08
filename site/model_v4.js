@@ -4,10 +4,11 @@
    inference, and Elo expected-outcome information; all formulas are original. */
 'use strict';
 const MODEL_V4={
-  version:"4.0.0", name:"CFMI V4 — merit + opponent-adjusted performance",
+  version:"4.1.0", name:"CFMI V4.1 — merit plus independently optimized Power",
   weights:{sor:.30,mov:.20,quality:.15,eff:.35},
   efficiency:{ppa:10,success:7,explosive:5,consistency:4,control:3,redzone:3,turnovers:2,penalties:1},
   ridge:3.5,homePoints:2.5,eloHome:55,eloK:26,
+  predictivePowerWeights:{baseline:65,ppa:20,success:10,explosive:5},
   minimumAdvancedCoverage:.70
 };
 const v4clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
@@ -101,7 +102,7 @@ function computeV4(rows,cutoffMode,seasonYear=2026){
   }
   const powerRank=teams.slice().sort((a,b)=>b.power-a.power).map((t,i)=>[t.name,i+1]);
   const powerRanks=new Map(powerRank);
-  for(const t of teams)t.powerRank=powerRanks.get(t.name);
+  for(const t of teams){t.powerRank=powerRanks.get(t.name);t.baselinePowerRank=t.powerRank}
   const powerSorted=teams.map(t=>t.power).sort((a,b)=>b-a);
   const bench=powerSorted[Math.min(24,powerSorted.length-1)];
   const median=powerSorted[Math.floor(powerSorted.length/2)];
@@ -248,6 +249,7 @@ function attachEfficiencyV4(teams,rows){
       t.score=(MODEL_V4.weights.sor*t.sor+MODEL_V4.weights.mov*t.movPct+MODEL_V4.weights.quality*t.qualityComponent)/.65;
     }
     rankTeams(teams);
+    assignPredictivePowerV4(teams,false);
     return;
   }
   const base={};
@@ -369,4 +371,33 @@ function attachEfficiencyV4(teams,rows){
       MODEL_V4.weights.quality*t.qualityComponent+MODEL_V4.weights.eff*t.effScore;
   }
   rankTeams(teams);
+  assignPredictivePowerV4(teams,true);
+}
+
+// Predictive Power is computed after opponent-adjusted advanced measurements
+// have been finalized. It does not feed back into the Merit score or opponent
+// quality: avoiding circular references and preserving independent purposes.
+// The underlying neutral-start SRS + Elo signal is 65% of Power, plus
+// sustainably repeatable performance: EPA 20%, success 10%, explosion 5%.
+// No WAB, quality-win bonus, head-to-head override, poll or conference prior.
+function assignPredictivePowerV4(teams,advancedAvailable){
+  const weights=MODEL_V4.predictivePowerWeights;
+  for(const t of teams){
+    const signal=(metric)=>{
+      const measured=t[metric+'Pct'];
+      const coverage=t.advMetricCoverage?.[metric]||0;
+      return Number.isFinite(measured)?50+coverage*(measured-50):50;
+    };
+    const ppa=signal('ppaNet'),success=signal('successNet'),
+          explosive=signal('explosiveNet');
+    const baseline=Number.isFinite(t.powerPct)?t.powerPct:50;
+    t.powerComponents={baseline,ppa,success,explosive};
+    t.powerScore=advancedAvailable?(
+      weights.baseline*baseline+weights.ppa*ppa+
+      weights.success*success+weights.explosive*explosive
+    )/100:baseline;
+    t.powerMethod=advancedAvailable?'predictive_efficiency_blend':'baseline_only_fallback';
+  }
+  pctRanks(teams,'powerScore','powerScore');
+  for(const t of teams)t.powerRank=t.powerScoreRank;
 }
