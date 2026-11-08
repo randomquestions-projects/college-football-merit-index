@@ -71,8 +71,9 @@ for(let week=1;week<=lastWeek;week++){
  // compute the model only from already-final games as of build time.
  const cutoff=prior.length?Math.min(...prior)-1:Date.now();
  const safeCutoff=week===lastWeek?Math.min(cutoff,Date.now()):cutoff;
- const result=compute(rows,advRows,safeCutoff);
- const asOf=sundayBefore(prior.length?Math.min(...prior):lastKick+7*86400000);
+ const scopedRaw=rows.map(r=>Number(r.week)>week?{...r,completed:'FALSE'}:r);
+ const result=compute(scopedRaw,advRows,safeCutoff);
+ const asOf=sundayBefore(prior.length?Math.min(...prior):lastKick+86400000);
  const teams=result.teams.map(summarize);
  const matches=completed.filter(r=>Date.parse(r.start_date)<=safeCutoff&&Number(r.week)<=week);
  weeks.push({
