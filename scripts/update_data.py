@@ -28,7 +28,7 @@ FIELDS = [
     "def_success_rate", "off_explosive_rate", "def_explosive_rate",
     "lead_share", "penalty_yards", "opp_penalty_yards", "turnovers_lost",
     "turnovers_gained", "redzone_td", "redzone_trips",
-    "opp_redzone_td", "opp_redzone_trips",
+    "opp_redzone_td", "opp_redzone_trips", "expected_turnover_margin",
 ]
 
 def fetch_csv(url):
@@ -128,8 +128,11 @@ def main():
             own_t = by_game["turnover"].get(own_key)
             other_t = by_game["turnover"].get(other_key)
             control = game_control(quarter_rows, gid, own_id, other_id)
-            if any(x is None for x in (own_row, other_row, own_s, other_s, own_t, other_t, control)):
-                continue
+            # Preserve a partially measured game rather than drop every metric
+            # when one feed is absent or its red-zone/penalty value is null.
+            own_row, other_row = own_row or {}, other_row or {}
+            own_s, other_s = own_s or {}, other_s or {}
+            own_t, other_t = own_t or {}, other_t or {}
             rz, other_rz = unit(number(own_s, "EPA_success_rate_rz")), unit(number(other_s, "EPA_success_rate_rz"))
             record = {
                 "game_id": gid, "team": g[own + "_team"],
@@ -146,16 +149,22 @@ def main():
                 "turnovers_gained": number(other_t, "turnovers"),
                 # 'redzone_td' is a compatibility field and means red-zone positive-EPA
                 # PLAY success rate, not possession-level TD conversion.
-                "redzone_td": rz, "redzone_trips": 1,
-                "opp_redzone_td": other_rz, "opp_redzone_trips": 1,
+                "redzone_td": rz, "redzone_trips": 1 if rz is not None else None,
+                "opp_redzone_td": other_rz,
+                "opp_redzone_trips": 1 if other_rz is not None else None,
+                "expected_turnover_margin": number(own_t, "expected_turnover_margin"),
             }
-            if any(v is None for v in record.values()):
-                continue
-            if any(not 0 <= record[field] <= 1 for field in
-                   ("off_success_rate", "def_success_rate", "off_explosive_rate",
-                    "def_explosive_rate", "redzone_td", "opp_redzone_td")):
-                continue
-            if abs(record["off_ppa"]) > 10 or abs(record["def_ppa"]) > 10:
+            for field in ("off_success_rate", "def_success_rate",
+                          "off_explosive_rate", "def_explosive_rate", "redzone_td",
+                          "opp_redzone_td", "lead_share"):
+                if record[field] is not None and not 0 <= record[field] <= 1:
+                    record[field] = None
+            for field in ("off_ppa", "def_ppa"):
+                if record[field] is not None and abs(record[field]) > 10:
+                    record[field] = None
+            if not any(record[key] is not None for key in
+                       ("off_ppa", "off_success_rate", "off_explosive_rate",
+                        "lead_share", "turnovers_lost", "penalty_yards")):
                 continue
             output.append(record)
     # Per-week completeness audit: why exactly were some FBS matchups omitted?
@@ -198,9 +207,10 @@ def main():
         "advanced_team_game_rows": len(output),
         "advanced_source_row_counts": {name: len(rows) for name, rows in advanced.items()},
         "advanced_source_errors": errors, "game_data_source": SOURCE,
-        "model_version": "CFMI-3.1-beta",
-        "weights": {"strength_of_record": 35, "adjusted_margin": 20,
-                    "quality_and_road": 20, "on_field": 25},
+        "model_version": "CFMI-4.0.0",
+        "weights": {"strength_of_record": 30, "adjusted_margin": 20,
+                    "quality_and_road": 15, "on_field": 35},
+        "data_coverage_policy": "per-metric nullable values; neutral-adjusted measured share",
     }
     (DATA / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
     print(json.dumps(metadata, indent=2))
