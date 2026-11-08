@@ -17,6 +17,10 @@ assert.deepEqual(doc.parameters.validatedOn,[2025]);
 assert(doc.trainingGames>=300&&doc.validationGames>=300);
 assert(doc.validation?.baseline2025?.logLoss>0&&doc.validation?.previousV5_2025?.logLoss>0);
 assert(['joint_opponent_network','validated_v5_reference'].includes(doc.parameters.mode));
+if(doc.parameters.mode==='joint_opponent_network'){
+ assert(doc.parameters.jointCoefficients.length===6);
+ assert(doc.validation?.opponentStrengthComparison?.selected===true);
+}
 assert(doc.parameters.finishing>=0&&doc.parameters.consistency>=0&&doc.parameters.offense>=0&&doc.parameters.defense>=0);
 const body=prelude+[
 "if(!MODEL_V5.setParameters(parameters))throw Error('Model parameters invalid');",
@@ -26,7 +30,7 @@ const body=prelude+[
 "return {gameCount:games.length,coverage:{measured:state.advCovered,eligible:state.advExpected,full:state.fullModel},",
 "teams:teams.map(t=>({name:t.name,rank:t.rank,merit:t.score,power:t.powerScore,",
 "powerPoints:t.powerPoints,powerRank:t.powerRank,won:t.won,lost:t.lost,wab:t.wab,",
-"residual:t.meritQualityResidual,meritRecord:t.meritRecordScore,meritQuality:t.meritQualityScore,meritControl:t.meritControlScore,",
+"residual:t.meritQualityResidual,meritRecord:t.meritRecordScore,meritQuality:t.meritQualityScore,meritControl:t.meritControlScore,powerComponentTotal:Object.values(t.powerContributionPoints).reduce((z,v)=>z+v,0),",
 "advanced:t.advCoreGames,fbsGames:t.fbsGames,mode:t.powerMode||'reference'})),version:MODEL_V5.version};"
 ].join('\n');
 const compute=new Function('scores','advCsv','parameters','cutoff',model+'\n'+body);
@@ -45,14 +49,21 @@ assert(latest.teams.every(t=>Number.isFinite(t.merit)&&t.merit>=0&&t.merit<=100
 for(const t of latest.teams){
  const scored=.55*t.meritRecord+.25*t.meritQuality+.20*t.meritControl;
  assert(Math.abs(scored-t.merit)<1e-8,'Merit formula mismatch '+t.name);
+ assert(Math.abs(t.powerComponentTotal-t.powerPoints)<1e-8,'Power component total mismatch '+t.name);
 }
-// Metamorphic check: winning an FCS game by 60 extra points must NOT raise
-// Merit, power or any opponent-adjusted FBS strength measurement.
+// Metamorphic check: increasing an ALREADY dominant FCS victory by 60
+// must not raise Merit or Power. Converting a close FCS win to a blowout
+// intentionally removes negative underperformance evidence.
 const parse=new Function('csv',prelude+'return csvParse(csv)');
 const source=parse(csv);
-const example=source.find(g=>g.completed==='TRUE'&&g.season==='2026'&&g.season_type==='regular'&&
-  ((g.home_division==='fbs'&&g.away_division==='fcs'&&Number(g.home_points)>Number(g.away_points))||
-  (g.away_division==='fbs'&&g.home_division==='fcs'&&Number(g.away_points)>Number(g.home_points))));
+const example=source.find(g=>{
+ if(g.completed!=='TRUE'||g.season!=='2026'||g.season_type!=='regular')return false;
+ if(g.home_division==='fbs'&&g.away_division==='fcs')
+   return Number(g.home_points)-Number(g.away_points)>=20;
+ if(g.away_division==='fbs'&&g.home_division==='fcs')
+   return Number(g.away_points)-Number(g.home_points)>=20;
+ return false;
+});
 if(example){
  const adjusted=source.map(g=>({...g}));
  const game=adjusted.find(g=>g.game_id===example.game_id);
