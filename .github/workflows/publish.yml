@@ -35,6 +35,12 @@ jobs:
         run: python scripts/update_polls.py
       - name: Audit weekly ranking results and data coverage
         run: node scripts/audit_dashboard.cjs
+      - name: Verify interactive dashboard in Chromium
+        continue-on-error: true # promote to required after first successful CI run
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+          node scripts/smoke_dashboard.cjs
       - name: Upload validated site artifact
         uses: actions/upload-pages-artifact@v4
         with:
