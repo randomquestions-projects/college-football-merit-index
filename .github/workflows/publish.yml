@@ -50,6 +50,8 @@ jobs:
           CFMI_SEASON=2025 python scripts/update_possessions.py
       - name: Fit and verify V5 predictive coefficients on earlier seasons
         run: node scripts/train_v5.cjs
+      - name: Diagnose current opponent strength and rating contributions
+        run: node scripts/diagnose_opponent_strength.cjs
       - name: Reconstruct weekly V5 history and upcoming matchup predictions
         run: node scripts/build_weekly_views.cjs
       - name: Audit V5 model, weekly data quality and season cutoff invariants
