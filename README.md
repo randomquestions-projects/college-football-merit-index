@@ -65,8 +65,8 @@ We added a **walk-forward 2024–25 backtest** in `scripts/backtest_v4.cjs`. For
 
 | Held-out season | Games | CFMI V4 winner accuracy | CFMI V3 winner accuracy | Opponent-power signal | Elo signal |
 |---|---:|---:|---:|---:|---:|
-| 2024 | 481 | 69.2% | 66.1% | 70.5% | 68.6% |
-| 2025 | 490 | 70.4% | 69.2% | 71.8% | 68.2% |
+| 2024 | 481 | 69.4% | 66.1% | 70.5% | 68.6% |
+| 2025 | 490 | 70.8% | 69.2% | 71.8% | 68.2% |
 
 The 2024 and 2025 live-data audit also saves `site/data/backtest_v4.json` on every deployment. Mean week-to-week Top-25 overlap for V4 was 21.875 and 20.875 teams respectively across evaluated weeks.
 
