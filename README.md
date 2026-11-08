@@ -1,0 +1,1 @@
+# college-football-merit-index
