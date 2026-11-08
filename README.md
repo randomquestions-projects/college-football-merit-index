@@ -1,56 +1,85 @@
-# College Football Merit Index (CFMI)
+# College Football Merit Index — CFMI V4
 
-An independent, public college-football rankings dashboard. The project ranks every 2026 FBS team from actual results rather than AP, CFP, preseason polls, recruiting talent or brand reputation.
+**Public dashboard:** https://randomquestions-projects.github.io/college-football-merit-index/
 
-## Dashboard
+A reproducible, independent, season-only assessment of college-football **merit and quality of play**. Includes every FBS team, an AP/CFP Top 25 comparison, and interactive **up-to-five-team résumé comparisons**.
 
-Once GitHub Pages is enabled, the public dashboard will be served at:
+## Three views
 
-https://randomquestions-projects.github.io/college-football-merit-index/
+1. **CFMI Rankings:** All FBS and Top 25/50, opponent-adjusted score components, sortable metrics, and game-by-game team audit with opponent strength, venue, game quality and data completeness.
+2. **AP / CFP Comparison:** CFMI vs the dated latest available AP and CFP Top 25; publication dates and rank deltas. Polls **never influence CFMI**.
+3. **Compare Team Résumés:** Select one to five teams at a time. View quality wins, opponent-strength power, close losses, home/away results, adjusted margin, EPA, national rank comparisons, common opponents and explainable head-to-head narratives. Direct link: [#resume](https://randomquestions-projects.github.io/college-football-merit-index/#resume).
 
-The website defaults to the **Top 50**, with an all-FBS view, sortable metric ranks, opponent-ledger drilldowns, and fully documented methodology.
+## V4 weighting
 
-## Ranking methodology
-
-| Component | Weight |
+| Component | CFMI V4 |
 |---|---:|
-| Strength of record (wins above benchmark / winning percentage) | 35% |
-| Opponent- and venue-adjusted margin of victory | 20% |
-| Quality wins / quality road wins | 20% |
-| On-field efficiency | 25% |
+| Strength of record: 85% wins above an independently inferred top-25-power benchmark, 15% win% | **30%** |
+| Venue- and opponent-adjusted scoring margin, diminishing blowout returns | **20%** |
+| Opponent-strength quality victories and quality road wins | **15%** |
+| Opponent-adjusted on-field efficiency | **35%** |
 
-The on-field component includes EPA/PPA, success rate, game control, explosiveness, penalty differential, turnover differential, offensive/defensive consistency, and red-zone play efficiency. Scores are converted to national percentiles. **Rankings keep all four weights active when verified advanced-stat coverage is at least 70% nationally.** Below this guardrail, results still update but display a clearly labeled résumé-only fallback rather than pretending on-field inputs were adequate. For each team, efficiency is adjusted toward a neutral score of 50 based on the fraction of FBS team-games with verified advanced data: `adjusted efficiency = 50 + coverage × (measured efficiency − 50)`. Every team displays its measurement coverage. If no advanced-stat rows are usable at all, the dashboard explicitly switches to a résumé-only fallback and identifies it as such.
+Within the 35-point on-field category:
 
-The red-zone metric is **positive-EPA play success rate**, *not* red-zone possession touchdown conversion. Data coverage, model assumptions and limits are disclosed on the site.
+| Metric | Overall points |
+|---|---:|
+| Offensive and defensive EPA/PPA | 10 |
+| Offensive and defensive positive-EPA play success | 7 |
+| Offensive and defensive explosiveness | 5 |
+| Consistency in adjusted EPA | 4 |
+| Quarter-end lead / game control *proxy* | 3 |
+| Red-zone positive-EPA play success | 3 |
+| Expected turnover margin / shrunken raw turnovers | 2 |
+| Penalty yards differential | 1 |
 
-## Weekly refresh
+### How opponent strength is inferred
 
-`.github/workflows/publish.yml` runs **Sunday at 9:00 AM America/New_York**, including DST, as well as on code changes and manual dispatch. It:
+A season-only regularized margin **SRS/Massey-style** model iteratively considers every FBS opponent and opponents' opponents. Margin contributions are capped smoothly, with 2.5 points of home advantage. Ratings start at zero for every team.
 
-1. Downloads completed 2026 scores from the public SportsDataverse/cfbfastR feed.
-2. Attempts SportsDataverse advanced-team, situational, turnover and quarter-score releases.
-3. Writes validated score and advanced snapshots under `site/data/` with metadata.
-4. Deploys `site/` to GitHub Pages, showing data coverage and the source publication timestamp. If collection fails, the previously published site stays online.
+In parallel, a season-only **Elo** calculation starts every FBS program from the same neutral 1500 rating. Game results update Elo using the FIDE-like \`K × (outcome − expected)\` rule, a capped margin multiplier, 55 Elo home advantage and a modest K-factor reduction as the season progresses. No past-season ratings enter Elo.
 
-Data availability is not uniform: on November 8, the first run matched 938 of 1,124 FBS-vs-FBS team-game observations. Recent games can be absent while the provider updates the advanced release, and some earlier games lack one or more required measurements. Teams with lower advanced coverage are explicitly marked, not silently treated as fully measured.
+The internal opponent-power signal blends SRS margin power (78%) and neutral-start Elo results (22%). **“Top-25 opponent” means top 25 by this internally derived, same-season signal**, not AP/CFP or brand reputation. Conference labels are never model inputs.
 
-Public GitHub Actions scheduled jobs can be delayed, and GitHub automatically disables schedules in public repositories after 60 days without repository activity.
+A road victory receives 1.52× the opponent-quality win credit; neutral receives 1.16×. A win over a very good team earns much more than a win over a weak FBS team; FCS wins get zero signature-win credit. FCS wins count as W–L wins but contribute little evidence of superior play.
 
-## Privacy
+A narrow loss to an elite team still counts as a loss; schedule-adjusted expected wins and margin soften the penalty compared to losing to a weak opponent. There is no bonus for losing.
 
-This public repository contains football data, code and methodology only. **No ChatGPT chat transcript, account credentials or personal information is stored or linked.** The linked GitHub account/repository ownership are public metadata. No API keys are required.
+### Adjusted on-field play
 
-## Data sources
+Every offensive/defensive metric is evaluated against what the **opponent produced or allowed in its other games**, not just raw efficiency. For a team-game:
+- Adjusted offense = observed offense + 0.80 × (league-average opposing defense − opponent's leave-one-matchup-out defense baseline)
+- Adjusted defense = observed defense + 0.80 × (league-average opposing offense − opponent's leave-one-matchup-out offense baseline)
 
-- [SportsDataverse 2026 schedules](https://github.com/sportsdataverse/cfbfastR-data/blob/main/schedules/csv/cfb_schedules_2026.csv)
-- [SportsDataverse derived ESPN advanced data releases](https://github.com/sportsdataverse/sportsdataverse-data/releases)
-- [GitHub Actions schedule documentation](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onschedule)
+The opponent baseline uses two league-average pseudogames to stabilize small samples. Expected turnover margin is preferred to the much noisier realized turnover differential.
 
-## Local development
+When a statistic is missing, the model uses the available measurements rather than discarding all others. Each separate metric is shrunk toward neutral percentile 50 according to that team's actual measured-game share. National core EPA coverage below 70% triggers a conspicuously labeled résumé-only fallback. The published dashboard shows **core offensive+defensive EPA coverage** — not just a quarter-score record.
 
-```bash
+**Known limits:** The present control input is the share of first-three-quarter checkpoints in the lead, not play-by-play win probability, and red-zone success is a positive-EPA play rate, not touchdown-conversion rate. A true non-garbage-possession/game-control replacement will require an additional validated drive-by-drive source. V4 coefficients are transparent research hypotheses, not results of a historical parameter optimization. Cross-conference opponent quality is less certain when the season's network has few cross-conference games.
+
+## Scheduled refresh and publication
+
+The workflow [.github/workflows/publish.yml](.github/workflows/publish.yml) publishes a refreshed, validated static dataset and site on **Sunday at 9 AM America/New_York** (DST-aware), and checks for updated AP/CFP polls on Sunday evening and Tuesday night. Pushing changes to \`main\` also triggers publication. GitHub scheduled jobs may be delayed.
+
+Site and data are generated and deployed through GitHub Actions; no manual CSV imports, user registration, API keys or private chat data are needed. \`scripts/audit_dashboard.cjs\` verifies all team scores and the game feed using the same JavaScript engine as the browser.
+
+### Sources
+
+- [SportsDataverse/cfbfastR schedule and final scores](https://github.com/sportsdataverse/cfbfastR-data/blob/main/schedules/csv/cfb_schedules_2026.csv)
+- [SportsDataverse ESPN advanced-team, situational, turnovers, linescores](https://github.com/sportsdataverse/sportsdataverse-data/releases)
+- [Massey — rating and schedule-adjustment methodology](https://masseyratings.com/faq.php)
+- [Massey's NCAA model description](https://www.ncaa.com/_flysystem/public-s3/images/2024/10/30/massey.pdf)
+- [BCF Toys — FEI opponent-adjusted non-garbage possessions](https://bcftoys.com/2025-fei)
+- [FIDE — chess Elo ratings and K-factor](https://www.fide.com/docs/regulations/ARB%20Manual%202020.pdf)
+
+The V4 implementation is an original blend. No SP+, FEI, AP or CFP numerical ratings are fed into it. This repository contains football data, public code and formulas only, **not the ChatGPT conversation or account credentials**.
+
+## Development
+
+\`\`\`bash
 python scripts/update_data.py
+python scripts/update_polls.py
+node scripts/audit_dashboard.cjs
 python -m http.server --directory site 8000
-```
+\`\`\`
 
-Visit http://localhost:8000/. This is a public experiment, not a predictive model or an official college-football poll.
+Open http://localhost:8000/ after generating data. V4 data model is isolated in \`site/model_v4.js\` so methodology changes can be made without changing the permanent website URL. Audit output is saved in \`site/data/cfmi_ranking_audit.json\`.
