@@ -41,6 +41,12 @@ jobs:
           npm install --no-save playwright@1.61.0
           npx playwright install --with-deps chromium
           node scripts/smoke_dashboard.cjs
+      - name: Historical V4 versus V3 walk-forward evaluation
+        if: github.event_name != 'schedule'
+        run: |
+          CFMI_SEASON=2024 python scripts/update_data.py
+          CFMI_SEASON=2025 python scripts/update_data.py
+          node scripts/backtest_v4.cjs
       - name: Upload validated site artifact
         uses: actions/upload-pages-artifact@v4
         with:
