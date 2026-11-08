@@ -4,7 +4,7 @@ const fs=require('fs'),path=require('path');
 const base=path.join(__dirname,'../site');
 const html=fs.readFileSync(path.join(base,'index.html'),'utf8');
 const body=html.match(/<script>([\s\S]*?)<\/script>/)[1],prelude=body.slice(0,body.indexOf('const submetric='));
-const scripts=['model_v4.js','model_v5.js'].map(f=>fs.readFileSync(path.join(base,f),'utf8')).join('\n');
+const scripts=['model_v4.js','opponent_network_research.js','model_v5.js'].map(f=>fs.readFileSync(path.join(base,f),'utf8')).join('\n');
 const calculate=[
 'MODEL_V5.setParameters(config);',
 'const raw=csvParse(csv),adv=csvParse(advanced);',
