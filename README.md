@@ -1,16 +1,46 @@
-# College Football Merit Index — CFMI V4
+# College Football Merit Index — CFMI V4.1 (Merit + Predictive Power)
 
 **Public dashboard:** https://randomquestions-projects.github.io/college-football-merit-index/
 
-A reproducible, independent, season-only assessment of college-football **merit and quality of play**. Includes every FBS team, an AP/CFP Top 25 comparison, and interactive **up-to-five-team résumé comparisons**.
+A reproducible, independent, season-only assessment of two distinct things: **Merit (what teams have earned)** and **Power (how strong their repeatable performance appears)**. Includes every FBS team, an AP/CFP Top 25 comparison, and interactive **up-to-five-team résumé comparisons**.
 
 ## Three views
 
-1. **CFMI Rankings:** All FBS and Top 25/50, opponent-adjusted score components, sortable metrics, and game-by-game team audit with opponent strength, venue, game quality and data completeness.
+1. **CFMI Merit / Power Rankings:** Switch the primary leaderboard between two separate scores. Both show all FBS schools with independently sortable Top 25/50; team drilldowns explain Merit and Power contributions individually, opponent baseline, road wins and play-by-play coverage.
 2. **AP / CFP Comparison:** CFMI vs the dated latest available AP and CFP Top 25; publication dates and rank deltas. Polls **never influence CFMI**.
 3. **Compare Team Résumés:** Select one to five teams at a time. View quality wins, opponent-strength power, close losses, home/away results, adjusted margin, EPA, national rank comparisons, common opponents and explainable head-to-head narratives. Direct link: [#resume](https://randomquestions-projects.github.io/college-football-merit-index/#resume).
 
-## V4 weighting
+## Two different methodologies — NOT two weights on the same résumé
+
+### CFMI Merit: who has earned the strongest season?
+
+| Independent Merit factor | Overall weight |
+|---|---:|
+| Wins above schedule expectation + winning percentage | **30%** |
+| Opponent- and venue-adjusted margin | **20%** |
+| Quality victories and quality road wins | **15%** |
+| Opponent-adjusted efficiency, drives and consistency | **35%** |
+
+Merit intentionally rewards actual game outcomes and résumé achievements. Opponent power feeds schedule-quality estimates, but a large marquee win or difficult road victory earns added credit because it was actually achieved. An ugly loss matters even when it doesn't say much about a team's true talent.
+
+### CFMI Power: who looks stronger in a future neutral-field matchup?
+
+| Independent Power factor | Overall weight |
+|---|---:|
+| Season-only opponent-strength baseline (regularized SRS/Elo) | **65%** |
+| Opponent-adjusted net EPA/play (offense and defense) | **20%** |
+| Opponent-adjusted play success rate | **10%** |
+| Opponent-adjusted explosive-play rate | **5%** |
+
+The first 65% itself consists of 78% season-only regularized, venue-adjusted scoring margins and 22% neutral-start Elo. **Effective overall Power contributions are 50.7% SRS, 14.3% Elo, 20% EPA, 10% success and 5% explosive-play rate**. No signature-win bonus, no extra road-win credit, no record-above-benchmark award, no conference bonus, and no preseason ratings enter the *final predictive Power score*. Partial advanced measurements are shrunk toward neutral; when core EPA coverage is too low, Power is labeled a baseline-only fallback.
+
+Why this matters: if Utah earns more quality wins than Alabama, Utah can rank higher in **Merit**. If Alabama has stronger opponent-adjusted performance and margin power, Alabama can rank higher in **Power**. Neither ranking is automatically right or wrong; they ask different questions.
+
+**Avoiding circularity:** The underlying SRS/Elo opponent-strength *baseline* is used for both ratings and schedule quality; its rank is an internal diagnostic (not the public predictive Power Rank). Merit is calculated independently. The final predictive Power Rank is calculated afterward, using adjusted EPA, success and explosiveness, and **does not feed back into Merit or opponent-strength calculations**. AP and CFP are always compared to Merit, never fed into either score.
+
+**Predictive validation and caveat:** Predeclared Power blends were compared on 2024 and 2025 held-out next-week FBS games. A 65/20/10/5 blend was a conservative compromise: compared with the baseline alone, it improved the fixed-scale probability-score diagnostic on both seasons, with very similar winner-selection accuracy. Adding too much advanced efficiency reduced predictive accuracy. This is exploratory two-season evidence, not proof that the weights are optimal. A 0–100 Power score is **not a calibrated win probability or point spread**. It estimates relative ability; actual matchup predictions would require a separately calibrated mapping.
+
+## Detailed Merit V4 weighting
 
 | Component | CFMI V4 |
 |---|---:|
@@ -39,7 +69,7 @@ A season-only regularized margin **SRS/Massey-style** model iteratively consider
 
 In parallel, a season-only **Elo** calculation starts every FBS program from the same neutral 1500 rating. Game results update Elo using the FIDE-like \`K × (outcome − expected)\` rule, a capped margin multiplier, 55 Elo home advantage and a modest K-factor reduction as the season progresses. No past-season ratings enter Elo.
 
-The internal opponent-power signal blends SRS margin power (78%) and neutral-start Elo results (22%). **“Top-25 opponent” means top 25 by this internally derived, same-season signal**, not AP/CFP or brand reputation. Conference labels are never model inputs.
+The internal opponent-strength baseline blends SRS margin power (78%) and neutral-start Elo results (22%). **“Top-25 opponent” in the Merit game ledger refers to this underlying independent opponent baseline**, not the public predictive Power composite, AP/CFP or brand reputation. Public Power adds opponent-adjusted EPA, success and explosiveness after Merit has been calculated. Conference labels are never model inputs.
 
 A road victory receives 1.52× the opponent-quality win credit; neutral receives 1.16×. A win over a very good team earns much more than a win over a weak FBS team; FCS wins get zero signature-win credit. FCS wins count as W–L wins but contribute little evidence of superior play.
 
