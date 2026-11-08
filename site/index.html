@@ -442,20 +442,24 @@ function renderComparison(){
  }).join('');
 }
 function switchDashboardPage(page){
- const current=['rankings','comparison','resume'].includes(page)?page:'rankings';
- const compare=current==='comparison',resume=current==='resume';
- document.body.classList.toggle('cfmi-compare',compare);
- document.body.classList.toggle('cfmi-resume',resume);
+ const current=['rankings','comparison','resume','methodology'].includes(page)?page:'rankings';
+ document.body.classList.toggle('cfmi-compare',current==='comparison');
+ document.body.classList.toggle('cfmi-resume',current==='resume');
+ document.body.classList.toggle('cfmi-methodology',current==='methodology');
+ for(const id of ['rankings','comparison','resume','methodology']){
+   const el=$(id==='methodology'?'methodologyPage':id);
+   el?.classList.toggle('page-active',id===current);
+ }
  document.querySelectorAll('#pageSwitch [data-page]').forEach(el=>{
    const active=el.dataset.page===current;
    el.classList.toggle('selected',active);
    el.setAttribute('aria-selected',active?'true':'false');
  });
- if(compare)renderComparison();
- if(resume)renderResume();
- const target=current==='rankings'?'':('#'+current);
- if(location.hash!==target)history.replaceState(null,'',location.pathname+location.search+target);
- if(current!=='rankings')window.scrollTo({top:0,behavior:'smooth'});
+ if(current==='comparison')renderComparison();
+ if(current==='resume')renderResume();
+ const nextHash=current==='rankings'?'':'#'+current;
+ if(location.hash!==nextHash)history.replaceState(null,'',location.pathname+location.search+nextHash);
+ if(current!=='rankings')window.scrollTo({top:0,behavior:'instant'});
 }
 async function loadPollComparison(){
  try{
@@ -471,7 +475,10 @@ $('comparisonBaseline').addEventListener('click',e=>{const el=e.target.closest('
 $('navComparison').addEventListener('click',e=>{e.preventDefault();switchDashboardPage('comparison');$('comparison').scrollIntoView({behavior:'smooth'})});
 $('navResume').addEventListener('click',e=>{e.preventDefault();switchDashboardPage('resume');$('resume').scrollIntoView({behavior:'smooth'})});
 $('navRanks').addEventListener('click',e=>{e.preventDefault();switchDashboardPage('rankings');$('rankings').scrollIntoView({behavior:'smooth'})});
-document.querySelectorAll('a[href="#method"],a[href="#variables"],a[href="#sources"]').forEach(a=>a.addEventListener('click',()=>switchDashboardPage('rankings')));
+$('navMethodology').addEventListener('click',e=>{e.preventDefault();switchDashboardPage('methodology')});
+document.querySelectorAll('.method-index a[href^="#"]').forEach(a=>a.addEventListener('click',e=>{
+ e.preventDefault();const target=a.getAttribute('href').slice(1);switchDashboardPage('methodology');$(target)?.scrollIntoView({behavior:'smooth',block:'start'});
+}));
 
 
 const resumeState={names:['Georgia','Notre Dame','Miami','','']};
@@ -572,12 +579,13 @@ loadPollComparison();
   $('historicalAccuracy').textContent=entries.map(x=>'V4 selected '+(100*x.accuracy.v4).toFixed(1)+'% of '+x.heldoutGames+' held-out games in '+x.season+' (V3: '+(100*x.accuracy.v3).toFixed(1)+'%).').join(' ');
  }catch(error){$('historicalAccuracy').textContent='Current historical results are available via the linked backtest report.';}
 })();
-if(location.hash==='#comparison')switchDashboardPage('comparison');
-if(location.hash==='#resume')switchDashboardPage('resume');
+const initialPage=location.hash==='#comparison'?'comparison':location.hash==='#resume'?'resume':
+ ['#method','#variables','#sources','#methodology'].includes(location.hash)?'methodology':'rankings';
+switchDashboardPage(initialPage);
 window.addEventListener('hashchange',()=>{
- if(location.hash==='#comparison')switchDashboardPage('comparison');
- else if(location.hash==='#resume')switchDashboardPage('resume');
- else if(document.body.classList.contains('cfmi-compare')||document.body.classList.contains('cfmi-resume'))switchDashboardPage('rankings');
+ const h=location.hash;
+ switchDashboardPage(h==='#comparison'?'comparison':h==='#resume'?'resume':
+   ['#method','#variables','#sources','#methodology'].includes(h)?'methodology':'rankings');
 });
 </script>
 </body></html>
