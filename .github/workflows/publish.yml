@@ -55,6 +55,8 @@ jobs:
           CFMI_SEASON=2025 python scripts/update_possessions.py
           node scripts/backtest_v4.cjs
           rm -rf site/data/history # published analytics retain summary results, not old raw seasons
+      - name: Research predictive Power model candidates
+        run: node scripts/evaluate_power_candidates.cjs
       - name: Upload validated site artifact
         uses: actions/upload-pages-artifact@v4
         with:
