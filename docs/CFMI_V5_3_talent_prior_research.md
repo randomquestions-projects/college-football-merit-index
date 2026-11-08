@@ -58,7 +58,31 @@ These are preselected research candidates, **not a verified production schedule*
 - `scripts/test_talent_prior.cjs`: build pregame week-1 through week-10 future-game predictions from the *previous season's final result-based strength* and same-season roster talent, then test fixed fast-decaying prior intensity alternatives. 2025 is used for candidate selection; 2026 is inspected but not trained.
 - No active V5.2 Power coefficients, homepage or other production tabs are changed.
 
-## 5. Statistical gates before release
+## 5. First measured experiment (not all-FBS)
+
+Source check shows **2024–2026 archived roster tier pages contain exactly 68 P4/Notre Dame programs each**, not the entire FBS. The complete **2026 full-FBS team talent composite covers all 138** schools but is not accompanied by equally complete, independently frozen historical 2024/2025 year-specific player-level ratings. Therefore the experimental validation below is **strictly matched games with the subset of teams having historical roster data**. It **cannot** establish the benefit for Ole Miss versus Liberty, New Mexico, or North Dakota State.
+
+The initial code used top-30 and depth-31-to-80 *tier-score proxies* (not actual known starters or individual player grades). The preseason estimated point-strength prior was 55% last-season opponent-adjusted SRS and 45% current roster-tier percentile; prior influence diminished quickly after completed games. Four intensity variants were tested. The 2025 selection set favored a **0.7 multiplier** to the candidate weekly-decay weights.
+
+| Year / same matched games | Power with no prior | Talent + previous-year prior (0.7 intensity) |
+|---|---:|---:|
+| 2025 matched games | 217 | 217 |
+| 2025 all-game correct picks | 66.4% (144/217) | **67.3% (146/217)** |
+| 2025 log loss | 0.5887 | **0.5851** |
+| 2025 margin MAE | 12.33 points | **12.12 points** |
+| 2026 matched games | 238 | 238 |
+| 2026 all-game correct picks | 61.8% (147/238) | **63.4% (151/238)** |
+| 2026 log loss | 0.6431 | **0.6343** |
+| 2026 margin MAE | 12.91 points | **12.80 points** |
+| 2026 Weeks 1–4 correct picks | 63.9% (46/72) | **68.1% (49/72)** |
+
+**Interpretation:** Incorporating a talent/previous-season prior improves early-game predictions in this P4-heavy matched subset. The 2026 evidence is directionally consistent with 2025, but the 2025 reference model had already been selected with that season's outcomes, and 2026 outcomes partly motivated this research. Neither season is a pristine independent confirmation of this new hypothesis. The sample's 2026 improvement is only 4 correct games out of 238; changes must be evaluated with paired uncertainty before production. Also, some historical roster pages may be retrospectively updated.
+
+**Decision:** Do NOT merge this prior into live CFMI Power based on the partial historical 68-team sample. Next statistical requirement is verified **all-138-program historical talent coverage** (including G5) and either a genuine pre-season ratings archive or immutable yearly snapshots, plus reliable returning-production and coaching continuity. These are necessary for the user's primary cross-conference use case.
+
+The experiment code is [here](../scripts/test_talent_prior.cjs); sourcing and roster-tier audit are [here](../scripts/collect_talent_research.py).
+
+## 6. Statistical gates before release
 
 1. **Expand 2024/2025 all-FBS roster talent coverage**, particularly G5 and recently promoted teams. A 68-team P4-only backtest cannot prove effectiveness for Liberty/New Mexico/NDSU versus P4.
 2. Archive original preseason source dates and roster snapshots rather than assuming current historical pages are immutable. Historical webpages may have received retroactive player data updates.
