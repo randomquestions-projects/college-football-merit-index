@@ -69,23 +69,35 @@ def read_csv(url):
 def main():
  out={'version':'research-2026-11-08','generatedAt':datetime.now(timezone.utc).isoformat(),
   'temporalPolicy':'Each season uses ONLY its same-year published roster breakdown; original publication dates and retrospective revisions not independently verifiable.',
-  'caveat':'Tier-score top30 is an approximation to rated recruiting tiers, NOT actual current top30 players, playing time or positional value. Historical pages may have retrospective updates; coaching and return-production unavailable in this dataset.',
+  'caveat':'Historic 2024–2026 roster tier pages cover only 68 P4/Notre Dame teams. 2026 full FBS 138-team 247 composite coverage is separate. Tier-score top30 is an approximation to rated recruiting tiers, NOT actual current top30 players, playing time or positional value. Historical pages may have retrospective updates; coaching and return-production unavailable in this dataset.',
   'years':{},'sourceHashes':{}}
  for y in [2024,2025,2026]:
   url=f'https://www.puntandrally.com/talent.php?view=roster&whichyear={y}'
   raw=get(url);out['sourceHashes'][str(y)]=hashlib.sha256(raw).hexdigest()
   out['years'][str(y)]=roster(raw.decode('utf-8','replace'),y)
   print('TALENT ROSTER',y,'rows',len(out['years'][str(y)]),'sample',[dict(name=x['team'],top30=x['top30TierProxy'],depth=x['depth31to80TierProxy']) for x in out['years'][str(y)][:2]],flush=True)
+ fullFbs={}
  for key,metric in [('talent_composite','Talent composite'),('bluechip','Blue-chip ratio')]:
   url='https://collegefootballcharts.com/stats/'+('talent-composite' if key=='talent_composite' else 'blue-chip-ratio')+'.csv'
   source=read_csv(url)
   mapped={norm(x['team']):float(x[metric]) for x in source if x.get(metric) and x.get('team')}
+  for team in source:
+   k=norm(team['team'])
+   fullFbs.setdefault(k,{'team':team['team'],'teamKey':k})[key]=mapped.get(k)
   for team in out['years']['2026']:
    val=mapped.get(team['teamKey'])
    team[key]=val
-  if sum(x.get(key) is not None for x in out['years']['2026'])<125:raise RuntimeError('Poor 2026 source team join '+key)
+  if sum(x.get(key) is not None for x in out['years']['2026'])<55:raise RuntimeError('Poor 2026 source team join '+key)
   out['sourceHashes'][key]=hashlib.sha256(json.dumps(source,sort_keys=True).encode()).hexdigest()
   print('TALENT 2026 join',key,sum(x.get(key) is not None for x in out['years']['2026']),flush=True)
+ # Complete 138-team composite supports current 2026 G5 talent comparisons.
+ if len(fullFbs)<130:raise RuntimeError('Missing full 2026 FBS talent coverage')
+ ranked=sorted([x for x in fullFbs.values() if x.get('talent_composite') is not None],key=lambda x:-x['talent_composite'])
+ for i,x in enumerate(ranked,1):
+  x['talentCompositeRank']=i
+  x['talentNationalPercentile']=round(100*(len(ranked)-i)/max(1,len(ranked)-1),3)
+ out['fullFbs2026']=ranked
+ print('FULL 2026 FBS COMPOSITE',len(ranked),flush=True)
  # Normalize each YEAR separately so 2024 teams are not ranked with 2026 roster info.
  for y,rows in out['years'].items():
   xs=sorted(r['top30TierProxy'] for r in rows)
