@@ -62,6 +62,8 @@ jobs:
         run: node scripts/promote_opponent_network.cjs
       - name: Diagnose current opponent strength and rating contributions
         run: node scripts/diagnose_opponent_strength.cjs
+      - name: Research rapidly fading talent and last-season Power prior on matched games
+        run: node scripts/test_talent_prior.cjs
       - name: Reconstruct weekly V5 history and upcoming matchup predictions
         run: node scripts/build_weekly_views.cjs
       - name: Audit V5 model, weekly data quality and season cutoff invariants
