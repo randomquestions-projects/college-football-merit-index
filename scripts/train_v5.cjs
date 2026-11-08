@@ -57,7 +57,7 @@ function readSeason(season){
    });
   }
  }
- if(observations.length<350)throw Error('Insufficient historical samples '+season);
+ if(observations.length<(season===2026?180:350))throw Error('Insufficient historical samples '+season);
  return {observations,weekly};
 }
 function fitPositiveRidge(rows){
