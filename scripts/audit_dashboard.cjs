@@ -25,7 +25,7 @@ const body=prelude+[
 "return {gameCount:games.length,coverage:{measured:state.advCovered,eligible:state.advExpected,full:state.fullModel},",
 "teams:teams.map(t=>({name:t.name,rank:t.rank,merit:t.score,power:t.powerScore,",
 "powerPoints:t.powerPoints,powerRank:t.powerRank,won:t.won,lost:t.lost,wab:t.wab,",
-"residual:t.meritQualityResidual,meritRecord:t.meritRecordScore,meritControl:t.meritControlScore,",
+"residual:t.meritQualityResidual,meritRecord:t.meritRecordScore,meritQuality:t.meritQualityScore,meritControl:t.meritControlScore,",
 "advanced:t.advCoreGames,fbsGames:t.fbsGames})),version:MODEL_V5.version};"
 ].join('\n');
 const compute=new Function('scores','advCsv','parameters','cutoff',model+'\n'+body);
@@ -40,6 +40,33 @@ assert(latest.teams.every(t=>Number.isFinite(t.merit)&&t.merit>=0&&t.merit<=100
  &&Number.isFinite(t.power)&&t.power>=0&&t.power<=100&&Number.isFinite(t.powerPoints)
  &&Number.isInteger(t.rank)&&Number.isInteger(t.powerRank)&&t.fbsGames>=t.advanced),
  'Invalid Merit, Power, coverage or ranks');
+// Merit exactly follows the published earned-resume contribution weights.
+for(const t of latest.teams){
+ const scored=.55*t.meritRecord+.25*t.meritQuality+.20*t.meritControl;
+ assert(Math.abs(scored-t.merit)<1e-8,'Merit formula mismatch '+t.name);
+}
+// Metamorphic check: winning an FCS game by 60 extra points must NOT raise
+// Merit, power or any opponent-adjusted FBS strength measurement.
+const parse=new Function('csv',prelude+'return csvParse(csv)');
+const source=parse(csv);
+const example=source.find(g=>g.completed==='TRUE'&&g.season==='2026'&&g.season_type==='regular'&&
+  ((g.home_division==='fbs'&&g.away_division==='fcs'&&Number(g.home_points)>Number(g.away_points))||
+  (g.away_division==='fbs'&&g.home_division==='fcs'&&Number(g.away_points)>Number(g.home_points))));
+if(example){
+ const adjusted=source.map(g=>({...g}));
+ const game=adjusted.find(g=>g.game_id===example.game_id);
+ const field=game.home_division==='fbs'?'home_points':'away_points';
+ game[field]=String(Number(game[field])+60);
+ const headings=Object.keys(adjusted[0]),quote=x=>'"'+String(x??'').replaceAll('"','""')+'"';
+ const modified=headings.map(quote).join(',')+'\n'+adjusted.map(r=>headings.map(h=>quote(r[h])).join(',')).join('\n')+'\n';
+ const distorted=compute(modified,adv,doc,Date.now());
+ for(const t of latest.teams){
+  const other=distorted.teams.find(x=>x.name===t.name);
+  assert(other&&Math.abs(other.merit-t.merit)<1e-8&&Math.abs(other.powerPoints-t.powerPoints)<1e-8,
+   'FCS blowout must never improve V5.1 rating '+t.name);
+ }
+}
+
 for(const key of ['rank','powerRank']){
  const ranks=latest.teams.map(t=>t[key]).sort((a,b)=>a-b);
  assert.deepEqual(ranks,Array.from({length:latest.teams.length},(_,i)=>i+1),'Invalid ranking sequence: '+key);
