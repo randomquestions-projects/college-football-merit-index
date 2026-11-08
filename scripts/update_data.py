@@ -7,21 +7,25 @@ The on-field bucket activates in the dashboard only with sufficient measured cov
 import csv
 import io
 import json
+import os
 import time
 from pathlib import Path
 from datetime import datetime, timezone
 from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
-DATA = ROOT / "site" / "data"
+SEASON = str(os.environ.get("CFMI_SEASON", "2026"))
+if SEASON not in ("2024","2025","2026"):
+    raise RuntimeError("Unsupported season")
+DATA = ROOT / "site" / "data" if SEASON == SEASON else ROOT / "site" / "data" / "history" / SEASON
 DATA.mkdir(parents=True, exist_ok=True)
-SOURCE = "https://raw.githubusercontent.com/sportsdataverse/cfbfastR-data/main/schedules/csv/cfb_schedules_2026.csv"
+SOURCE = f"https://raw.githubusercontent.com/sportsdataverse/cfbfastR-data/main/schedules/csv/cfb_schedules_{SEASON}.csv"
 RELEASE = "https://github.com/sportsdataverse/sportsdataverse-data/releases/download"
 ASSETS = {
-    "team": ("espn_cfb_adv_team", "adv_team_2026.csv"),
-    "situational": ("espn_cfb_adv_situational", "adv_situational_2026.csv"),
-    "turnover": ("espn_cfb_adv_turnover", "adv_turnover_2026.csv"),
-    "quarters": ("espn_cfb_linescores", "linescores_2026.csv"),
+    "team": ("espn_cfb_adv_team", f"adv_team_{SEASON}.csv"),
+    "situational": ("espn_cfb_adv_situational", f"adv_situational_{SEASON}.csv"),
+    "turnover": ("espn_cfb_adv_turnover", f"adv_turnover_{SEASON}.csv"),
+    "quarters": ("espn_cfb_linescores", f"linescores_{SEASON}.csv"),
 }
 FIELDS = [
     "game_id", "team", "off_ppa", "def_ppa", "off_success_rate",
@@ -89,9 +93,9 @@ def main():
     if not required.issubset(schedule[0]):
         raise RuntimeError("Game-results source schema changed; refusing a blank deployment")
     fbs = {g[s + "_team"] for g in schedule for s in ("home", "away")
-           if g.get("season") == "2026" and g.get(s + "_division") == "fbs"}
+           if g.get("season") == SEASON and g.get(s + "_division") == "fbs"}
     finals = [g for g in schedule
-              if g.get("season") == "2026" and g.get("season_type") == "regular"
+              if g.get("season") == SEASON and g.get("season_type") == "regular"
               and g.get("completed") == "TRUE"
               and number(g, "home_points") is not None
               and number(g, "away_points") is not None]
@@ -195,13 +199,13 @@ def main():
     print("CFMI COVERAGE BY WEEK:", [(w, totals[w], totals[w]-failures[w], failures[w]) for w in sorted(totals, key=int)])
     print("CFMI MISSING REASONS:", reasons.most_common())
     print("CFMI MISSING GAME EXAMPLES:", missing_examples[:30])
-    (DATA / "cfb_schedules_2026.csv").write_bytes(schedule_bytes)
-    with (DATA / "cfmi_advanced_2026.csv").open("w", newline="", encoding="utf8") as fh:
+    (DATA / f"cfb_schedules_{SEASON}.csv").write_bytes(schedule_bytes)
+    with (DATA / f"cfmi_advanced_{SEASON}.csv").open("w", newline="", encoding="utf8") as fh:
         writer = csv.DictWriter(fh, fieldnames=FIELDS)
         writer.writeheader()
         writer.writerows(output)
     metadata = {
-        "season": 2026, "published_snapshot_at_utc": datetime.now(timezone.utc).isoformat(),
+        "season": int(SEASON), "published_snapshot_at_utc": datetime.now(timezone.utc).isoformat(),
         "fbs_teams": len(fbs), "completed_games": len(finals),
         "fbs_fbs_games": len(valid_fbs_games),
         "advanced_team_game_rows": len(output),
