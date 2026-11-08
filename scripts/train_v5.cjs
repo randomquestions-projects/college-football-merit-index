@@ -97,11 +97,11 @@ function fitRidge(obs){
   }
  }
  const raw=solveLinear(A,b);
- // Bounds protect predictions from instability and correlated feature swings.
+ // Bounds protect predictions from instability and correlated feature swings.\n // Constrain positive-play-quality factors to monotone nonnegative effects;\n // any sign-reversed fitted coefficient is shrunk all the way to zero.
  const c=[Math.max(.7,Math.min(1.45,raw[0])),
-   Math.max(-5,Math.min(5,raw[1])),
-   Math.max(-4,Math.min(4,raw[2])),
-   Math.max(-3,Math.min(3,raw[3]))];
+   Math.max(0,Math.min(5,raw[1])),
+   Math.max(0,Math.min(4,raw[2])),
+   Math.max(0,Math.min(3,raw[3]))];
  return {baseScale:c[0],epa:c[1]/.10,success:c[2]/.05,explosive:c[3]/.03,
   rawFittedCoefficients:raw,shrinkagePenalties:lambda,usableAdvancedGames:obs.filter(g=>g.advancedAvailable).length};
 }
