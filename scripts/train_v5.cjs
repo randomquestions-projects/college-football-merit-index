@@ -1,235 +1,215 @@
 #!/usr/bin/env node
 'use strict';
 /**
- * CFMI V5 two-season, strictly forward-only predictive model fit.
- * 2024 weeks 5–13: fit shrunken season-only margin/efficiency coefficients.
- * 2025 weeks 5–13: untouched validation and deployment decision.
- * External ratings, polls, sportsbooks, recruiting and team/conference names are never inputs.
+ * CFMI V5.1 power-training pipeline: the complete opponent-adjusted,
+ * sustainable football-performance feature set is tested, not presumed useful.
+ * 2024 weeks 5–13 fit coefficients and calibration. 2025 weeks 5–13 compare
+ * the candidate against both bare opponent strength and deployed V5 Power.
+ * 2025 is a model-selection set; it is NOT a pristine independent final test.
  */
 const fs=require('fs'),path=require('path');
 const ROOT=path.join(__dirname,'..','site'),DIR=path.join(ROOT,'data');
 const html=fs.readFileSync(path.join(ROOT,'index.html'),'utf8');
-const script=html.match(/<script>([\s\S]*?)<\/script>/i);
-if(!script)throw Error('CFMI script missing');
-const boundary=script[1].indexOf('const submetric=');
-if(boundary<10000)throw Error('CFMI engine boundary missing');
-const prelude=script[1].slice(0,boundary);
-const v4=fs.readFileSync(path.join(ROOT,'model_v4.js'),'utf8');
-const evaluate=new Function('rows','adv','season','cutoff',v4+'\n'+prelude+'\n'+
- 'state.raw=rows;const result=computeV4(rows,cutoff,season);attachEfficiencyV4(result.teams,adv);'+
- 'return {teams:result.teams,coverage:{advanced:state.advCovered,expected:state.advExpected,full:state.fullModel}};'
-);
+const inline=html.match(/<script>([\s\S]*?)<\/script>/i);
+if(!inline)throw Error('Missing model prelude');
+const end=inline[1].indexOf('const submetric=');
+if(end<10000)throw Error('Model prelude moved');
+const prelude=inline[1].slice(0,end);
+const library=fs.readFileSync(path.join(ROOT,'model_v4.js'),'utf8')+'\n'+
+ fs.readFileSync(path.join(ROOT,'model_v5.js'),'utf8');
 const parse=new Function('csv',prelude+'return csvParse(csv)');
-const mean=a=>a.reduce((x,y)=>x+y,0)/Math.max(1,a.length);
-const sigmoid=x=>1/(1+Math.exp(-Math.max(-30,Math.min(30,x))));
-function rawSnapshots(year){
- const dir=path.join(DIR,'history',String(year));
- const rows=parse(fs.readFileSync(path.join(dir,'cfb_schedules_'+year+'.csv'),'utf8'));
- const advanced=parse(fs.readFileSync(path.join(dir,'cfmi_advanced_'+year+'.csv'),'utf8'));
- const finals=rows.filter(r=>r.season===String(year)&&r.season_type==='regular'&&r.completed==='TRUE'&&
-  r.home_division==='fbs'&&r.away_division==='fbs'&&r.home_points!==''&&r.away_points!==''&&
-  r.home_points!=='NA'&&r.away_points!=='NA'&&Number.isFinite(+r.home_points)&&
-  Number.isFinite(+r.away_points)&&+r.home_points!==+r.away_points);
- const observations=[],coverage=[];
+const evaluate=new Function('rows','adv','season','cutoff',library+'\n'+prelude+'\n'+
+ 'state.raw=rows;const r=computeV4(rows,cutoff,season);attachEfficiencyV4(r.teams,adv);'+
+ 'return {teams:r.teams,signals:v5PowerSignals(r.teams,state.fullModel),'+
+ 'coverage:{measured:state.advCovered,expected:state.advExpected,full:state.fullModel}};');
+const keys=['baseline','epa','success','explosive','finishing','consistency','control','offense','defense'];
+const mean=a=>a.reduce((v,x)=>v+x,0)/Math.max(1,a.length);
+const clamp=(v,l,h)=>Math.max(l,Math.min(h,v));
+const sigmoid=x=>1/(1+Math.exp(-clamp(x,-30,30)));
+const capCorrection=10;
+function readSeason(season){
+ const dir=season===2026?DIR:path.join(DIR,'history',String(season));
+ const rows=parse(fs.readFileSync(path.join(dir,'cfb_schedules_'+season+'.csv'),'utf8'));
+ const adv=parse(fs.readFileSync(path.join(dir,'cfmi_advanced_'+season+'.csv'),'utf8'));
+ const played=rows.filter(g=>g.season===String(season)&&g.season_type==='regular'&&g.completed==='TRUE'&&
+  g.home_division==='fbs'&&g.away_division==='fbs'&&g.home_points!==''&&g.away_points!==''&&
+  g.home_points!=='NA'&&g.away_points!=='NA'&&Number.isFinite(+g.home_points)&&
+  Number.isFinite(+g.away_points)&&+g.home_points!==+g.away_points);
+ const observations=[],weekly=[];
  for(let week=5;week<=13;week++){
-  const games=finals.filter(g=>+g.week===week);
-  if(games.length<5)continue;
-  const firstKick=Math.min(...games.map(g=>Date.parse(g.start_date)));
-  const previous=finals.filter(g=>+g.week<week&&Date.parse(g.start_date)<firstKick);
-  if(previous.length<120)continue;
-  const r=evaluate(rows,advanced,year,firstKick-1);
-  coverage.push({week,...r.coverage});
-  const lookup=new Map(r.teams.map(t=>[t.name,t]));
-  const valid=r.teams.filter(t=>Number.isFinite(t.ppaNet)&&t.advMetricCounts?.ppaNet>0);
-  const avg={};
-  for(const key of ['ppaNet','successNet','explosiveNet']){
-    const eligible=r.teams.filter(t=>Number.isFinite(t[key])&&t.advMetricCounts?.[key]>0);
-    avg[key]=mean(eligible.map(t=>t[key]));
-  }
-  const feature=(t,k,maxAbs)=>{
-    if(!r.coverage.full)return 0;
-    return Number.isFinite(t[k])?Math.max(-maxAbs,Math.min(maxAbs,(t[k]-avg[k])*(t.advMetricCoverage?.[k]||0))):0;
-  };
-  for(const g of games){
-   const h=lookup.get(g.home_team),a=lookup.get(g.away_team);
+  const upcoming=played.filter(g=>Number(g.week)===week);
+  if(upcoming.length<5)continue;
+  const first=Math.min(...upcoming.map(g=>Date.parse(g.start_date)));
+  if(played.filter(g=>Number(g.week)<week&&Date.parse(g.start_date)<first).length<120)continue;
+  const r=evaluate(rows,adv,season,first-1);
+  weekly.push({week,...r.coverage});
+  const team=new Map(r.teams.map(t=>[t.name,t]));
+  for(const g of upcoming){
+   const h=team.get(g.home_team),a=team.get(g.away_team);
    if(!h||!a)continue;
-   const neutral=g.neutral_site==='TRUE',venue=neutral?0:2.5;
-   const homeMargin=+g.home_points-(+g.away_points);
-   const epa=feature(h,'ppaNet',.7)-feature(a,'ppaNet',.7);
-   const success=feature(h,'successNet',.22)-feature(a,'successNet',.22);
-   const explosive=feature(h,'explosiveNet',.13)-feature(a,'explosiveNet',.13);
+   const home=r.signals.get(h.name),away=r.signals.get(a.name);
+   const x=[h.power-a.power,...keys.slice(1).map(k=>home[k]-away[k])];
    observations.push({
-    year,week,homeMargin,neutral,
-    outcome:+(+g.home_points>+g.away_points),
-    baseline:h.power-a.power,
-    // Standardized coefficient units: one feature ~= representative team gap.
-    x:[(h.power-a.power),epa/.10,success/.05,explosive/.03],
-    raw:[epa,success,explosive],venue,advancedAvailable:r.coverage.full
+    year:season,week,neutral:g.neutral_site==='TRUE',
+    margin:+g.home_points-(+g.away_points),actual:+(+g.home_points>+g.away_points),
+    baseline:h.power-a.power,x,
+    advancedAvailable:r.coverage.full
    });
   }
  }
- if(observations.length<300)throw Error('Too few eligible walk-forward games '+year+': '+observations.length);
- return {observations,coverage};
+ if(observations.length<(season===2026?180:350))throw Error('Insufficient historical samples '+season);
+ return {observations,weekly};
 }
-function solveLinear(A,b){
- const n=b.length;const matrix=A.map((row,i)=>[...row,b[i]]);
- for(let k=0;k<n;k++){
-   let pivot=k;for(let j=k+1;j<n;j++)if(Math.abs(matrix[j][k])>Math.abs(matrix[pivot][k]))pivot=j;
-   [matrix[k],matrix[pivot]]=[matrix[pivot],matrix[k]];
-   const d=matrix[k][k];if(Math.abs(d)<1e-9)throw Error('Singular ridge normal matrix');
-   for(let q=k;q<=n;q++)matrix[k][q]/=d;
-   for(let j=0;j<n;j++)if(j!==k){const w=matrix[j][k];for(let q=k;q<=n;q++)matrix[j][q]-=w*matrix[k][q];}
- }
- return matrix.map(x=>x[n]);
-}
-function fitRidge(obs){
- // Prior center: preserve model's 1-to-1 points-scale baseline, and require
- // measured gain before coefficients for correlated EPA/success/explosive inputs.
- const lambda=[120,850,850,1100],prior=[1,0,0,0],n=4;
- const A=Array.from({length:n},()=>Array(n).fill(0));
- const b=Array(n).fill(0);
- for(let i=0;i<n;i++){A[i][i]=lambda[i];b[i]=lambda[i]*prior[i];}
- for(const g of obs){
-  const target=g.homeMargin-g.venue;
+function fitPositiveRidge(rows){
+ // Positive performance signals are allowed to increase strength, never
+ // perversely reduce it. Strong shrinkage handles correlated EPA, success,
+ // finishing, offensive scoring and other features.
+ const ridge=[100,350,390,480,650,720,690,900,900];
+ const prior=[1,0,0,0,0,0,0,0,0];
+ const beta=prior.slice(),n=keys.length;
+ for(let iter=0;iter<2500;iter++){
+  let changed=0;
   for(let i=0;i<n;i++){
-    b[i]+=g.x[i]*target;
-    for(let j=0;j<n;j++)A[i][j]+=g.x[i]*g.x[j];
+   let numer=ridge[i]*prior[i],denom=ridge[i];
+   for(const g of rows){
+    const current=beta.reduce((v,b,j)=>v+b*g.x[j],0);
+    const residual=g.margin-(g.neutral?0:2.5)-current+beta[i]*g.x[i];
+    numer+=g.x[i]*residual;denom+=g.x[i]*g.x[i];
+   }
+   const proposed=numer/denom;
+   const next=i===0?clamp(proposed,.70,1.50):clamp(proposed,0,5);
+   changed=Math.max(changed,Math.abs(next-beta[i]));beta[i]=next;
   }
+  if(changed<1e-8)break;
  }
- const raw=solveLinear(A,b);
- // Bounds protect predictions from instability and correlated feature swings.\n // Constrain positive-play-quality factors to monotone nonnegative effects;\n // any sign-reversed fitted coefficient is shrunk all the way to zero.
- const c=[Math.max(.7,Math.min(1.45,raw[0])),
-   Math.max(0,Math.min(5,raw[1])),
-   Math.max(0,Math.min(4,raw[2])),
-   Math.max(0,Math.min(3,raw[3]))];
- return {baseScale:c[0],epa:c[1]/.10,success:c[2]/.05,explosive:c[3]/.03,
-  rawFittedCoefficients:raw,shrinkagePenalties:lambda,usableAdvancedGames:obs.filter(g=>g.advancedAvailable).length};
+ const p=Object.fromEntries(keys.map((k,i)=>[k==='baseline'?'baseScale':k,beta[i]]));
+ const home=rows.filter(g=>!g.neutral);
+ const residual=home.reduce((sum,g)=>sum+g.margin-
+  predictedEdge(g,{...p,homePoints:0}),0);
+ p.homePoints=clamp((residual+100*2.5)/(home.length+100),0,6);
+ return {...p,shrinkagePenalties:ridge};
 }
-const clamp=(x,lo,hi)=>Math.max(lo,Math.min(hi,x));
-function predictedEdge(g,p){
- const corr=clamp(p.epa*g.raw[0]+p.success*g.raw[1]+p.explosive*g.raw[2],-16,16);
- return p.baseScale*g.baseline+corr+(g.neutral?0:(p.homePoints??2.5));
+function predictedEdge(g,p,cap=capCorrection){
+ const advanced=keys.slice(1).reduce((sum,k,i)=>sum+(p[k]||0)*g.x[i+1],0);
+ return (p.baseScale||1)*g.baseline+clamp(advanced,-cap,cap)+
+    (g.neutral?0:(p.homePoints??2.5));
 }
-function trainCalibration(obs,p){
- // One-dimensional, monotonic link fitted on previous-season game outcomes.
+function calibration(rows,p,cap=capCorrection){
  let best={scale:12,loss:Infinity};
- for(let s=6;s<=25;s+=.25){
-  const loss=mean(obs.map(g=>{
-   const prob=clamp(sigmoid(predictedEdge(g,p)/s),.0001,.9999);
-   return -(g.outcome*Math.log(prob)+(1-g.outcome)*Math.log(1-prob));
+ for(let scale=6;scale<=25;scale+=.25){
+  const loss=mean(rows.map(g=>{
+   const prob=clamp(sigmoid(predictedEdge(g,p,cap)/scale),1e-5,1-1e-5);
+   return -(g.actual*Math.log(prob)+(1-g.actual)*Math.log(1-prob));
   }));
-  if(loss<best.loss)best={scale:s,loss};
+  if(loss<best.loss)best={scale,loss};
  }
- return best;
+ return best.scale;
 }
-function stats(obs,p,scale){
- const m={games:obs.length,accuracy:0,brier:0,logLoss:0,marginMAE:0,marginRMSE:0,early:0,late:0,advancedGames:0};
- for(const g of obs){
-  const margin=predictedEdge(g,p),win=clamp(sigmoid(margin/scale),.0001,.9999);
-  const err=margin-g.homeMargin;
-  m.accuracy+=+( (margin>=0)===Boolean(g.outcome));
-  m.brier+=(win-g.outcome)**2;
-  m.logLoss-=g.outcome*Math.log(win)+(1-g.outcome)*Math.log(1-win);
-  m.marginMAE+=Math.abs(err);m.marginRMSE+=err*err;
-  if(g.advancedAvailable)m.advancedGames++;
+function results(rows,p,scale,cap=capCorrection){
+ let wins=0,brier=0,logLoss=0,mae=0,mse=0;
+ for(const g of rows){
+  const margin=predictedEdge(g,p,cap),pr=clamp(sigmoid(margin/scale),1e-5,1-1e-5);
+  wins+=Number((margin>=0)===Boolean(g.actual));
+  brier+=(pr-g.actual)**2;
+  logLoss-=g.actual*Math.log(pr)+(1-g.actual)*Math.log(1-pr);
+  mae+=Math.abs(margin-g.margin);mse+=(margin-g.margin)**2;
  }
- for(const k of ['accuracy','brier','logLoss','marginMAE'])m[k]/=m.games;
- m.marginRMSE=Math.sqrt(m.marginRMSE/m.games);
- return m;
+ return {games:rows.length,accuracy:wins/rows.length,brier:brier/rows.length,
+  logLoss:logLoss/rows.length,marginMAE:mae/rows.length,marginRMSE:Math.sqrt(mse/rows.length)};
 }
-const train=rawSnapshots(2024),test=rawSnapshots(2025);
-const baseline={baseScale:1,epa:0,success:0,explosive:0};
-const fitted=fitRidge(train.observations);
-const homeGames=train.observations.filter(g=>!g.neutral);
-const homeResidual=homeGames.reduce((total,g)=>total+g.homeMargin-
-  (fitted.baseScale*g.baseline+clamp(
-    fitted.epa*g.raw[0]+fitted.success*g.raw[1]+fitted.explosive*g.raw[2],-16,16)),0);
-// Empirical venue advantage with 100-pseudo-game shrinkage toward the neutral
-// 2.5-point literature-informed baseline, fitted on 2024 only.
-fitted.homePoints=clamp((homeResidual+100*2.5)/(homeGames.length+100),0,6);
-
-const calibratedCandidate=trainCalibration(train.observations,fitted);
-const calibratedBaseline=trainCalibration(train.observations,baseline);
-function pairedBlockBootstrap(obs,p1,s1,p0,s0){
- // Weekly blocks are the resampling units because game outcomes within a week
- // are correlated through shared opponent-strength estimates and other shocks.
- const byWeek=new Map();
- for(const g of obs){if(!byWeek.has(g.week))byWeek.set(g.week,[]);byWeek.get(g.week).push(g)}
- const blocks=[...byWeek.values()],out={logLoss:[],marginMAE:[],accuracy:[]};
- let seed=20261108;
- function random(){seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296}
- const component=(g,p,s)=>{
-  const edge=predictedEdge(g,p),prob=clamp(sigmoid(edge/s),.0001,.9999);
-  return {ll:-(g.outcome*Math.log(prob)+(1-g.outcome)*Math.log(1-prob)),
-   mae:Math.abs(g.homeMargin-edge),hit:Number((edge>=0)===Boolean(g.outcome))};
- };
- const diffs=blocks.map(b=>b.map(g=>{
-  const c=component(g,p1,s1),v=component(g,p0,s0);
-  return {ll:v.ll-c.ll,mae:v.mae-c.mae,hit:c.hit-v.hit};
- }));
- for(let iter=0;iter<1500;iter++){
-  const sum={ll:0,mae:0,hit:0},n={count:0};
-  for(let z=0;z<blocks.length;z++){
-   const block=diffs[Math.floor(random()*blocks.length)];
-   for(const a of block){sum.ll+=a.ll;sum.mae+=a.mae;sum.hit+=a.hit;n.count++}
+function bootstrap(test,modern,modernS,old,oldS){
+ const weeks=[...new Set(test.map(x=>x.week))],byWeek=new Map(weeks.map(w=>[w,test.filter(g=>g.week===w)]));
+ const vals={logLoss:[],marginMAE:[],accuracy:[]};let seed=20261108;
+ const rand=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};
+ for(let rep=0;rep<1200;rep++){
+  let n=0,logLoss=0,marginMAE=0,accuracy=0;
+  for(let i=0;i<weeks.length;i++){
+   const group=byWeek.get(weeks[Math.floor(rand()*weeks.length)]);
+   for(const g of group){
+    const a=predictedEdge(g,modern),b=predictedEdge(g,old);
+    const pa=clamp(sigmoid(a/modernS),1e-5,1-1e-5),pb=clamp(sigmoid(b/oldS),1e-5,1-1e-5);
+    const la=-(g.actual*Math.log(pa)+(1-g.actual)*Math.log(1-pa));
+    const lb=-(g.actual*Math.log(pb)+(1-g.actual)*Math.log(1-pb));
+    logLoss+=lb-la;marginMAE+=Math.abs(g.margin-b)-Math.abs(g.margin-a);
+    accuracy+=Number((a>=0)===Boolean(g.actual))-Number((b>=0)===Boolean(g.actual));n++;
+   }
   }
-  out.logLoss.push(sum.ll/n.count);
-  out.marginMAE.push(sum.mae/n.count);
-  out.accuracy.push(sum.hit/n.count);
+  vals.logLoss.push(logLoss/n);vals.marginMAE.push(marginMAE/n);vals.accuracy.push(accuracy/n);
  }
- function interval(a){a.sort((x,y)=>x-y);return {lower95:a[Math.floor(.025*a.length)],upper95:a[Math.floor(.975*a.length)]}}
- return {resamplingUnit:'week',iterations:1500,validationWeeks:blocks.length,
-  improvementPositiveForCandidate:true,
-  logLoss:interval(out.logLoss),marginMAE:interval(out.marginMAE),accuracy:interval(out.accuracy)};
+ const interval=arr=>{arr.sort((x,y)=>x-y);return {lower95:arr[Math.floor(.025*arr.length)],
+   upper95:arr[Math.floor(.975*arr.length)]}};
+ return {method:'paired week-block bootstrap',samples:1200,weekCount:weeks.length,
+  positiveIndicatesImprovement:true,logLoss:interval(vals.logLoss),
+  marginMAE:interval(vals.marginMAE),accuracy:interval(vals.accuracy)};
 }
-
-const candidateTest=stats(test.observations,fitted,calibratedCandidate.scale);
-const baselineTest=stats(test.observations,baseline,calibratedBaseline.scale);
-const candidateTrain=stats(train.observations,fitted,calibratedCandidate.scale);
-const baselineTrain=stats(train.observations,baseline,calibratedBaseline.scale);
-const uncertainty=pairedBlockBootstrap(test.observations,fitted,calibratedCandidate.scale,baseline,calibratedBaseline.scale);
-const advancedAvailable= train.observations.filter(x=>x.advancedAvailable).length>=150;
-const acceptable=advancedAvailable && candidateTest.logLoss<baselineTest.logLoss-.0001 &&
-  candidateTest.marginMAE<=baselineTest.marginMAE-.25;
-// Select only after a true later-season test; no V5 candidate is assumed better.
-const deployed=acceptable?fitted:baseline,scale=acceptable?calibratedCandidate.scale:calibratedBaseline.scale;
-const evidence={
- version:'5.0.0',generatedAtUtc:new Date().toISOString(),
- methodology:'Train on 2024 weekly next-game FBS vs FBS margins; validate on previously untouched 2025 weeks 5-13. No 2026 outcomes in training; source advanced games always filtered to previous played game IDs. Fixed ridge priors and bounded corrections; the venue edge is estimated with 100 pseudo-games of shrinkage using 2024 only.',
- trainSeason:2024,validationSeason:2025,trainingGames:train.observations.length,
- validationGames:test.observations.length,
- advancedTrainingGames:train.observations.filter(x=>x.advancedAvailable).length,
- deployedCandidate:acceptable?'regularized_efficiency':'margin_baseline_only',
- reason:acceptable?'2025 held-out log loss improved and margin MAE did not meaningfully degrade':
-  'Conservative baseline: efficiency improvement not established on untouched 2025 season.',
- parameters:{
-  baseScale:deployed.baseScale,epa:deployed.epa,success:deployed.success,
-  explosive:deployed.explosive,homePoints:deployed.homePoints??2.5,
-  logisticScale:scale,source:acceptable?'historical_2024_ridge_2025_validated':'historical_2024_baseline_2025_validated',
-  trainedOn:[2024],validatedOn:[2025]
- },
- probabilitiesCalibrated:true,
+const train=readSeason(2024),test=readSeason(2025);
+const candidate=fitPositiveRidge(train.observations);
+const base={baseScale:1,homePoints:2.5};
+const previous={
+ baseScale:1.2359402338491845,epa:0,
+ success:13.554077261006876*.05,
+ explosive:11.844451681279617*.03,
+ homePoints:3.540379938213802
+};
+// The V5 model was already selected with this same 2025 set. We compare
+// transparently as a reference, not an untouched external holdout.
+const candidateS=calibration(train.observations,candidate);
+// Prospective 2026 as-of-week evaluation, never used to train, tune or select.
+const prospective=readSeason(2026);
+const baseS=calibration(train.observations,base);
+const previousS=8.75;
+const test2026Candidate=results(prospective.observations,candidate,candidateS);
+const test2026Previous=results(prospective.observations,previous,previousS,8);
+const test2026Baseline=results(prospective.observations,base,baseS);
+const trainCandidate=results(train.observations,candidate,candidateS);
+const testCandidate=results(test.observations,candidate,candidateS);
+const testBase=results(test.observations,base,baseS);
+const testPrevious=results(test.observations,previous,previousS,8);
+// Gating prevents expanding the model merely to use a wider feature list.
+// Every factor is evaluated; a zero coefficient legitimately means no
+// independent predictive value was established with the available data.
+const winsBase=testCandidate.logLoss<testBase.logLoss &&
+ testCandidate.marginMAE<testBase.marginMAE-.20;
+const winsPrevious=testCandidate.logLoss<=testPrevious.logLoss+.001 &&
+ testCandidate.marginMAE<=testPrevious.marginMAE-.10;
+const useCandidate=winsBase&&winsPrevious;
+const selected=useCandidate?candidate:previous;
+const selectedS=useCandidate?candidateS:previousS;
+const chosen=useCandidate?'full_spectrum_regularized':'validated_v5_reference';
+const params={...Object.fromEntries(keys.slice(1).map(k=>[k,selected[k]||0])),
+ baseScale:selected.baseScale,homePoints:selected.homePoints,logisticScale:selectedS,
+ source:chosen,trainedOn:[2024],validatedOn:[2025]};
+const audit={
+ version:'5.1.0',generatedAtUtc:new Date().toISOString(),
+ methodology:'Season-only walk-forward snapshots. 2024 weeks 5–13 train ridge-regularized nonnegative performance factors, then 2025 weeks 5–13 compare against season-only baseline and prior V5. No future games enter any snapshot or ratings. 2025 reused for model selection, not an untouched final test.',
+ featureKeys:keys,
+ trainSeason:2024,validationSeason:2025,
+ trainingGames:train.observations.length,validationGames:test.observations.length,prospective2026Games:prospective.observations.length,
+ deployedCandidate:chosen,
+ selectionReason:useCandidate?'Full-spectrum candidate improved margin MAE and met log-loss gates against the baseline and V5 reference.':'Use existing V5 reference; full-spectrum candidate did not meet the predeclared margin and log-loss validation gates.',
+ parameters:params,probabilitiesCalibrated:true,
  validation:{
-   candidate2025:candidateTest,baseline2025:baselineTest,
-   candidateTrain2024:candidateTrain,baselineTrain2024:baselineTrain,
-   candidateProbabilityScale:calibratedCandidate.scale,
-   baselineProbabilityScale:calibratedBaseline.scale,
-   candidateCoefficients:fitted,
-   pairedWeeklyBootstrap2025:uncertainty
+  candidate2025:testCandidate,baseline2025:testBase,previousV5_2025:testPrevious,
+  candidate2026:test2026Candidate,previousV5_2026:test2026Previous,baseline2026:test2026Baseline,
+  candidateTrain2024:trainCandidate,
+  candidateCoefficients:candidate,
+  pairedWeeklyBootstrap2025:bootstrap(test.observations,candidate,candidateS,previous,previousS),
+  coverage2024:train.weekly,coverage2025:test.weekly,coverage2026:prospective.weekly
  },
  caveats:[
-  '2025 determined model selection and is not reusable as a clean final holdout for additional iterative tuning.',
-  'Paired week-block bootstrap uncertainty ranges are reported; an apparent small win-rate improvement must not be interpreted as statistically established.',
-  'Calibrated only with a fitted one-dimensional sigmoid scale; inspect season-by-season reliability diagrams.',
-  'Initial-season predictions have higher uncertainty, but no preseason or recruiting prior enters CFMI.',
-  'Model excludes injuries, personnel changes, betting market, third-party ratings and FCS-vs-FCS results.'
+  '2025 was used to select both the prior V5 and this expanded candidate; this is an iterative out-of-time comparison, not an unbiased final holdout.',
+  '2026 weekly results are prospectively evaluated as of the available cutoff but not used to fit, choose or recalibrate the model; retrospective source corrections can still affect reconstructed as-of values.',
+  'Red-zone finishing and game control may be less stable than EPA/success; coefficients shrink or reach zero when incremental signal is not established.',
+  'Offensive and defensive scoring diagnostics overlap the game-margin baseline; regularization prevents double-counted strength.',
+  'Neither recruiting, conferences, betting markets, polls nor preseason team priors determine ratings.',
+  'Probabilities are calibrated only through a monotone 2024-trained link; 2025 is evaluation/model-selection data.'
  ]
 };
-fs.writeFileSync(path.join(DIR,'model_v5_params.json'),JSON.stringify(evidence,null,2)+'\n');
-fs.writeFileSync(path.join(DIR,'backtest_v5.json'),JSON.stringify(evidence,null,2)+'\n');
-console.log('CFMI V5 TRAINING + 2025 HOLDOUT',JSON.stringify({
- train:train.observations.length,test:test.observations.length,advancedAvailable,
- selected:evidence.deployedCandidate,coefficients:evidence.parameters,
- training:{candidate:candidateTrain,baseline:baselineTrain},
- validation:{candidate:candidateTest,baseline:baselineTest}
+fs.writeFileSync(path.join(DIR,'model_v5_params.json'),JSON.stringify(audit,null,2)+'\n');
+fs.writeFileSync(path.join(DIR,'backtest_v5.json'),JSON.stringify(audit,null,2)+'\n');
+console.log('CFMI V5.1 POWER COMPARISON',JSON.stringify({
+ training:train.observations.length,validation:test.observations.length,
+ choice:chosen,params,trainCandidate,testCandidate,testPrevious,testBase,
+ prospective2026:{candidate:test2026Candidate,previous:test2026Previous,baseline:test2026Baseline},
+ uncertainty:audit.validation.pairedWeeklyBootstrap2025
 },null,2));

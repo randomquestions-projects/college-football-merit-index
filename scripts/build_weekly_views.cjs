@@ -115,7 +115,7 @@ const matchups=nextWeek===null?[]:future.filter(x=>Number(x.week)===nextWeek)
   };
  }).filter(Boolean);
 const document={
- season:2026,version:'CFMI V5.0 historical/matchups extension',
+ season:2026,version:'CFMI V5.1 historical/matchups extension',
  generatedAtUtc:new Date().toISOString(),
  historicalMode:'RECONSTRUCTED_AS_OF_CUTOFF',
  warning:'Historical rankings use only completed games preceding each weekly cutoff, but are V5 as-of reconstructions from the current sources. They are not immutable original-publication archives; retrospective source revisions can affect historical values.',
