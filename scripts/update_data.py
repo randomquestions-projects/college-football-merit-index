@@ -158,6 +158,34 @@ def main():
             if abs(record["off_ppa"]) > 10 or abs(record["def_ppa"]) > 10:
                 continue
             output.append(record)
+    # Per-week completeness audit: why exactly were some FBS matchups omitted?
+    from collections import Counter, defaultdict
+    covered_ids = {item["game_id"] for item in output}
+    totals, failures, reasons = Counter(), Counter(), Counter()
+    missing_examples = []
+    for g in valid_fbs_games:
+        wk = str(g["week"])
+        totals[wk] += 1
+        if str(g["game_id"]) in covered_ids:
+            continue
+        failures[wk] += 1
+        gid = str(g["game_id"])
+        row_reasons = []
+        for label in ("team", "situational", "turnover"):
+            for side in ("home", "away"):
+                if (gid, str(g[side + "_id"])) not in by_game[label]:
+                    row_reasons.append(label + "_" + side)
+        if not quarter_rows.get((gid, str(g["home_id"]))):
+            row_reasons.append("quarters_home")
+        if not quarter_rows.get((gid, str(g["away_id"]))):
+            row_reasons.append("quarters_away")
+        if not row_reasons:
+            row_reasons.append("missing_or_invalid_measure")
+        reasons.update(row_reasons)
+        missing_examples.append((wk, gid, g["home_team"], g["away_team"], ",".join(row_reasons)))
+    print("CFMI COVERAGE BY WEEK:", [(w, totals[w], totals[w]-failures[w], failures[w]) for w in sorted(totals, key=int)])
+    print("CFMI MISSING REASONS:", reasons.most_common())
+    print("CFMI MISSING GAME EXAMPLES:", missing_examples[:30])
     (DATA / "cfb_schedules_2026.csv").write_bytes(schedule_bytes)
     with (DATA / "cfmi_advanced_2026.csv").open("w", newline="", encoding="utf8") as fh:
         writer = csv.DictWriter(fh, fieldnames=FIELDS)
