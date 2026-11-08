@@ -38,7 +38,14 @@ try:
   keys=[c[0] for c in cols]
   gid=next((k for k in keys if k.lower() in ["game_id","gameid","espn_game_id"]),None)
   if gid:
+   select=["game_id","game_play_number","pos_team_id","homeTeamId","awayTeamId","drive.id","start.TimeSecsRem","start.homeScore","start.awayScore","end.homeScore","end.awayScore","start.yardsToEndzone","start.pos_team.id","homeFinalScore","awayFinalScore","scrimmage_play","rz_play","scoring_opp","pos_score_pts","td_play","fg_made","start.is_home","home_wp_before"]
+   select=[x for x in select if x in keys]
+   fields=", ".join('"'+x.replace('"','""')+'"' for x in select)
    try:
-    print("GEORGIA_PBP_SAMPLES",con.execute(f"select * from read_parquet(?) where CAST({gid} as VARCHAR)='401856741' limit 2",[tmp.name]).fetchdf().to_dict("records"),flush=True)
+    q=f"select {fields} from read_parquet(?) where game_id=401856741 order by game_play_number limit 14"
+    rows=con.execute(q,[tmp.name]).fetchall()
+    print("PBP_SELECTED_FIELDS",select,flush=True)
+    for row in rows: print("GEORGIA_PBP_ROW",dict(zip(select,row)),flush=True)
+    print("PBP_ROWS_COUNT",con.execute("select count(*) from read_parquet(?) where game_id=401856741",[tmp.name]).fetchone(),flush=True)
    except Exception as exc:print("PBP_SAMPLE_ERROR",repr(exc),flush=True)
 except Exception as exc:print("PBP_METADATA_FAIL",repr(exc),flush=True)
