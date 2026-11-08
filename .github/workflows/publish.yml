@@ -40,6 +40,8 @@ jobs:
           python -m pip install numpy==2.2.6 duckdb==1.4.2
           python scripts/train_neutral_wp.py
           python scripts/update_possessions.py
+      - name: Generate historical week-by-week ratings and next-week matchup inputs
+        run: node scripts/build_weekly_views.cjs
       - name: Audit weekly ranking results and data coverage
         run: node scripts/audit_dashboard.cjs
       - name: Verify interactive dashboard in Chromium
