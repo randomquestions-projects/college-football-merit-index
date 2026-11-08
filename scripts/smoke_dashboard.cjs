@@ -28,7 +28,7 @@ async function waitForServer(){
   const names=await page.locator("#body tr[data-team]").allTextContents();
   assert(names.length>=25,"Expected populated Top 50");
   const model=await page.evaluate(()=>({version:MODEL_V5.version,parameters:MODEL_V5.params.source,teamCount:state.teams.length,active:state.fullModel,score:state.teams[0].score,powerScore:state.teams[0].powerScore,powerRank:state.teams[0].powerRank,coreCount:state.advCovered,expected:state.advExpected}));
-  assert(model.version==="5.0.0"&&model.teamCount>=130,"Dual Merit/Power model did not run");
+  assert(model.version==="5.1.0"&&model.teamCount>=130,"Dual Merit/Power model did not run");
   assert(Number.isFinite(model.score)&&Number.isFinite(model.powerScore)&&model.active,"Merit/Power scores not populated");
   await page.locator('#rankingLens [data-lens="power"]').click();
   const powerView=await page.evaluate(()=>({
@@ -44,7 +44,7 @@ async function waitForServer(){
   assert.equal(await page.locator('#rankingLens [data-lens="merit"]').getAttribute('aria-pressed'),"true");
   await page.locator('#pageSwitch [data-page="methodology"]').click();
   assert(await page.locator("#v5MethodSummary").isVisible(),"V5 methodology not visible");
-  assert((await page.locator("#v5MethodSummary").innerText()).includes("75%"),"V5 earned-results weighting is missing");
+  assert((await page.locator("#v5MethodSummary").innerText()).includes("55%"),"V5 earned-results weighting is missing");
   assert(model.coreCount/model.expected>=.70,"Core EPA coverage below required threshold");
   await page.locator('#pageSwitch [data-page="resume"]').click();
   await page.locator("#resumeControls select").first().waitFor();
