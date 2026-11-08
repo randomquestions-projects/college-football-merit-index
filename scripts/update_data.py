@@ -59,7 +59,7 @@ def unit(x):
         return x / 100
     return x
 
-def key(record, team_key="pos_team"):
+def key(record, team_key="pos_team_id"):
     return str(record.get("game_id", "")).strip(), str(record.get(team_key, "")).strip()
 
 def game_control(grouped, game_id, own_id, opp_id):
@@ -103,8 +103,6 @@ def main():
             _, rows = fetch_csv(f"{RELEASE}/{tag}/{filename}")
             advanced[label] = rows
             print("Advanced source", label, len(rows), "rows")
-            print("SCHEMA", label, list(rows[0].keys()))
-            print("KEY_SAMPLE", label, {k: rows[0].get(k) for k in ("game_id","pos_team","team_id","team","period","value","EPA_per_play","EPA_success_rate")})
         except Exception as exc:
             advanced[label] = []
             errors[label] = repr(exc)
@@ -112,7 +110,7 @@ def main():
     by_game = {}
     for label in ("team", "situational", "turnover"):
         by_game[label] = {key(r): r for r in advanced[label]
-                          if r.get("game_id") and r.get("pos_team")}
+                          if r.get("game_id") and r.get("pos_team_id")}
     quarter_rows = {}
     for r in advanced["quarters"]:
         quarter_rows.setdefault(key(r, "team_id"), []).append(r)
