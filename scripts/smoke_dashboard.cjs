@@ -28,7 +28,7 @@ async function waitForServer(){
   const names=await page.locator("#body tr[data-team]").allTextContents();
   assert(names.length>=25,"Expected populated Top 50");
   const model=await page.evaluate(()=>({version:MODEL_V5.version,parameters:MODEL_V5.params.source,teamCount:state.teams.length,active:state.fullModel,score:state.teams[0].score,powerScore:state.teams[0].powerScore,powerRank:state.teams[0].powerRank,coreCount:state.advCovered,expected:state.advExpected}));
-  assert(model.version==="5.1.0"&&model.teamCount>=130,"Dual Merit/Power model did not run");
+  assert(model.version==="5.2.0"&&model.teamCount>=130,"Dual Merit/Power model did not run");
   assert(Number.isFinite(model.score)&&Number.isFinite(model.powerScore)&&model.active,"Merit/Power scores not populated");
   await page.locator('#rankingLens [data-lens="power"]').click();
   const powerView=await page.evaluate(()=>({
