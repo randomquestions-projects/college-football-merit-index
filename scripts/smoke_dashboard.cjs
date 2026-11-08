@@ -42,7 +42,7 @@ async function waitForServer(){
   assert.equal(powerView.top50,50,"Power Top 50 filter is not independent of Merit");
   await page.locator('#rankingLens [data-lens="merit"]').click();
   assert.equal(await page.locator('#rankingLens [data-lens="merit"]').getAttribute('aria-pressed'),"true");
-  await page.locator('a[href="#method"]').first().click();
+  await page.locator('#pageSwitch [data-page="methodology"]').click();
   assert(await page.locator('.method-lens-card').count()===2,"Both methodologies must be visible");
   assert((await page.locator('.method-lens-card').nth(1).innerText()).includes("65%"),"Power methodology weight is missing");
   assert(model.coreCount/model.expected>=.70,"Core EPA coverage below required threshold");
