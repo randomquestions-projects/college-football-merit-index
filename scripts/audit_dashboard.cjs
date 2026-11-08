@@ -11,11 +11,12 @@ const prelude=m[1].slice(0,boundary);
 const model=fs.readFileSync(path.join(base,'model_v4.js'),'utf8')+'\n'+fs.readFileSync(path.join(base,'model_v5.js'),'utf8');
 const doc=JSON.parse(fs.readFileSync(path.join(data,'model_v5_params.json'),'utf8'));
 const history=JSON.parse(fs.readFileSync(path.join(data,'weekly_views_2026.json'),'utf8'));
-assert.equal(doc.version,'5.0.0');
+assert.equal(doc.version,'5.1.0');
 assert.deepEqual(doc.parameters.trainedOn,[2024]);
 assert.deepEqual(doc.parameters.validatedOn,[2025]);
 assert(doc.trainingGames>=300&&doc.validationGames>=300);
-assert(doc.validation?.baseline2025?.logLoss>0);
+assert(doc.validation?.baseline2025?.logLoss>0&&doc.validation?.previousV5_2025?.logLoss>0);
+assert(doc.parameters.finishing>=0&&doc.parameters.consistency>=0&&doc.parameters.offense>=0&&doc.parameters.defense>=0);
 const body=prelude+[
 "if(!MODEL_V5.setParameters(parameters))throw Error('Model parameters invalid');",
 "const records=csvParse(scores),advanced=csvParse(advCsv);",
@@ -31,7 +32,7 @@ const compute=new Function('scores','advCsv','parameters','cutoff',model+'\n'+bo
 const csv=fs.readFileSync(path.join(data,'cfb_schedules_2026.csv'),'utf8');
 const adv=fs.readFileSync(path.join(data,'cfmi_advanced_2026.csv'),'utf8');
 const latest=compute(csv,adv,doc,Date.now());
-assert.equal(latest.version,'5.0.0');
+assert.equal(latest.version,'5.1.0');
 assert(latest.gameCount>=300,'Expected substantial 2026 games');
 assert(latest.teams.length>=130,'Expected complete FBS coverage');
 assert(latest.coverage.eligible>=300,'Missing advanced data eligibility');
@@ -74,7 +75,7 @@ for(const game of history.upcoming.games||[]){
  }else assert.equal(game.homeWinProbability,null);
 }
 const output={
- modelVersion:'5.0.0',generatedAtUtc:new Date().toISOString(),
+ modelVersion:'5.1.0',generatedAtUtc:new Date().toISOString(),
  provenance:{trainSeason:doc.trainSeason,validationSeason:doc.validationSeason,
   selected:doc.deployedCandidate,validation:doc.validation},
  coverage:latest.coverage,totalGames:latest.gameCount,teamCount:latest.teams.length,
@@ -85,7 +86,7 @@ fs.writeFileSync(path.join(data,'cfmi_ranking_audit.json'),JSON.stringify(output
 console.log('CFMI V5 AUDIT PASSED',JSON.stringify({
  games:latest.gameCount,teams:latest.teams.length,coverage:latest.coverage,
  weeks:history.history.length,matchups:history.upcoming.games?.length||0,
- selection:doc.deployedCandidate,heldout2025:{
+ selection:doc.deployedCandidate,legacyReference:doc.validation.previousV5_2025,heldout2025:{
   candidate:doc.validation.candidate2025,baseline:doc.validation.baseline2025
  }
 },null,2));
