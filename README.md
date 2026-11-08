@@ -1,4 +1,87 @@
-# College Football Merit Index — CFMI V4.1 (Merit + Predictive Power)
+# College Football Merit Index — CFMI V5
+
+**Public dashboard:** https://randomquestions-projects.github.io/college-football-merit-index/  
+**Status:** V5 upgrade lives on feature branch \`feature/weekly-history-and-matchups\`; production currently stays on V4.1 until the full GitHub Actions evaluation and browser audit pass and the pull request merges.  
+**Research design:** [CFMI V5 statistical methodology audit](docs/CFMI_V5_statistical_design_review.md)
+
+CFMI is a **season-only, brand-neutral college football assessment** with two different answers:
+
+**Merit** — *What has a team actually earned through its season's results?*  
+**Power** — *How good is the team in a hypothetical future matchup?*
+
+Neither final score uses AP/CFP votes, FPI, SP+, FEI, recruiting, preseason rankings, bookmaker lines, conference prestige, or the school's name to allocate ranking points. External systems are comparison-only.
+
+## V5 index formulas
+
+### Merit — normative résumé criterion, not trained to predict the next winner
+
+| Factor | Weight | Interpretation |
+|---|---:|---|
+| Schedule-adjusted results | **75%** | Actual wins minus expected wins for a neutral top-25-strength benchmark facing the same schedule; an opponent/venue-adjusted season achievement |
+| Residual quality of results | **15%** | Game outcome surprise weighted by strong-opponent difficulty, then residualized against overall WAB to reduce double counting |
+| Opponent-adjusted game control | **10%** | Diminishing-return scoring-margin evidence with venue/opponent context and games-played shrinkage |
+
+Per-game expected results already adjust venue and opponent strength. **V5 removes V4's arbitrary 1.52× road and 1.16× neutral signature-win multipliers** from scoring; diagnostic views may still display the old quality statistics, clearly labeled as such. Margin and advanced efficiency no longer dominate a result-focused résumé. Historical weekly benchmarks are recalculated using **only games before that week's cutoff**, rather than borrowing later game results.
+
+Merit factor score transformations are documented in \`site/model_v5.js\`. Its 75/15/10 weights are intentionally values-based **research assumptions**; they are not asserted to be mathematically optimal or calibrated against polls. There is no objectively observed “correct résumé rank” training label. Validation should emphasize transparent counterfactuals and blinded expert pairwise judgements, not next-game accuracy alone.
+
+### Power — predictive strength on an expected-points scale
+
+A season-only neutral-start, regularized SRS + Elo power baseline estimates relative game strength. Additional **opponent-adjusted, shrinkage-corrected** net EPA/play, play success rate, and explosive rate enter only when **2024 weekly training and 2025 out-of-time validation** establish incremental predictive value beyond the simpler baseline.
+
+Conceptually:
+
+\`\`\`
+Power margin vs. average FBS team (points)
+  = fitted baseline coefficient × season-only SRS/Elo strength
+    + clipped [EPA coefficient × adjusted net EPA
+               + success coefficient × adjusted net success rate
+               + explosive coefficient × adjusted net explosive rate]
+
+Power Index (0–100) = clip(50 + 1.6 × Power points, 0, 100)
+\`\`\`
+
+**A Power index point is not a win probability.** The matchmaking pipeline uses underlying points ratings (plus 2.5 points for the home venue when applicable), then a historical logistic calibration fitted on 2024 and evaluated on 2025. Only verified probabilities appear; otherwise the view shows a directional winner pick without a percentage.
+
+We fit ridge-regularized coefficients with constrained ranges to control highly correlated play-quality signals. If the holdout log loss does not beat the baseline, or margin error meaningfully worsens, the deployed parameters revert to the baseline rather than assuming additional complexity is always better. The published \`site/data/model_v5_params.json\` and \`site/data/backtest_v5.json\` include the objective validation results, accepted/rejected choice, sample sizes, data coverage, fitted parameters, and training/validation years. **Model selection on 2025 means 2025 is no longer a pristine final benchmark for any future V5 tuning**; a new season or later disjoint holdout is needed for an unbiased further assessment.
+
+### Data and uncertainty
+
+- All models use **2026 completed-game observations** as of the published weekly cutoff; 2024 historical results are used only to fit general coefficient and probability-scale parameters, not to seed team or conference rankings.
+- League-wide advanced data coverage and each team's actual number of measured games are displayed. Missing data trigger conservative shrinkage or a baseline-only fallback, rather than invented advanced statistics.
+- Sparse early-season game schedules produce uncertain relative team strengths. Current site exposes a low/moderate/season-sample evidence label; the label is qualitative, not an unearned confidence interval.
+- Opponent adjustment is cross-sectional and recomputed as of each period. Strong opponents' future outcomes can change **a later** rank but cannot leak into **an earlier** historical snapshot.
+
+## Six dashboard tabs
+
+| Tab | Behavior |
+|---|---|
+| **Rankings** | Current-week Merit or Power Top 25/50/All FBS, sorting, full team breakdown |
+| **Compare Rankings** | Both CFMI rankings vs. AP, CFP, ESPN FPI, SP+ and FEI, with filters and separately dated sources |
+| **Compare Teams** | Up to five teams, résumé/performance metrics, wins and common opponents |
+| **Historical Results** | Two Top 25 movement tables (Merit and Power) plus week selection and full-team season-to-date ratings |
+| **Matchups** | Next week's verified FBS-vs-FBS schedule, both CFMI scores, Power-based winner/optional probability, statistical comparison and three actionable keys |
+| **Methodology** | V5 formulas, validation, source lineage, limits and archived V4.1 reference methodology |
+
+**Historical integrity:** V5 historical results are *reconstructed as-of cutoff* using all completed games then and currently available source files, not a claim to reproduce the exact published bytes and original source-release times from earlier dates. The next improvement is an immutable archive of weekly original publications with dated source versions and model SHAs.
+
+## Build and verification
+
+The [GitHub Actions workflow](.github/workflows/publish.yml) downloads 2026 public schedules and enriched advanced team-game data, validates historical seasons, fits/validates V5, produces weekly data and predictions, audits score/rank and cutoff invariants, runs V4 benchmarks and Chromium smoke checks, then publishes only after all gates succeed on \`main\`. A pull request invokes the same checks **without deploying** the site.
+
+\`\`\`sh
+# Run once source data from the normal data-refresh job are present:
+node scripts/train_v5.cjs
+node scripts/build_weekly_views.cjs
+node scripts/audit_dashboard.cjs
+\`\`\`
+
+---
+## Archived CFMI V4.1 methodology (superseded after V5 deployment)
+
+The historical information below describes V4.1 for auditability. Its 30/20/15/35 Merit and 65/20/10/5 Power percentages are **not V5 production methodology**.
+
+### Archived original README — CFMI V4.1
 
 **Public dashboard:** https://randomquestions-projects.github.io/college-football-merit-index/
 
