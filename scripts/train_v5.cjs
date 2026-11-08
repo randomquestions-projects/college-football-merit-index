@@ -160,7 +160,7 @@ const prospective=readSeason(2026);
 const baseS=calibration(train.observations,base);
 const previousS=8.75;
 const test2026Candidate=results(prospective.observations,candidate,candidateS);
-const test2026Previous=results(prospective.observations,previous,previousS,8);
+const test2026Previous=results(prospective.observations,previous,previousS,10);
 const test2026Baseline=results(prospective.observations,base,baseS);
 const trainCandidate=results(train.observations,candidate,candidateS);
 const testCandidate=results(test.observations,candidate,candidateS);
@@ -187,7 +187,7 @@ const gameAhead2026={
  trainingSeasons:[2024],selectionSeasons:[2025],
  note:'Reconstructed strict prior-week predictions; source corrections may change retrospectively.',
  games:prospective.observations.map(g=>{
-  const prior=predictedEdge(g,previous,8);
+  const prior=predictedEdge(g,previous,10);
   const expanded=predictedEdge(g,candidate);
   return {gameId:g.gameId,date:g.date,week:g.week,home:g.home,away:g.away,
     neutral:g.neutral,homePoints:g.margin,homeWon:g.actual===1,
@@ -201,9 +201,9 @@ fs.writeFileSync(path.join(DIR,'research_cfmi_2026_pregame.json'),JSON.stringify
 const same2025=test.observations.filter(g=>g.week<=10);
 const same2026=prospective.observations.filter(g=>g.week<=10);
 const breakdown=(sample,p,scale)=>{
- const overall=results(sample,p,scale);
+ const overall=results(sample,p,scale,10);
  const favorites=sample.map(g=>{
-  const edge=predictedEdge(g,p);
+  const edge=predictedEdge(g,p,10);
   const f=sigmoid(Math.abs(edge)/scale);
   const correct=(edge>=0)===Boolean(g.actual);
   return {week:g.week,predictedFavoriteWinProb:f,correct,upset:!correct,edge:Math.abs(edge),homeWon:!!g.actual};
