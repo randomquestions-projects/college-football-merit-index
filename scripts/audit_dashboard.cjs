@@ -19,8 +19,10 @@ return {teams:teams.map(t=>({
  rank:t.rank,team:t.name,score:t.score,record:t.won+'-'+t.lost,
  sorRank:t.sorRank,movRank:t.movRank,qualityRank:t.qualityComponentRank,
  sorPct:t.sor,movPct:t.movPct,qualityPct:t.qualityComponent,effPct:t.effScore,
+ powerRank:t.powerRank,opponentPower:t.power,qualityTop25Wins:t.top25Wins,roadTop25Wins:t.top25RoadWins,
  efficiencyRank:t.effScoreRank,efficiencyScore:t.effScore,
- advancedGames:t.advGames.length,expectedAdvancedGames:t.fbsGames
+ efficiencyDetails:Object.fromEntries(['ppaNet','successNet','explosiveNet','control','redzoneNet','turnoverNet','penaltyNet','consistencyScore'].map(k=>[k,{percentile:t[k+'Pct'],nationalRank:t[k+'Rank'],coverage:t.advMetricCoverage?.[k]}])),
+ advancedGames:t.advCoreGames,expectedAdvancedGames:t.fbsGames
 })),gameCount:games.length,advancedCoverage:{numerator:state.advCovered,denominator:state.advExpected},fourComponentModelActive:state.fullModel};
 `;
 const executor=new Function("scores","advCsv",model+"\n"+body);
