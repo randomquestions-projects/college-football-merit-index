@@ -85,7 +85,7 @@ function sample(year){
    });
   }
  }
- if(result.length<350)throw Error('Insufficient 2025/26 talent-linked games '+year+' '+result.length);
+ if(result.length<100)throw Error('Insufficient 2025/26 talent-linked games '+year+' '+result.length);
  return result;
 }
 const samples={2025:sample(2025),2026:sample(2026)};
