@@ -16,7 +16,7 @@ if(!inline)throw Error('Missing CFMI inline model prelude');
 const boundary=inline[1].indexOf('const submetric=');
 if(boundary<10000)throw Error('CFMI engine prelude moved: update build_weekly_views.cjs');
 const prelude=inline[1].slice(0,boundary);
-const model=fs.readFileSync(path.join(root,'model_v4.js'),'utf8')+'\n'+fs.readFileSync(path.join(root,'model_v5.js'),'utf8');
+const model=fs.readFileSync(path.join(root,'model_v4.js'),'utf8')+'\n'+fs.readFileSync(path.join(root,'opponent_network_research.js'),'utf8')+'\n'+fs.readFileSync(path.join(root,'model_v5.js'),'utf8');
 const parameters=JSON.parse(fs.readFileSync(path.join(root,'data','model_v5_params.json'),'utf8'));
 
 const schedule=fs.readFileSync(path.join(root,'data','cfb_schedules_2026.csv'),'utf8');
@@ -46,7 +46,7 @@ const summarize=t=>{
   name:t.name,conference:t.conference,rank:t.rank,powerRank:t.powerRank,
   score:t.score,powerScore:t.powerScore,won:t.won,lost:t.lost,
   wab:t.wab,sor:t.sor,sos:t.sos,mov:t.mov,
-  quality:t.qualityComponent,eff:t.effScore,meritRecordScore:t.meritRecordScore,meritQualityResidual:t.meritQualityResidual,meritQualityScore:t.meritQualityScore,meritControlScore:t.meritControlScore,powerPoints:t.powerPoints,powerEvidence:t.powerEvidence,
+  quality:t.qualityComponent,eff:t.effScore,meritRecordScore:t.meritRecordScore,meritQualityResidual:t.meritQualityResidual,meritQualityScore:t.meritQualityScore,meritControlScore:t.meritControlScore,powerPoints:t.powerPoints,powerEvidence:t.powerEvidence,powerMode:t.powerMode||'reference',opponentSupportRisk:t.powerOpponentSupportRisk||0,fcsUnderperformance:t.powerFcsUnderperformance||0,powerBreakdown:t.powerContributionPoints,
   opponentStrength:t.power,baselineRank:t.baselinePowerRank,
   ppaNet:t.ppaNet,successNet:t.successNet,explosiveNet:t.explosiveNet,
   off:t.off,def:t.def,top25Wins:t.top25Wins,
@@ -115,7 +115,7 @@ const matchups=nextWeek===null?[]:future.filter(x=>Number(x.week)===nextWeek)
   };
  }).filter(Boolean);
 const document={
- season:2026,version:'CFMI V5.1 historical/matchups extension',
+ season:2026,version:'CFMI V5.2 historical/matchups extension',
  generatedAtUtc:new Date().toISOString(),
  historicalMode:'RECONSTRUCTED_AS_OF_CUTOFF',
  warning:'Historical rankings use only completed games preceding each weekly cutoff, but are V5 as-of reconstructions from the current sources. They are not immutable original-publication archives; retrospective source revisions can affect historical values.',

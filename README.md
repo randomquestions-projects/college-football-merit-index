@@ -1,10 +1,23 @@
-# College Football Merit Index — CFMI V5.1
+# College Football Merit Index — CFMI V5.2
 
 **Live dashboard:** https://randomquestions-projects.github.io/college-football-merit-index/  
 **Statistical design:** [CFMI V5.1 model changes](docs/CFMI_V5_1_model_notes.md)  
 **Release:** Feature branch `feature/v5-1-resume-and-power-depth`; merge only after the historical workflow and browser tests pass.
 
 CFMI ranks every FBS program using two deliberately different systems. Neither uses AP/CFP, SP+, FPI, FEI, school reputation, recruiting, conference-status bonuses, betting lines or preseason team-specific strength as scoring inputs.
+
+
+## V5.2 opponent-strength correction
+
+**Power is now estimated relative to the quality of actual played opponents at every stage**, without giving a boost to the SEC, Big Ten or any other conference by name.
+
+The new Power engine simultaneously estimates team offense and defense versus opponents across the completed-game graph for EPA/PPA, successful plays and explosive gains; high performance against weak defenses is no longer treated as equivalent to the same performance against strong defenses. Additional schedule-support corrections are only accepted when historical future-game validation supports them. Narrow FCS wins add cautious negative evidence; blowing out FCS opponents cannot generate extra Power points. Merit remains unchanged (55% record, 25% quality/road victories, 20% adjusted FBS margins).
+
+The team Power breakdown exposes individual point contributions for opponent baseline, jointly adjusted EPA/success/explosiveness, schedule strength, uncertainty from a weak schedule and underwhelming FCS results.
+
+**Benchmark limitations:** 2025 comparisons are from a reused model-selection season; 2026 is out of coefficient training. Differences in predictive accuracy are small. This upgrade is *not* a claim that CFMI now outpredicts FPI, SP+ or FEI, nor does it force Power Four schools above independently strong non-P4 teams.
+
+[Read the full V5.2 opponent-quality methodology, 2026 school examples and benchmark](docs/CFMI_V5_2_opponent_adjustment.md).
 
 ## Merit — what the team has earned
 
