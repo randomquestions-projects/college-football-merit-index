@@ -56,6 +56,19 @@ When a statistic is missing, the model uses the available measurements rather th
 
 **Known limits:** The present control input is the share of first-three-quarter checkpoints in the lead, not play-by-play win probability, and red-zone success is a positive-EPA play rate, not touchdown-conversion rate. A true non-garbage-possession/game-control replacement will require an additional validated drive-by-drive source. V4 coefficients are transparent research hypotheses, not results of a historical parameter optimization. Cross-conference opponent quality is less certain when the season's network has few cross-conference games.
 
+## Historical validation — preliminary
+
+We added a **walk-forward 2024–25 backtest** in `scripts/backtest_v4.cjs`. For each held-out week, the model uses only games completed in prior regular-season weeks. It compares V4 against the previous V3 weighting/formula, a season-only Elo signal, the independent opponent-power signal and simple win percentage. AP/CFP are not considered.
+
+| Held-out season | Games | CFMI V4 winner accuracy | CFMI V3 winner accuracy | Opponent-power signal | Elo signal |
+|---|---:|---:|---:|---:|---:|
+| 2024 | 481 | 68.8% | 66.1% | 70.5% | 68.6% |
+| 2025 | 490 | 70.0% | 69.2% | 71.8% | 68.2% |
+
+The 2024 and 2025 live-data audit also saves `site/data/backtest_v4.json` on every deployment. Mean week-to-week Top-25 overlap for V4 was 21.5 and 21.25 teams respectively across evaluated weeks.
+
+**Interpretation:** This is encouraging but limited evidence. The opponent-power signal alone has slightly higher future-winner accuracy than V4, which is expected because V4 intentionally rewards *results earned*, not just forward-looking power. This does not prove V4 is the best possible résumé ranking. The test contains only two seasons, and the Brier score shown in its JSON uses a fixed, uncalibrated logistic scale; these percentages are not verified win probabilities. Parameters have **not** been optimized on those years, avoiding in-sample overfitting.
+
 ## Scheduled refresh and publication
 
 The workflow [.github/workflows/publish.yml](.github/workflows/publish.yml) publishes a refreshed, validated static dataset and site on **Sunday at 9 AM America/New_York** (DST-aware), and checks for updated AP/CFP polls on Sunday evening and Tuesday night. Pushing changes to \`main\` also triggers publication. GitHub scheduled jobs may be delayed.
