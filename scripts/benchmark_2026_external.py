@@ -151,6 +151,9 @@ def main():
   venue=compare_group(covered,chosen[metric],metric,neutral=False)
   pure=compare_group(covered,chosen[metric],metric,neutral=True)
   tables['venueAware'][metric]=summarize_subset(metric,covered,venue)
+  if metric in ('fpi','sp_plus'):
+   tables['venueAware'][metric]['approxMarginMAE']=mean(abs(venue(g)-g['homePoints']) for g in covered)
+   tables['venueAware'][metric]['cfmiMarginMAESameGames']=mean(abs(g['cfmiPredictedMargin']-g['homePoints']) for g in covered)
   tables['neutralStrength'][metric]=summarize_subset(metric,covered,pure,'cfmiNeutralMargin')
   byWeek=[]
   for w in weeks:
@@ -182,6 +185,9 @@ def main():
   venue=compare_group(all_match,chosen[metric],metric)
   neutral=compare_group(all_match,chosen[metric],metric,neutral=True)
   common[metric]=summarize_subset(metric,all_match,venue)
+  if metric in ('fpi','sp_plus'):
+   common[metric]['approxMarginMAE']=mean(abs(venue(g)-g['homePoints']) for g in all_match)
+   common[metric]['cfmiMarginMAE']=mean(abs(g['cfmiPredictedMargin']-g['homePoints']) for g in all_match)
   common[metric+'Neutral']=summarize_subset(metric,all_match,neutral,'cfmiNeutralMargin')
  out={'version':'1.0','generatedAtUtc':datetime.now(timezone.utc).isoformat(),
   'historicalSource':URL,'sampleType':'2026 reconstructed game-ahead predictions, source-dated archival comparators',
