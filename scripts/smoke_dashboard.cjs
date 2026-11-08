@@ -27,9 +27,24 @@ async function waitForServer(){
   await page.locator("#body tr[data-team]").first().waitFor({timeout:30000});
   const names=await page.locator("#body tr[data-team]").allTextContents();
   assert(names.length>=25,"Expected populated Top 50");
-  const model=await page.evaluate(()=>({version:MODEL_V4.version,teamCount:state.teams.length,active:state.fullModel,score:state.teams[0].score,coreCount:state.advCovered,expected:state.advExpected}));
-  assert(model.version==="4.0.0"&&model.teamCount>=130,"V4 model did not run");
-  assert(Number.isFinite(model.score)&&model.active,"V4 computed score not populated");
+  const model=await page.evaluate(()=>({version:MODEL_V4.version,teamCount:state.teams.length,active:state.fullModel,score:state.teams[0].score,powerScore:state.teams[0].powerScore,powerRank:state.teams[0].powerRank,coreCount:state.advCovered,expected:state.advExpected}));
+  assert(model.version==="4.1.0"&&model.teamCount>=130,"Dual Merit/Power model did not run");
+  assert(Number.isFinite(model.score)&&Number.isFinite(model.powerScore)&&model.active,"Merit/Power scores not populated");
+  await page.locator('#rankingLens [data-lens="power"]').click();
+  const powerView=await page.evaluate(()=>({
+    lens:state.lens,
+    firstShown:document.querySelector('#body tr[data-team]')?.getAttribute('data-team'),
+    expected:state.teams.slice().sort((a,b)=>a.powerRank-b.powerRank)[0]?.name,
+    top50:document.querySelectorAll('#body tr[data-team]').length
+  }));
+  assert.equal(powerView.lens,"power","Power view did not activate");
+  assert.equal(powerView.firstShown,powerView.expected,"Power view is not sorted by predictive power");
+  assert.equal(powerView.top50,50,"Power Top 50 filter is not independent of Merit");
+  await page.locator('#rankingLens [data-lens="merit"]').click();
+  assert.equal(await page.locator('#rankingLens [data-lens="merit"]').getAttribute('aria-pressed'),"true");
+  await page.locator('a[href="#method"]').first().click();
+  assert(await page.locator('.method-lens-card').count()===2,"Both methodologies must be visible");
+  assert((await page.locator('.method-lens-card').nth(1).innerText()).includes("65%"),"Power methodology weight is missing");
   assert(model.coreCount/model.expected>=.70,"Core EPA coverage below required threshold");
   await page.locator('#pageSwitch [data-page="resume"]').click();
   await page.locator("#resumeControls select").first().waitFor();
