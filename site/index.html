@@ -389,6 +389,8 @@ function switchDashboardPage(page){
    el.setAttribute('aria-selected',active?'true':'false');
  });
  if(compare)renderComparison();
+ if(compare && location.hash!=='#comparison')history.replaceState(null,'','#comparison');
+ if(!compare && location.hash==='#comparison')history.replaceState(null,'',location.pathname+location.search);
  if(compare)window.scrollTo({top:0,behavior:'smooth'});
 }
 async function loadPollComparison(){
@@ -409,5 +411,10 @@ document.querySelectorAll('a[href="#method"],a[href="#variables"],a[href="#sourc
 // Published data changes weekly via GitHub Actions.
 load();
 loadPollComparison();
+if(location.hash==='#comparison')switchDashboardPage('comparison');
+window.addEventListener('hashchange',()=>{
+ if(location.hash==='#comparison')switchDashboardPage('comparison');
+ else if(document.body.classList.contains('cfmi-compare'))switchDashboardPage('rankings');
+});
 </script>
 </body></html>
