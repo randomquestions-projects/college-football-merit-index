@@ -251,7 +251,7 @@ function attachEfficiencyV4(teams,rows){
     return;
   }
   const base={};
-  const tracked=['off_ppa','def_ppa','off_success_rate','def_success_rate','off_explosive_rate','def_explosive_rate','redzone_td','opp_redzone_td','off_finish_pp40','def_finish_pp40','penalty_yards','turnovers_lost','turnovers_gained'];
+  const tracked=['off_ppa','def_ppa','off_success_rate','def_success_rate','off_explosive_rate','def_explosive_rate','redzone_td','opp_redzone_td','off_finish_pp40','def_finish_pp40','off_redzone_td_rate','def_redzone_td_rate','penalty_yards','turnovers_lost','turnovers_gained'];
   for(const field of tracked){
     const vals=observations.map(x=>x[field]).filter(Number.isFinite);
     base[field]=vals.length?v4mean(vals):0;
@@ -263,7 +263,7 @@ function attachEfficiencyV4(teams,rows){
     const other=(byTeam.get(name)||[]).filter(x=>x.id!==id).map(x=>x[field]).filter(Number.isFinite);
     return (other.reduce((s,x)=>s+x,0)+2*base[field])/(other.length+2);
   }
-  const rawMetrics=['ppaNet','successNet','explosiveNet','control','penaltyNet','turnoverNet','redzoneNet','effWinRate','effStability'];
+  const rawMetrics=['ppaNet','successNet','explosiveNet','control','penaltyNet','turnoverNet','redzoneNet','redzoneTdNet','effWinRate','effStability'];
   for(const t of teams){
     const sample=Object.fromEntries(rawMetrics.map(k=>[k,[]]));
     const volOff=[],volDef=[];
@@ -311,6 +311,13 @@ function attachEfficiencyV4(teams,rows){
           const def=a.def_finish_pp40+.6*(base.off_finish_pp40-opponentMean(opp,id,'off_finish_pp40'));
           sample.redzoneNet.push(off-def);
         }
+        // A distinct second finishing measure: TDs per actual red-zone
+        // DRIVE (opponent 20), not positive-EPA play success.
+        if(Number.isFinite(a.off_redzone_td_rate)&&Number.isFinite(a.def_redzone_td_rate)){
+          const off=a.off_redzone_td_rate+.6*(base.def_redzone_td_rate-opponentMean(opp,id,'def_redzone_td_rate'));
+          const def=a.def_redzone_td_rate+.6*(base.off_redzone_td_rate-opponentMean(opp,id,'off_redzone_td_rate'));
+          sample.redzoneTdNet.push(off-def);
+        }
       }else if(Number.isFinite(a.redzone_td)&&Number.isFinite(a.opp_redzone_td)){
         // All teams use one season-wide measurement definition.
         const off=a.redzone_td+.6*(base.opp_redzone_td-opponentMean(opp,id,'opp_redzone_td'));
@@ -343,9 +350,11 @@ function attachEfficiencyV4(teams,rows){
   }
   rankMeasured('consistencyScore','ppaNet');
   const e=MODEL_V4.efficiency;
+  const finishingComponents=state.finishMode==='points_per_scoring_opportunity'
+    ?[['redzoneNet',2],['redzoneTdNet',1]]:[['redzoneNet',3]];
   const components=[
     ['ppaNet',e.ppa],['successNet',e.success],['explosiveNet',e.explosive],
-    ['consistencyScore',e.consistency],['control',e.control],['redzoneNet',e.redzone],
+    ['consistencyScore',e.consistency],['control',e.control],...finishingComponents,
     ['turnoverNet',e.turnovers],['penaltyNet',e.penalties]
   ];
   for(const t of teams){
