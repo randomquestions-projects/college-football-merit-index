@@ -440,7 +440,7 @@ $('advancedInput').addEventListener('change',async e=>{const f=e.target.files?.[
 function close(){ $('detailScrim').classList.remove('open');document.body.style.overflow=''}$('closeModal').addEventListener('click',close);$('detailScrim').addEventListener('click',e=>{if(e.target===$('detailScrim'))close()});document.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
 $('refresh').addEventListener('click',()=>load(true));$('refreshTop').addEventListener('click',()=>load(true));
 
-const pollView={data:null,baseline:'cfmi',error:null};
+const pollView={data:null,external:null,baseline:'merit',count:'25',reference:'ap',query:'',conference:'',sort:'baseline',asc:true,error:null,externalError:null};
 function pollKey(name){
  const original=String(name||'').trim();
  const alias={'Miami (FL)':'Miami','Miami (Fla.)':'Miami','Southern California':'USC','Southern Cal':'USC','Mississippi':'Ole Miss','Brigham Young':'BYU','Connecticut':'UConn','North Carolina State':'NC State','Hawai\u0027i':'Hawai\u0027i'};
@@ -462,20 +462,97 @@ function pollDate(poll){
  if(poll.detected_on_utc)return 'detected '+poll.detected_on_utc+' (publication date unverified)';
  return 'publication date unavailable';
 }
+const EXTERNAL_METRICS=['fpi','sp_plus','fei'];
+const COMPARE_LABELS={merit:'CFMI Merit',power:'CFMI Power',ap:'AP',cfp:'CFP',fpi:'FPI',sp_plus:'SP+',fei:'FEI'};
 function renderComparison(){
  if(!state.teams.length)return;
- const ap=pollView.data?.ap,cfp=pollView.data?.cfp;
  const apMap=officialRankMap('ap'),cfpMap=officialRankMap('cfp');
- const cfmiMap=new Map(state.teams.map(t=>[pollKey(t.name),t]));
- const arr=pollView.baseline==='cfmi'?state.teams.slice(0,25).map(t=>t.name):pollView.data?.[pollView.baseline]?.teams||[];
- $('pollProvenance').textContent='CFMI: '+(state.snapshotUpdated?new Date(state.snapshotUpdated).toLocaleString('en-US',{timeZone:'America/New_York',month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'}):'latest posted scores')+' · AP: '+pollDate(ap)+' · CFP: '+pollDate(cfp)+'.';
- $('pollMismatch').textContent='Important: CFMI uses the latest published game data, while AP and CFP are separate polls published on their own schedules. Compare the dates above before interpreting differences. A newly published Sunday AP poll or Tuesday CFP release may not match the Saturday-game cutoff until the next poll update.';
- if(!arr.length){$('compareBody').innerHTML='<tr><td colspan="8" class="waiting">This poll is not available in the current validated snapshot.</td></tr>';return;}
- $('compareBody').innerHTML=arr.slice(0,25).map((name,i)=>{
-   const t=cfmiMap.get(pollKey(name)), rank=t?.rank,ar=apMap.get(pollKey(name)),cr=cfpMap.get(pollKey(name));
-   const adv=t&&t.fbsGames?Math.round(100*t.advCoverage)+'% ('+t.advCoreGames+'/'+t.fbsGames+')':'—';
-   return '<tr><td><strong>#'+(i+1)+'</strong></td><td class="school">'+esc(t?.name||name)+'</td><td>'+compareRank(rank)+'</td><td>'+compareRank(ar)+'</td><td>'+compareRank(cr)+'</td><td>'+compareDifference(rank,ar)+'</td><td>'+compareDifference(rank,cr)+'</td><td>'+adv+'</td></tr>';
- }).join('');
+ const externalMaps=Object.fromEntries(EXTERNAL_METRICS.map(k=>[k,new Map(
+   Object.entries(pollView.external?.systems?.[k]?.teams||{}).map(([name,v])=>[pollKey(name),Number(v.rank)])
+ )]));
+ if($('comparisonConference').options.length<2){
+  const conferences=[...new Set(state.teams.map(t=>t.conference).filter(Boolean))].sort();
+  $('comparisonConference').innerHTML='<option value="">All conferences</option>'+
+    conferences.map(c=>'<option value="'+esc(c)+'">'+esc(c)+'</option>').join('');
+  $('comparisonConference').value=pollView.conference;
+ }
+ const available={ap:!!pollView.data?.ap?.teams?.length,cfp:!!pollView.data?.cfp?.teams?.length,
+   ...Object.fromEntries(EXTERNAL_METRICS.map(k=>[k,externalMaps[k].size>=95]))};
+ const rankOf=(key,t)=>{
+  if(key==='merit')return t.rank;
+  if(key==='power')return t.powerRank;
+  if(!available[key])return null;
+  const rank=(key==='ap'?apMap:key==='cfp'?cfpMap:externalMaps[key]).get(pollKey(t.name));
+  return Number.isFinite(rank)?rank:null;
+ };
+ const all=state.teams.map(t=>{
+   const ranks=Object.fromEntries(['merit','power','ap','cfp',...EXTERNAL_METRICS].map(k=>[k,rankOf(k,t)]));
+   const ref=ranks[pollView.reference];
+   return {t,ranks,baseline:ranks[pollView.baseline],
+       meritDelta:Number.isFinite(ref)?ref-ranks.merit:null,
+       powerDelta:Number.isFinite(ref)?ref-ranks.power:null};
+ });
+ const limit=pollView.count==='all'?Infinity:Number(pollView.count);
+ let rows=all.filter(r=>{
+   const matchName=!pollView.query||r.t.name.toLowerCase().includes(pollView.query);
+   const matchConference=!pollView.conference||r.t.conference===pollView.conference;
+   // Search intentionally covers all FBS rather than hiding an unranked team.
+   const matchLimit=pollView.query||limit===Infinity||(Number.isFinite(r.baseline)&&r.baseline<=limit);
+   return matchName&&matchConference&&matchLimit;
+ });
+ const sortedKey=pollView.sort;
+ rows.sort((a,b)=>{
+   if(sortedKey==='name')return (pollView.asc?1:-1)*a.t.name.localeCompare(b.t.name);
+   if(sortedKey==='record'){
+     const av=a.t.won/(a.t.won+a.t.lost||1),bv=b.t.won/(b.t.won+b.t.lost||1);
+     return (pollView.asc?1:-1)*(av-bv)||a.t.name.localeCompare(b.t.name);
+   }
+   const av=sortedKey==='baseline'?a.baseline:sortedKey==='meritDelta'||sortedKey==='powerDelta'?a[sortedKey]:a.ranks[sortedKey];
+   const bv=sortedKey==='baseline'?b.baseline:sortedKey==='meritDelta'||sortedKey==='powerDelta'?b[sortedKey]:b.ranks[sortedKey];
+   // Missing values remain at the bottom in BOTH directions.
+   const aMissing=!Number.isFinite(av),bMissing=!Number.isFinite(bv);
+   if(aMissing!==bMissing)return aMissing?1:-1;
+   return ((pollView.asc?1:-1)*((av??0)-(bv??0)))||a.t.name.localeCompare(b.t.name);
+ });
+ const showRank=(key,r)=>{
+   const value=r.ranks[key];
+   if(Number.isFinite(value))return '#'+value;
+   return ['ap','cfp'].includes(key)&&available[key]?'<span class="notranked">NR</span>':'<span class="compare-nodata">—</span>';
+ };
+ const delta=(v)=>Number.isFinite(v)?(v===0?'—':'<span class="'+(v>0?'positive':'negative')+'">'+(v>0?'+':'')+v+'</span>'):'<span class="compare-nodata">—</span>';
+ $('meritDeltaHeader').textContent='MERIT Δ vs '+COMPARE_LABELS[pollView.reference];
+ $('powerDeltaHeader').textContent='POWER Δ vs '+COMPARE_LABELS[pollView.reference];
+ document.querySelectorAll('#comparisonTable th[data-compare-sort]').forEach(th=>{
+    const selected=th.dataset.compareSort===pollView.sort;
+    th.setAttribute('aria-sort',selected?(pollView.asc?'ascending':'descending'):'none');
+    const label=th.textContent.replace(/[ ▲▼]$/,'');
+    th.title='Sort by '+label+' (click to reverse)';
+ });
+ $('compareBody').innerHTML=rows.length?rows.map(r=>
+   '<tr data-compare-team="'+esc(r.t.name)+'" title="Open '+esc(r.t.name)+' full CFMI breakdown">'+
+   '<td>'+compareRank(r.baseline).replace('NR','—')+'</td>'+
+   '<td class="school">'+esc(r.t.name)+'<small class="conf">'+esc(r.t.conference)+'</small></td>'+
+   '<td>'+r.t.won+'–'+r.t.lost+'</td>'+
+   ['merit','power','ap','cfp','fpi','sp_plus','fei'].map(k=>'<td>'+showRank(k,r)+'</td>').join('')+
+   '<td>'+delta(r.meritDelta)+'</td><td>'+delta(r.powerDelta)+'</td></tr>'
+ ).join(''):'<tr><td colspan="12" class="waiting">No teams match these filters or this ranking snapshot is unavailable. Try “All FBS teams” or another baseline.</td></tr>';
+ const sourceInfo=EXTERNAL_METRICS.map(k=>{
+  const x=pollView.external?.systems?.[k];
+  return COMPARE_LABELS[k]+': '+(x?('source '+(x.source_date||'date unavailable')+' · snapshot '+x.snapshot_date):'not available');
+ });
+ const cfmiDate=state.snapshotUpdated?
+   new Date(state.snapshotUpdated).toLocaleString('en-US',{timeZone:'America/New_York',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):
+   'latest available';
+ $('pollProvenance').textContent='CFMI: '+cfmiDate+' · AP: '+pollDate(pollView.data?.ap)+' · CFP: '+
+   pollDate(pollView.data?.cfp)+' · '+sourceInfo.join(' · ')+'.';
+ const missing=[...Object.keys(available)].filter(k=>!available[k]).map(k=>COMPARE_LABELS[k]);
+ $('pollMismatch').textContent='Sources update on different schedules; date labels above are part of the comparison. '+
+   'AP and CFP publish only 25 places; FPI, SP+ and FEI use their own dated full-FBS snapshots. '+
+   '“NR” means outside a valid Top 25, while “—” is unavailable.'+
+   (missing.length?' Missing or incomplete source: '+missing.join(', ')+'.':'');
+ $('comparisonResults').textContent='Showing '+rows.length+' of '+state.teams.length+' FBS teams'+
+   (pollView.query?' · search overrides Top 25/50 cutoff':'')+' · baseline: '+COMPARE_LABELS[pollView.baseline]+
+   ' · comparison deltas against: '+COMPARE_LABELS[pollView.reference]+'.';
 }
 function switchDashboardPage(page){
  const current=['rankings','comparison','resume','methodology'].includes(page)?page:'rankings';
@@ -499,15 +576,47 @@ function switchDashboardPage(page){
 }
 async function loadPollComparison(){
  try{
- const resp=await fetch('./data/polls_2026.json',{cache:'no-store'});
- if(!resp.ok)throw Error('HTTP '+resp.status);
- const json=await resp.json();
- if(json.season!==2026||!['ap','cfp'].every(key=>Array.isArray(json[key]?.teams)&&json[key].teams.length===25))throw Error('Unexpected poll data format');
- pollView.data=json;pollView.error=null;renderComparison();
- }catch(e){pollView.error=e.message;$('pollProvenance').textContent='Poll comparison unavailable: '+e.message;$('compareBody').innerHTML='<tr><td colspan="8" class="waiting">Could not load the validated AP/CFP ranking snapshots.</td></tr>'}
+  const resp=await fetch('./data/polls_2026.json',{cache:'no-store'});
+  if(!resp.ok)throw Error('Poll file HTTP '+resp.status);
+  const data=await resp.json();
+  if(data.season!==2026)throw Error('Incorrect poll season');
+  pollView.data=data;pollView.error=null;
+ }catch(e){pollView.error=e.message;pollView.data=null}
+ renderComparison();
+}
+async function loadExternalComparison(){
+ try{
+  const resp=await fetch('./data/external_rankings_2026.json',{cache:'no-store'});
+  if(!resp.ok)throw Error('External rating file HTTP '+resp.status);
+  const data=await resp.json();
+  if(data.season!==2026||!data.systems||Object.keys(data.systems).length<2)throw Error('Invalid external rating snapshot');
+  pollView.external=data;pollView.externalError=null;
+ }catch(e){pollView.externalError=e.message;pollView.external=null}
+ renderComparison();
 }
 $('pageSwitch').addEventListener('click',e=>{const el=e.target.closest('[data-page]');if(el)switchDashboardPage(el.dataset.page)});
-$('comparisonBaseline').addEventListener('click',e=>{const el=e.target.closest('[data-baseline]');if(!el)return;pollView.baseline=el.dataset.baseline;document.querySelectorAll('#comparisonBaseline .tab').forEach(b=>b.classList.toggle('active',b===el));renderComparison()});
+$('comparisonBaseline').addEventListener('change',e=>{
+ pollView.baseline=e.target.value;pollView.sort='baseline';pollView.asc=true;renderComparison()
+});
+$('comparisonCount').addEventListener('change',e=>{pollView.count=e.target.value;renderComparison()});
+$('comparisonQuery').addEventListener('input',e=>{pollView.query=e.target.value.toLowerCase().trim();renderComparison()});
+$('comparisonConference').addEventListener('change',e=>{pollView.conference=e.target.value;renderComparison()});
+$('comparisonReference').addEventListener('change',e=>{pollView.reference=e.target.value;renderComparison()});
+$('comparisonReset').addEventListener('click',()=>{
+ pollView.baseline='merit';pollView.count='25';pollView.reference='ap';pollView.query='';pollView.conference='';pollView.sort='baseline';pollView.asc=true;
+ $('comparisonBaseline').value='merit';$('comparisonCount').value='25';$('comparisonReference').value='ap';
+ $('comparisonQuery').value='';$('comparisonConference').value='';renderComparison();
+});
+document.querySelectorAll('#comparisonTable th[data-compare-sort]').forEach(th=>th.addEventListener('click',()=>{
+ const key=th.dataset.compareSort;
+ if(pollView.sort===key)pollView.asc=!pollView.asc;else{pollView.sort=key;pollView.asc=key==='name'||key==='record'?false:true}
+ renderComparison();
+}));
+$('compareBody').addEventListener('click',e=>{
+ const row=e.target.closest('tr[data-compare-team]');
+ if(row)showTeam(row.getAttribute('data-compare-team'));
+});
+
 $('navComparison').addEventListener('click',e=>{e.preventDefault();switchDashboardPage('comparison');$('comparison').scrollIntoView({behavior:'smooth'})});
 $('navResume').addEventListener('click',e=>{e.preventDefault();switchDashboardPage('resume');$('resume').scrollIntoView({behavior:'smooth'})});
 $('navRanks').addEventListener('click',e=>{e.preventDefault();switchDashboardPage('rankings');$('rankings').scrollIntoView({behavior:'smooth'})});
@@ -605,6 +714,7 @@ $('resumeHead').addEventListener('click',e=>{const th=e.target.closest('[data-op
 // Published data changes weekly via GitHub Actions.
 load();
 loadPollComparison();
+loadExternalComparison();
 (async()=>{
  try{
   const response=await fetch('./data/backtest_v4.json',{cache:'no-store'});
