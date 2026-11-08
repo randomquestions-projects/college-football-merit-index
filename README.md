@@ -2,13 +2,25 @@
 
 **Public dashboard:** https://randomquestions-projects.github.io/college-football-merit-index/
 
-A reproducible, independent, season-only assessment of two distinct things: **Merit (what teams have earned)** and **Power (how strong their repeatable performance appears)**. Includes every FBS team, an AP/CFP Top 25 comparison, and interactive **up-to-five-team résumé comparisons**.
+A reproducible, independent, season-only assessment of two distinct things: **Merit (what teams have earned)** and **Power (how strong their repeatable performance appears)**. Includes every FBS team, an interactive seven-system ranking comparison, a five-team résumé analysis, and a separate Methodology and Data Lineage page.
 
-## Three views
+## Four main tabs
 
-1. **CFMI Merit / Power Rankings:** Switch the primary leaderboard between two separate scores. Both show all FBS schools with independently sortable Top 25/50; team drilldowns explain Merit and Power contributions individually, opponent baseline, road wins and play-by-play coverage.
-2. **AP / CFP Comparison:** CFMI vs the dated latest available AP and CFP Top 25; publication dates and rank deltas. Polls **never influence CFMI**.
-3. **Compare Team Résumés:** Select one to five teams at a time. View quality wins, opponent-strength power, close losses, home/away results, adjusted margin, EPA, national rank comparisons, common opponents and explainable head-to-head narratives. Direct link: [#resume](https://randomquestions-projects.github.io/college-football-merit-index/#resume).
+1. **Rankings (home):** Concise introduction to Merit vs. Power and a first-class switch between two independently scored FBS rankings, with Top 25/50/All, national sorting, coverage and full team drilldowns. No long-form methodology on the home page.
+2. **Compare Rankings:** Interactive, sortable ranks for **CFMI Merit, CFMI Power, AP Top 25, CFP Top 25, ESPN FPI, Bill Connelly's SP+, and Brian Fremeau's FEI**. Select the baseline Top 25/50/All FBS cohort, search teams, filter conference, sort columns, and choose an outside ranking for Merit and Power rank-delta columns. All external sources include the original dated rating snapshot and never influence CFMI.
+3. **Compare Teams:** Select up to five teams to evaluate ratings, signature wins, road performances, schedules and common opponents. [#resume](https://randomquestions-projects.github.io/college-football-merit-index/#resume)
+4. **Methodology:** Both formulas and their limits, all variables/weights and adjustments, data lineage, automatic source checks, historical validation, and caveats. [#methodology](https://randomquestions-projects.github.io/college-football-merit-index/#methodology)
+
+### External-rankings provenance (comparison only)
+
+- **ESPN FPI:** source team-strength ratings from ESPN (2026), accessed through the [CFB TXT public rating snapshots](https://cfbtxt.com/data/ratings_snapshots/2026/historical_ratings.csv). [Original FPI](https://www.espn.com/college-football/fpi).
+- **SP+:** Bill Connelly's tempo- and opponent-adjusted efficiency ratings, sourced from the same *dated* historical snapshot. [Original SP+](https://pay.cfbupdate.com/sp-ratings).
+- **FEI:** Brian Fremeau's opponent-adjusted non-garbage possession-efficiency ratings, same dated snapshots. [Original FEI](https://bcftoys.com/2026-fei/).
+- **AP and CFP:** separate official poll snapshots retrieved through the public ESPN rankings feed; **only Top 25** places are known. “NR” means outside that published Top 25, not outside every ranking system.
+
+The external snapshot CSV has separate \`snapshot_date\` and original \`source_date\` fields; we preserve both. These rankings might lag CFMI by days; do not assume the listed teams were evaluated through the same games. Ranking gaps measure **disagreement**, not proof that one model outperforms another. Historical held-out game predictions are the separate evaluation method.
+
+The action \`scripts/update_external_rankings.py\` refreshes all three outside power ratings on every scheduled site build, validates 2026 season, numeric ranks, dates and national team coverage, and writes \`site/data/external_rankings_2026.json\`. If an external feed is temporarily inaccessible, the system keeps the last verified public external snapshot with its original dates (if available), rather than blocking CFMI's own refresh or inventing rankings.
 
 ## Two different methodologies — NOT two weights on the same résumé
 
@@ -117,7 +129,7 @@ Site and data are generated and deployed through GitHub Actions; no manual CSV i
 - [BCF Toys — FEI opponent-adjusted non-garbage possessions](https://bcftoys.com/2025-fei)
 - [FIDE — chess Elo ratings and K-factor](https://www.fide.com/docs/regulations/ARB%20Manual%202020.pdf)
 
-The V4 implementation is an original blend. No SP+, FEI, AP or CFP numerical ratings are fed into it. This repository contains football data, public code and formulas only, **not the ChatGPT conversation or account credentials**.
+The V4.1 implementation is an original blend. No SP+, FEI, FPI, AP or CFP numerical ratings enter either CFMI ranking. This repository contains football data, public code and formulas only, **not the ChatGPT conversation or account credentials**.
 
 ## Development
 
@@ -127,6 +139,7 @@ python -m pip install numpy duckdb
 python scripts/train_neutral_wp.py
 python scripts/update_possessions.py
 python scripts/update_polls.py
+python scripts/update_external_rankings.py
 node scripts/audit_dashboard.cjs
 python -m http.server --directory site 8000
 \`\`\`
