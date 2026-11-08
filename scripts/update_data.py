@@ -103,6 +103,8 @@ def main():
             _, rows = fetch_csv(f"{RELEASE}/{tag}/{filename}")
             advanced[label] = rows
             print("Advanced source", label, len(rows), "rows")
+            print("SCHEMA", label, list(rows[0].keys()))
+            print("KEY_SAMPLE", label, {k: rows[0].get(k) for k in ("game_id","pos_team","team_id","team","period","value","EPA_per_play","EPA_success_rate")})
         except Exception as exc:
             advanced[label] = []
             errors[label] = repr(exc)
