@@ -20,7 +20,7 @@ for year,url in SOURCES.items():
   print("SOURCE",year,"bytes",len(data),"mime",mime,"start",text[:280].replace("\n"," "),flush=True)
   if year in (2024,2025,2026):
    pos=text.find("Georgia")
-   print("HTML SAMPLE GEORGIA",year,text[max(0,pos-300):pos+350].replace("\n"," "),flush=True)
+   print("HTML SAMPLE GEORGIA",year,text[max(0,pos-300):pos+1800].replace("\n"," "),flush=True)
    for team in ["Ole Miss","Liberty","New Mexico","Georgia"]:
     print("NAME_COUNT",year,team,text.count(team),flush=True)
   else:
