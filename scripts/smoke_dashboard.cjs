@@ -56,7 +56,7 @@ async function waitForServer(){
   await page.locator('#resumeHead [data-open-team="Georgia"]').click();
   await page.locator("#detailScrim.open").waitFor();
   const detail=(await page.locator("#detailBody").innerText()).toLowerCase();
-  assert(detail.includes("game performance")&&detail.includes("opponent power"),"Team detail game-quality audit not visible");
+  assert(detail.includes("game performance")&&detail.includes("opponent baseline"),"Team detail game-quality audit not visible");
   await page.locator("#closeModal").click();
   await page.locator('#pageSwitch [data-page="comparison"]').click();
   await page.locator("#compareBody tr").first().waitFor();
