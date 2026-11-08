@@ -1,0 +1,48 @@
+name: Refresh and publish CFMI rankings
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 9 * * 0'
+      timezone: America/New_York
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cfmi-pages
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    name: Fetch and validate CFMI data
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Download 2026 scores and advanced statistics
+        run: python scripts/update_data.py
+      - name: Upload validated site artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+
+  deploy:
+    name: Publish CFMI to GitHub Pages
+    needs: refresh
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.pages.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - name: Deploy site
+        id: pages
+        uses: actions/deploy-pages@v4
