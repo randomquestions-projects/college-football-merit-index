@@ -8,14 +8,15 @@ if(!m)throw Error('Missing inline calculation engine');
 const boundary=m[1].indexOf('const submetric=');
 if(boundary<10000)throw Error('Invalid engine boundary');
 const prelude=m[1].slice(0,boundary);
-const model=fs.readFileSync(path.join(base,'model_v4.js'),'utf8')+'\n'+fs.readFileSync(path.join(base,'model_v5.js'),'utf8');
+const model=fs.readFileSync(path.join(base,'model_v4.js'),'utf8')+'\n'+fs.readFileSync(path.join(base,'opponent_network_research.js'),'utf8')+'\n'+fs.readFileSync(path.join(base,'model_v5.js'),'utf8');
 const doc=JSON.parse(fs.readFileSync(path.join(data,'model_v5_params.json'),'utf8'));
 const history=JSON.parse(fs.readFileSync(path.join(data,'weekly_views_2026.json'),'utf8'));
-assert.equal(doc.version,'5.1.0');
+assert.equal(doc.version,'5.2.0');
 assert.deepEqual(doc.parameters.trainedOn,[2024]);
 assert.deepEqual(doc.parameters.validatedOn,[2025]);
 assert(doc.trainingGames>=300&&doc.validationGames>=300);
 assert(doc.validation?.baseline2025?.logLoss>0&&doc.validation?.previousV5_2025?.logLoss>0);
+assert(['joint_opponent_network','validated_v5_reference'].includes(doc.parameters.mode));
 assert(doc.parameters.finishing>=0&&doc.parameters.consistency>=0&&doc.parameters.offense>=0&&doc.parameters.defense>=0);
 const body=prelude+[
 "if(!MODEL_V5.setParameters(parameters))throw Error('Model parameters invalid');",
@@ -26,13 +27,13 @@ const body=prelude+[
 "teams:teams.map(t=>({name:t.name,rank:t.rank,merit:t.score,power:t.powerScore,",
 "powerPoints:t.powerPoints,powerRank:t.powerRank,won:t.won,lost:t.lost,wab:t.wab,",
 "residual:t.meritQualityResidual,meritRecord:t.meritRecordScore,meritQuality:t.meritQualityScore,meritControl:t.meritControlScore,",
-"advanced:t.advCoreGames,fbsGames:t.fbsGames})),version:MODEL_V5.version};"
+"advanced:t.advCoreGames,fbsGames:t.fbsGames,mode:t.powerMode||'reference'})),version:MODEL_V5.version};"
 ].join('\n');
 const compute=new Function('scores','advCsv','parameters','cutoff',model+'\n'+body);
 const csv=fs.readFileSync(path.join(data,'cfb_schedules_2026.csv'),'utf8');
 const adv=fs.readFileSync(path.join(data,'cfmi_advanced_2026.csv'),'utf8');
 const latest=compute(csv,adv,doc,Date.now());
-assert.equal(latest.version,'5.1.0');
+assert.equal(latest.version,'5.2.0');
 assert(latest.gameCount>=300,'Expected substantial 2026 games');
 assert(latest.teams.length>=130,'Expected complete FBS coverage');
 assert(latest.coverage.eligible>=300,'Missing advanced data eligibility');
@@ -102,7 +103,7 @@ for(const game of history.upcoming.games||[]){
  }else assert.equal(game.homeWinProbability,null);
 }
 const output={
- modelVersion:'5.1.0',generatedAtUtc:new Date().toISOString(),
+ modelVersion:'5.2.0',generatedAtUtc:new Date().toISOString(),
  provenance:{trainSeason:doc.trainSeason,validationSeason:doc.validationSeason,
   selected:doc.deployedCandidate,validation:doc.validation},
  coverage:latest.coverage,totalGames:latest.gameCount,teamCount:latest.teams.length,
