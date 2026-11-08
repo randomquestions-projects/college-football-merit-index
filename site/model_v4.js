@@ -100,6 +100,7 @@ function computeV4(rows,cutoffMode){
   }
   const powerRank=teams.slice().sort((a,b)=>b.power-a.power).map((t,i)=>[t.name,i+1]);
   const powerRanks=new Map(powerRank);
+  for(const t of teams)t.powerRank=powerRanks.get(t.name);
   const powerSorted=teams.map(t=>t.power).sort((a,b)=>b-a);
   const bench=powerSorted[Math.min(24,powerSorted.length-1)];
   const median=powerSorted[Math.floor(powerSorted.length/2)];
