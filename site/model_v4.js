@@ -78,13 +78,20 @@ function computeV4(rows,cutoffMode){
   // difficulty emerges from actual results, with diminishing margin multiplier.
   const ordered=games.filter(g=>g.hfbs&&g.afbs).slice().sort((a,b)=>Date.parse(a.date)-Date.parse(b.date)||a.id.localeCompare(b.id));
   const elos=new Map(teams.map(t=>[t.name,1500]));
+  const nRatedGames=new Map(teams.map(t=>[t.name,0]));
   for(const g of ordered){
     const a=elos.get(g.home),b=elos.get(g.away);
     const homeAdv=g.neutral?0:MODEL_V4.eloHome;
     const expected=v4sigmoid(((a+homeAdv)-b)*Math.log(10)/400);
     const actual=g.hp>g.ap?1:g.hp<g.ap?0:.5;
     const marginMultiplier=v4clamp(1+.12*Math.log1p(Math.max(0,Math.abs(g.hp-g.ap)-3)),1,1.5);
-    const delta=MODEL_V4.eloK*marginMultiplier*(actual-expected);
+    // A chess-inspired K schedule starts responsive when every team has
+    // little evidence, then stabilizes without using preseason priors.
+    const n=Math.min(nRatedGames.get(g.home),nRatedGames.get(g.away));
+    const adaptiveK=MODEL_V4.eloK*(.70+.30*Math.sqrt(6/(6+n)));
+    const delta=adaptiveK*marginMultiplier*(actual-expected);
+    nRatedGames.set(g.home,nRatedGames.get(g.home)+1);
+    nRatedGames.set(g.away,nRatedGames.get(g.away)+1);
     elos.set(g.home,a+delta);elos.set(g.away,b-delta);
   }
   for(const t of teams){
@@ -117,7 +124,9 @@ function computeV4(rows,cutoffMode){
       g.q=0;g.qualityScore=0;g.eloSurprise=0;
       t.expected+=prob;
       if(g.opFbs){opStrengthTotal+=or;opStrengthN++}
-      const adjusted=g.opFbs?v4margin(g.margin)-venue+or:(g.win?0:-28);
+      // A blowout over an FCS opponent is a win, but not evidence of
+      // top-tier FBS ability. Always below even weak-FBS win credit.
+      const adjusted=g.opFbs?v4margin(g.margin)-venue+or:(g.win?-18:-34);
       g.adjustedMOV=adjusted;t.mov+=adjusted;
       const originalMarginExpected=v4sigmoid(((t.power-or+venue))/7);
       g.eloSurprise=g.win-originalMarginExpected;
@@ -156,6 +165,7 @@ function computeV4(rows,cutoffMode){
     t.fbsGames=t.fbsG.length;t.games=t.played.length;
     t.sos=opStrengthN?opStrengthTotal/opStrengthN:-26;
     t.opponentQualityAverage=t.sos;
+    t.eloGames=nRatedGames.get(t.name);
     t.quality=t.qSum;t.qRoadWins=t.top25RoadWins;
     t.qualityRoadWins=t.top25RoadWins;
   }
