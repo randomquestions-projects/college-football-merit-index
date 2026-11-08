@@ -88,4 +88,30 @@ def load():
     OUT.parent.mkdir(parents=True,exist_ok=True)
     OUT.write_text(json.dumps(out,indent=2,ensure_ascii=False)+"\n",encoding="utf8")
     print("EXTERNAL COMPARISON SNAPSHOT",OUT,flush=True)
-if __name__=="__main__":load()
+def main():
+    try:
+        load()
+    except Exception as error:
+        print("WARN: External rating source temporarily unavailable; CFMI calculations will continue:",repr(error),flush=True)
+        old_url="https://randomquestions-projects.github.io/college-football-merit-index/data/external_rankings_2026.json"
+        prior=None
+        try:
+            req=urllib.request.Request(old_url,headers={"User-Agent":"CFMI-ext-snapshot-recovery/1.0"})
+            with urllib.request.urlopen(req,timeout=15) as response:
+                candidate=json.load(response)
+            if candidate.get("season")==SEASON and isinstance(candidate.get("systems"),dict):
+                valid={k:v for k,v in candidate["systems"].items()
+                       if k in SOURCE and isinstance(v.get("teams"),dict) and len(v["teams"])>=95
+                       and v.get("snapshot_date")}
+                if len(valid)>=2:
+                    prior={**candidate,"systems":valid}
+                    print("RECOVERED: previously verified external snapshots with original source dates",flush=True)
+        except Exception as prior_error:
+            print("WARN: no prior external rating snapshot available",repr(prior_error),flush=True)
+        if prior is None:
+            prior={"season":SEASON,"source":"External comparison unavailable","source_url":URL,"systems":{}}
+        prior["checked_at_utc"]=datetime.now(timezone.utc).isoformat()
+        prior["refresh_warning"]="Most recent external source refresh failed; source dates above remain unchanged."
+        OUT.parent.mkdir(parents=True,exist_ok=True)
+        OUT.write_text(json.dumps(prior,indent=2,ensure_ascii=False)+"\n",encoding="utf8")
+if __name__=="__main__":main()
