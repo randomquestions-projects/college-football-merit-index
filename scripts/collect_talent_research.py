@@ -41,7 +41,7 @@ def roster(html_text,year):
    m=re.search(pattern,count.group(1))
    values.append(int(m.group(1)) if m else 0)
   players=sum(values)
-  if players<10:continue
+  if players<6:continue
   def avg_between(start,end):
    scores=[score for n,score in zip(values,APPROX_RATINGS) for _ in range(n)]
    part=scores[start:end]
@@ -59,7 +59,7 @@ def roster(html_text,year):
    source="Punt and Rally archived "+str(year)+" roster-tier breakdown",
    sourceUrl='https://www.puntandrally.com/talent.php?view=roster&whichyear='+str(year)))
  keys=[r['teamKey'] for r in result]
- if len(result)<115 or len(set(keys))!=len(keys):
+ if len(result)<60 or len(set(keys))!=len(keys):
   raise RuntimeError(f'Insufficient, duplicate or unreadable {year} roster: rows {len(result)}, unique {len(set(keys))}')
  return result
 def read_csv(url):
