@@ -38,6 +38,7 @@ function v5PoissonBinomialTail(probs,wins){
 // and game ledger, NOT V4's Merit or final Power scores.
 function computeV5(rows,cutoffMode,seasonYear=2026){
  const original=computeV4(rows,cutoffMode,seasonYear);
+ for(const t of original.teams)t._v5Benchmark=original.bench;
  return {...original,modelVersion:MODEL_V5.version};
 }
 function attachEfficiencyV5(teams,advRows){
@@ -106,13 +107,13 @@ function attachEfficiencyV5(teams,advRows){
        explosive=signal('explosiveNet',.13);
    const b=Number.isFinite(t.power)?t.power:0;
    const contributions={
-     baseline:b,epa:p.epa*epa,success:p.success*success,explosive:p.explosive*explosive
+     baseline:(Number.isFinite(p.baseScale)?p.baseScale:1)*b,epa:p.epa*epa,success:p.success*success,explosive:p.explosive*explosive
    };
    // Cap additive advanced correction to 35% of baseline typical scale:
    // prevents tiny advanced samples dominating repeatable scoring evidence.
    const correction=v5clamp(contributions.epa+contributions.success+
         contributions.explosive,-8,8);
-   t.powerPoints=b+correction;
+   t.powerPoints=(Number.isFinite(p.baseScale)?p.baseScale:1)*b+correction;
    t.powerScore=v5clamp(50+MODEL_V5.powerScale.indexPointsPerExpectedMarginPoint*t.powerPoints,0,100);
    t.powerComponents={
      baseline:v5clamp(50+1.6*contributions.baseline,0,100),
