@@ -19,7 +19,10 @@ return {teams:teams.map(t=>({
  rank:t.rank,team:t.name,score:t.score,record:t.won+'-'+t.lost,
  sorRank:t.sorRank,movRank:t.movRank,qualityRank:t.qualityComponentRank,
  sorPct:t.sor,movPct:t.movPct,qualityPct:t.qualityComponent,effPct:t.effScore,
- powerRank:t.powerRank,opponentPower:t.power,qualityTop25Wins:t.top25Wins,roadTop25Wins:t.top25RoadWins,
+ powerRank:t.powerRank,powerScore:t.powerScore,powerMethod:t.powerMethod,
+ baselineOpponentRank:t.baselinePowerRank,opponentPower:t.power,
+ powerComponents:t.powerComponents,
+ qualityTop25Wins:t.top25Wins,roadTop25Wins:t.top25RoadWins,
  efficiencyRank:t.effScoreRank,efficiencyScore:t.effScore,
  efficiencyDetails:Object.fromEntries(['ppaNet','successNet','explosiveNet','control','redzoneNet','turnoverNet','penaltyNet','consistencyScore'].map(k=>[k,{percentile:t[k+'Pct'],nationalRank:t[k+'Rank'],coverage:t.advMetricCoverage?.[k]}])),
  advancedGames:t.advCoreGames,expectedAdvancedGames:t.fbsGames
@@ -29,8 +32,11 @@ const executor=new Function("scores","advCsv",model+"\n"+body);
 const csv=fs.readFileSync(path.join(base,"data","cfb_schedules_2026.csv"),"utf8");
 const adv=fs.readFileSync(path.join(base,"data","cfmi_advanced_2026.csv"),"utf8");
 const result=executor(csv,adv);
-if(result.teams.length<130||result.gameCount<300||result.teams.some(t=>!Number.isFinite(t.score)||t.score<0||t.score>100))throw Error("CFMI V4 audit failed: invalid team scores or game count");
+if(result.teams.length<130||result.gameCount<300||result.teams.some(t=>!Number.isFinite(t.score)||t.score<0||t.score>100||!Number.isFinite(t.powerScore)||t.powerScore<0||t.powerScore>100||!Number.isInteger(t.powerRank)))throw Error("CFMI V4 audit failed: invalid team scores or game count");
 const georgia=result.teams.find(t=>t.team==="Georgia");
+const powerRanks=result.teams.map(t=>t.powerRank);
+if(new Set(powerRanks).size!==result.teams.length)throw Error("Predictive Power ranks aren't unique");
+if(result.teams.some(t=>t.powerMethod!=='predictive_efficiency_blend'))throw Error("Predictive Power unexpectedly unavailable with full advanced data");
 const oleMiss=csv.split(/\r?\n/).some(row=>row.includes('"Ole Miss"')&&row.includes('"Georgia"')&&row.includes(",2026,10,")&&row.includes(",42,"));
 console.log("CFMI LIVE AUDIT:",JSON.stringify({gameCount:result.gameCount,Georgia:georgia,advancedCoverage:result.advancedCoverage,fourComponentModelActive:result.fourComponentModelActive,GeorgiaOleMiss42_7InScores:oleMiss,Top25:result.teams.slice(0,25)},null,2));
 // Sensitivity is descriptive only; it never changes the published CFMI weights.
