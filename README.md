@@ -19,7 +19,7 @@ The website defaults to the **Top 50**, with an all-FBS view, sortable metric ra
 | Quality wins / quality road wins | 20% |
 | On-field efficiency | 25% |
 
-The on-field component includes EPA/PPA, success rate, game control, explosiveness, penalty differential, turnover differential, offensive/defensive consistency, and red-zone play efficiency. Scores are converted to national percentiles. When measured advanced-stat coverage is insufficient, the dashboard displays a separately labeled **75% résumé preview**, not a fabricated 100% model.
+The on-field component includes EPA/PPA, success rate, game control, explosiveness, penalty differential, turnover differential, offensive/defensive consistency, and red-zone play efficiency. Scores are converted to national percentiles. **Rankings keep all four weights active even with moderate data gaps.** For each team, efficiency is adjusted toward a neutral score of 50 based on the fraction of FBS team-games with verified advanced data: `adjusted efficiency = 50 + coverage × (measured efficiency − 50)`. Every team displays its measurement coverage. If no advanced-stat rows are usable at all, the dashboard explicitly switches to a résumé-only fallback and identifies it as such.
 
 The red-zone metric is **positive-EPA play success rate**, *not* red-zone possession touchdown conversion. Data coverage, model assumptions and limits are disclosed on the site.
 
@@ -30,7 +30,9 @@ The red-zone metric is **positive-EPA play success rate**, *not* red-zone posses
 1. Downloads completed 2026 scores from the public SportsDataverse/cfbfastR feed.
 2. Attempts SportsDataverse advanced-team, situational, turnover and quarter-score releases.
 3. Writes validated score and advanced snapshots under `site/data/` with metadata.
-4. Deploys `site/` to GitHub Pages. If collection fails, the previously published site stays online.
+4. Deploys `site/` to GitHub Pages, showing data coverage and the source publication timestamp. If collection fails, the previously published site stays online.
+
+Data availability is not uniform: on November 8, the first run matched 938 of 1,124 FBS-vs-FBS team-game observations. Recent games can be absent while the provider updates the advanced release, and some earlier games lack one or more required measurements. Teams with lower advanced coverage are explicitly marked, not silently treated as fully measured.
 
 Public GitHub Actions scheduled jobs can be delayed, and GitHub automatically disables schedules in public repositories after 60 days without repository activity.
 
