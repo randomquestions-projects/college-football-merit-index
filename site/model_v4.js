@@ -205,13 +205,17 @@ function attachEfficiencyV4(teams,rows){
   }
   for(const t of teams){
     t.advGames=t.fbsG.map(g=>byKey.get(String(g.id)+'|'+normalizeTeam(t.name))).filter(Boolean);
-    t.advCoverage=t.fbsGames?t.advGames.length/t.fbsGames:0;
+    // "Advanced coverage" is CORE offensive+defensive EPA, never just a
+    // score-derived quarter-lead or a partial box-score observation.
+    t.advCoreGames=t.advGames.filter(g=>Number.isFinite(g.off_ppa)&&Number.isFinite(g.def_ppa)).length;
+    t.advAnyGames=t.advGames.length;
+    t.advCoverage=t.fbsGames?t.advCoreGames/t.fbsGames:0;
     t.advMetricCoverage={};t.advMetricCounts={};
     t.effScore=NaN;
   }
   const observations=teams.flatMap(t=>t.advGames);
   const expected=teams.reduce((s,t)=>s+t.fbsGames,0);
-  const covered=observations.length;
+  const covered=observations.filter(g=>Number.isFinite(g.off_ppa)&&Number.isFinite(g.def_ppa)).length;
   state.advCovered=covered;state.advExpected=expected;
   state.fullModel=expected>0&&covered/expected>=MODEL_V4.minimumAdvancedCoverage;
   if(!state.fullModel){
