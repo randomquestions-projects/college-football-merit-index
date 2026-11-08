@@ -100,7 +100,7 @@ function attachEfficiencyV5(teams,advRows){
      const site=g.site==='A'?1.20:g.site==='N'?1.08:1;
      // Only actual wins earn positive signature credit. Losses to good teams
      // receive no "quality-loss bonus"; WAB already accounts for difficulty.
-     const achievement=g.win?opponentCredit*site:0;
+     const achievement=g.win?opponentCredit*site*(.75+.25*(1-g.expected)):0;
      g.meritQualityContribution=achievement;
      qualityAchievement+=achievement;
      // FCS win by 60 earns zero extra margin recognition. A loss to an FCS
@@ -117,13 +117,12 @@ function attachEfficiencyV5(teams,advRows){
    t.meritControlScore=v5clamp(50+MODEL_V5.meritScale.controlAmplitude*
        Math.tanh(t.meritMarginRaw/MODEL_V5.meritScale.controlMarginScale)*evidence,0,100);
  }
- // Prevent the 25% signature-win component simply becoming a second WAB term.
- // Partial residualization leaves modest deliberate extra value for beating
- // top opponents away from home, without adding a full second SOS premium.
- const denom=withGames.reduce((x,t)=>x+t.wab*t.wab,0)+3;
- const slope=withGames.reduce((x,t)=>x+t.wab*rawQuality.get(t.name),0)/denom;
+ // This component is a transparent achievement bonus rather than a second
+ // estimate of expected wins: only actual FBS wins against strong opponents
+ // earn extra credit. The saturating transform avoids a few marquee wins
+ // overwhelming the complete season-long results record.
  for(const t of teams){
-   t.meritQualityResidual=rawQuality.get(t.name)-.50*slope*t.wab;
+   t.meritQualityResidual=rawQuality.get(t.name);
    const shrink=t.fbsGames/(t.fbsGames+1.5);
    t.meritQualityScore=v5clamp(50+MODEL_V5.meritScale.qualityPoints*
        Math.tanh(t.meritQualityResidual/2.8)*shrink,0,100);
