@@ -50,6 +50,8 @@ jobs:
           CFMI_SEASON=2025 python scripts/update_possessions.py
       - name: Fit and verify V5 predictive coefficients on earlier seasons
         run: node scripts/train_v5.cjs
+      - name: Evaluate joint offense-defense opponent-network efficiency
+        run: node scripts/test_joint_opponent_network.cjs
       - name: Evaluate incremental opponent reliability correction on 2024 train / 2025 validation
         run: node scripts/test_opponent_corrections.cjs
       - name: Diagnose current opponent strength and rating contributions
