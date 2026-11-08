@@ -24,7 +24,7 @@ const advanced=fs.readFileSync(path.join(root,'data','cfmi_advanced_2026.csv'),'
 const csvParse=new Function('csv',prelude+'return csvParse(csv)');
 const rows=csvParse(schedule),advRows=csvParse(advanced);
 if(rows.length<300||advRows.length<200)throw Error('Unacceptably incomplete 2026 data');
-const compute=new Function('raw','advanced','cutoff',
+const compute=new Function('raw','advanced','cutoff','parameters',
  model+'\n'+prelude+'\n'+
  'state.raw=raw;MODEL_V5.setParameters(parameters);const result=computeV5(raw,cutoff,2026);'+
  'attachEfficiencyV5(result.teams,advanced);'+
@@ -74,7 +74,7 @@ for(let week=1;week<=lastWeek;week++){
  const cutoff=prior.length?Math.min(...prior)-1:Date.now();
  const safeCutoff=week===lastWeek?Math.min(cutoff,Date.now()):cutoff;
  const scopedRaw=rows.map(r=>Number(r.week)>week?{...r,completed:'FALSE'}:r);
- const result=compute(scopedRaw,advRows,safeCutoff);
+ const result=compute(scopedRaw,advRows,safeCutoff,parameters);
  const asOf=sundayBefore(prior.length?Math.min(...prior):lastKick+86400000);
  const teams=result.teams.map(summarize);
  const matches=completed.filter(r=>Date.parse(r.start_date)<=safeCutoff&&Number(r.week)<=week);
