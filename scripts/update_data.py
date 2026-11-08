@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SEASON = str(os.environ.get("CFMI_SEASON", "2026"))
 if SEASON not in ("2024","2025","2026"):
     raise RuntimeError("Unsupported season")
-DATA = ROOT / "site" / "data" if SEASON == SEASON else ROOT / "site" / "data" / "history" / SEASON
+DATA = ROOT / "site" / "data" if SEASON == "2026" else ROOT / "site" / "data" / "history" / SEASON
 DATA.mkdir(parents=True, exist_ok=True)
 SOURCE = f"https://raw.githubusercontent.com/sportsdataverse/cfbfastR-data/main/schedules/csv/cfb_schedules_{SEASON}.csv"
 RELEASE = "https://github.com/sportsdataverse/sportsdataverse-data/releases/download"
