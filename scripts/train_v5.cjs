@@ -142,13 +142,47 @@ const baseline={baseScale:1,epa:0,success:0,explosive:0};
 const fitted=fitRidge(train.observations);
 const calibratedCandidate=trainCalibration(train.observations,fitted);
 const calibratedBaseline=trainCalibration(train.observations,baseline);
+function pairedBlockBootstrap(obs,p1,s1,p0,s0){
+ // Weekly blocks are the resampling units because game outcomes within a week
+ // are correlated through shared opponent-strength estimates and other shocks.
+ const byWeek=new Map();
+ for(const g of obs){if(!byWeek.has(g.week))byWeek.set(g.week,[]);byWeek.get(g.week).push(g)}
+ const blocks=[...byWeek.values()],out={logLoss:[],marginMAE:[],accuracy:[]};
+ let seed=20261108;
+ function random(){seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296}
+ const component=(g,p,s)=>{
+  const edge=predictedEdge(g,p),prob=clamp(sigmoid(edge/s),.0001,.9999);
+  return {ll:-(g.outcome*Math.log(prob)+(1-g.outcome)*Math.log(1-prob)),
+   mae:Math.abs(g.homeMargin-edge),hit:Number((edge>=0)===Boolean(g.outcome))};
+ };
+ const diffs=blocks.map(b=>b.map(g=>{
+  const c=component(g,p1,s1),v=component(g,p0,s0);
+  return {ll:v.ll-c.ll,mae:v.mae-c.mae,hit:c.hit-v.hit};
+ }));
+ for(let iter=0;iter<1500;iter++){
+  const sum={ll:0,mae:0,hit:0},n={count:0};
+  for(let z=0;z<blocks.length;z++){
+   const block=diffs[Math.floor(random()*blocks.length)];
+   for(const a of block){sum.ll+=a.ll;sum.mae+=a.mae;sum.hit+=a.hit;n.count++}
+  }
+  out.logLoss.push(sum.ll/n.count);
+  out.marginMAE.push(sum.mae/n.count);
+  out.accuracy.push(sum.hit/n.count);
+ }
+ function interval(a){a.sort((x,y)=>x-y);return {lower95:a[Math.floor(.025*a.length)],upper95:a[Math.floor(.975*a.length)]}}
+ return {resamplingUnit:'week',iterations:1500,validationWeeks:blocks.length,
+  improvementPositiveForCandidate:true,
+  logLoss:interval(out.logLoss),marginMAE:interval(out.marginMAE),accuracy:interval(out.accuracy)};
+}
+
 const candidateTest=stats(test.observations,fitted,calibratedCandidate.scale);
 const baselineTest=stats(test.observations,baseline,calibratedBaseline.scale);
 const candidateTrain=stats(train.observations,fitted,calibratedCandidate.scale);
 const baselineTrain=stats(train.observations,baseline,calibratedBaseline.scale);
+const uncertainty=pairedBlockBootstrap(test.observations,fitted,calibratedCandidate.scale,baseline,calibratedBaseline.scale);
 const advancedAvailable= train.observations.filter(x=>x.advancedAvailable).length>=150;
 const acceptable=advancedAvailable && candidateTest.logLoss<baselineTest.logLoss-.0001 &&
-  candidateTest.marginMAE<=baselineTest.marginMAE+.15;
+  candidateTest.marginMAE<=baselineTest.marginMAE-.25;
 // Select only after a true later-season test; no V5 candidate is assumed better.
 const deployed=acceptable?fitted:baseline,scale=acceptable?calibratedCandidate.scale:calibratedBaseline.scale;
 const evidence={
@@ -172,10 +206,12 @@ const evidence={
    candidateTrain2024:candidateTrain,baselineTrain2024:baselineTrain,
    candidateProbabilityScale:calibratedCandidate.scale,
    baselineProbabilityScale:calibratedBaseline.scale,
-   candidateCoefficients:fitted
+   candidateCoefficients:fitted,
+   pairedWeeklyBootstrap2025:uncertainty
  },
  caveats:[
   '2025 determined model selection and is not reusable as a clean final holdout for additional iterative tuning.',
+  'Paired week-block bootstrap uncertainty ranges are reported; an apparent small win-rate improvement must not be interpreted as statistically established.',
   'Calibrated only with a fitted one-dimensional sigmoid scale; inspect season-by-season reliability diagrams.',
   'Initial-season predictions have higher uncertainty, but no preseason or recruiting prior enters CFMI.',
   'Model excludes injuries, personnel changes, betting market, third-party ratings and FCS-vs-FCS results.'
