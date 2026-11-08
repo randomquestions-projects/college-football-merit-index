@@ -35,7 +35,14 @@ const result=executor(csv,adv);
 if(result.teams.length<130||result.gameCount<300||result.teams.some(t=>!Number.isFinite(t.score)||t.score<0||t.score>100||!Number.isFinite(t.powerScore)||t.powerScore<0||t.powerScore>100||!Number.isInteger(t.powerRank)))throw Error("CFMI V4 audit failed: invalid team scores or game count");
 const georgia=result.teams.find(t=>t.team==="Georgia");
 const powerRanks=result.teams.map(t=>t.powerRank);
-if(new Set(powerRanks).size!==result.teams.length)throw Error("Predictive Power ranks aren't unique");
+// Legitimate exact ties share the same rank; validate rank bounds and monotonic scoring.
+if(result.teams.some(t=>!Number.isInteger(t.powerRank)||t.powerRank<1||t.powerRank>result.teams.length))
+ throw Error("Invalid Power rank bounds");
+const sortedPower=result.teams.slice().sort((a,b)=>b.powerScore-a.powerScore);
+for(let i=1;i<sortedPower.length;i++){
+ if(sortedPower[i].powerScore<sortedPower[i-1].powerScore-1e-9 && sortedPower[i].powerRank<=sortedPower[i-1].powerRank)
+   throw Error("Power ranks do not follow model scores");
+}
 if(result.teams.some(t=>t.powerMethod!=='predictive_efficiency_blend'))throw Error("Predictive Power unexpectedly unavailable with full advanced data");
 const oleMiss=csv.split(/\r?\n/).some(row=>row.includes('"Ole Miss"')&&row.includes('"Georgia"')&&row.includes(",2026,10,")&&row.includes(",42,"));
 console.log("CFMI LIVE AUDIT:",JSON.stringify({gameCount:result.gameCount,Georgia:georgia,advancedCoverage:result.advancedCoverage,fourComponentModelActive:result.fourComponentModelActive,GeorgiaOleMiss42_7InScores:oleMiss,Top25:result.teams.slice(0,25)},null,2));
