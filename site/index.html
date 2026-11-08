@@ -912,7 +912,7 @@ async function loadV5Parameters(){
    state.v5ParamsLoaded=true;
    const v=json.validation;
    if(v&&$('v5ValidationSummary')){
-     const c=v.candidate2025,b=v.baseline2025,old=v.previousV5_2025,ci=v.pairedWeeklyBootstrap2025;
+     const c=v.candidate2025,b=v.baseline2025,old=v.previousV5_2025,ci=v.pairedWeeklyBootstrap2025,c26=v.candidate2026,old26=v.previousV5_2026;
      const show=x=>Number.isFinite(x)?x.toFixed(4):'—';
      const pct=x=>Number.isFinite(x)?(100*x).toFixed(1)+'%':'—';
      const cmp=old?'<tr><td>Previous V5</td><td>'+pct(old.accuracy)+'</td><td>'+show(old.logLoss)+'</td><td>'+old.marginMAE.toFixed(2)+'</td></tr>':'';
@@ -926,7 +926,9 @@ async function loadV5Parameters(){
        '<tr><td>Basic opponent-strength</td><td>'+pct(b.accuracy)+'</td><td>'+show(b.logLoss)+'</td><td>'+b.marginMAE.toFixed(2)+'</td></tr></tbody></table></div>'+
        '<p><strong>Selected:</strong> '+esc(json.deployedCandidate)+'. '+esc(json.selectionReason||'')+'</p>'+
        '<p><strong>Direct active Power factors:</strong> '+esc(active.join(', ')||'baseline only')+'. <strong>Measured but zero incremental coefficient:</strong> '+esc(diagnostic.join(', ')||'none')+'. A zero here does not mean the football skill is irrelevant; it means the current training data did not establish an additional improvement beyond overlapping factors.</p>'+
-       '<p>'+esc(ciInfo)+' These are exploratory two-season comparisons, with 2025 reused for selection rather than a clean independent confirmation. No 2026 outcomes entered coefficient training.</p>';
+       '<p>'+esc(ciInfo)+' 2025 was used for previous and current model selection, so it is not a pristine independent final holdout.</p>'+ 
+       (c26&&old26?'<p><strong>2026 forward-week check ('+json.prospective2026Games+' FBS games, not used to train or select):</strong> expanded candidate '+pct(c26.accuracy)+' winners vs previous V5 '+pct(old26.accuracy)+'; log loss '+show(c26.logLoss)+' vs '+show(old26.logLoss)+'. This is early-season evidence, not grounds for silently changing Power rankings.</p>':'')+ 
+       '<p>No 2026 outcomes entered coefficient training. New source revisions may affect reconstructed weekly evaluations.</p>';
    }
    if(state.raw.length)recalc();
  }catch(err){
