@@ -5,7 +5,7 @@
  */
 'use strict';
 const MODEL_V5={
- version:'5.1.0',name:'CFMI V5.1 — explicit earned resume and multi-dimensional predictive Power',
+ version:'5.2.0',name:'CFMI V5.2 — independently earned Merit and opponent-network adjusted predictive Power',
  meritWeights:{record:.55,qualityResidual:.25,control:.20},
  meritScale:{wabPoints:12,qualityPoints:20,controlAmplitude:32,controlMarginScale:16},
  powerScale:{indexPointsPerExpectedMarginPoint:1.6},
@@ -168,6 +168,58 @@ function attachEfficiencyV5(teams,advRows){
    t.powerMethod=t.powerModelStatus;
    t.powerEvidence=t.fbsGames<4?'low':t.fbsGames<8?'moderate':'season_sample';
    t.matchupCalibrationStatus=MODEL_V5.calibrated?'historically_calibrated':'uncalibrated';
+ }
+
+ // Empirically selected opponent-network mode. All eight advanced diagnostics
+ // remain visible, but game-to-game forecast contributions come from a
+ // simultaneously estimated offense-vs-defense model and separately trained
+ // residual schedule reliability. Do not simply reward a Power Four label.
+ // The old V5 powerPoints (computed immediately above) is a reference used
+ // ONLY to quantify how much high reported strength is poorly supported.
+ if(p.mode==='joint_opponent_network'){
+   if(typeof solveOpponentNetworkEfficiency!=='function')
+      throw Error('Required opponent-network solver was not loaded');
+   const network=solveOpponentNetworkEfficiency(teams);
+   const c=Array.isArray(p.jointCoefficients)&&p.jointCoefficients.length===6?
+       p.jointCoefficients:null;
+   if(!c||!c.every(x=>Number.isFinite(x)&&x>=0&&x<=8))
+       throw Error('Opponent adjustment parameter set is missing or malformed');
+   for(const t of teams){
+     const metrics=network.get(t.name)||{};
+     const rawPower=t.powerPoints;
+     const schedule=Number.isFinite(t.sos)?t.sos:0;
+     const supportRisk=Math.max(0,rawPower)*Math.min(1.6,Math.max(0,-schedule)/8);
+     const fcsGames=t.played.filter(g=>!g.opFbs);
+     const fcsPenalty=fcsGames.reduce((v,g)=>
+         v+Math.min(30,Math.max(0,14-g.margin)),0)/(fcsGames.length+1.5);
+     const components={
+       baseline:(Number.isFinite(p.baseScale)?p.baseScale:1)*(t.power||0),
+       epa:c[0]*((metrics.epa||0)/.10),
+       success:c[1]*((metrics.success||0)/.05),
+       explosive:c[2]*((metrics.explosive||0)/.03),
+       schedule:c[3]*(schedule/4),
+       scheduleReliability:-c[4]*(supportRisk/5),
+       fcsEvidence:-c[5]*(fcsPenalty/6),
+       finishing:0,consistency:0,control:0,offense:0,defense:0
+     };
+     t.powerPoints=Object.values(components).reduce((sum,x)=>sum+x,0);
+     t.powerScore=v5clamp(50+MODEL_V5.powerScale.indexPointsPerExpectedMarginPoint*t.powerPoints,0,100);
+     t.powerContributionPoints=components;
+     t.powerComponents={
+       baseline:v5clamp(50+1.6*components.baseline,0,100),
+       ppa:components.epa,success:components.success,explosive:components.explosive,
+       schedule:components.schedule,
+       support:components.scheduleReliability,
+       fcs:components.fcsEvidence
+     };
+     t.opponentAdjustedNetwork=metrics;
+     t.powerOpponentSupportRisk=supportRisk;
+     t.powerFcsUnderperformance=fcsPenalty;
+     t.powerRawV51Points=rawPower;
+     t.powerMode='opponent_network';
+     t.powerMethod='joint FBS offense-defense opponent adjustment + schedule support + FCS underperformance';
+     t.powerModelStatus='opponent_network_adjusted';
+   }
  }
  v5percentiles(teams,'powerScore','powerScore');
  for(const t of teams)t.powerRank=t.powerScoreRank;
