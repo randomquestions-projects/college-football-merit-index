@@ -28,7 +28,7 @@ const clamp=(v,l,h)=>Math.max(l,Math.min(h,v));
 const sigmoid=x=>1/(1+Math.exp(-clamp(x,-30,30)));
 const capCorrection=10;
 function readSeason(season){
- const dir=path.join(DIR,'history',String(season));
+ const dir=season===2026?DIR:path.join(DIR,'history',String(season));
  const rows=parse(fs.readFileSync(path.join(dir,'cfb_schedules_'+season+'.csv'),'utf8'));
  const adv=parse(fs.readFileSync(path.join(dir,'cfmi_advanced_'+season+'.csv'),'utf8'));
  const played=rows.filter(g=>g.season===String(season)&&g.season_type==='regular'&&g.completed==='TRUE'&&
@@ -154,8 +154,13 @@ const previous={
 // The V5 model was already selected with this same 2025 set. We compare
 // transparently as a reference, not an untouched external holdout.
 const candidateS=calibration(train.observations,candidate);
+// Prospective 2026 as-of-week evaluation, never used to train, tune or select.
+const prospective=readSeason(2026);
 const baseS=calibration(train.observations,base);
 const previousS=8.75;
+const test2026Candidate=results(prospective.observations,candidate,candidateS);
+const test2026Previous=results(prospective.observations,previous,previousS,8);
+const test2026Baseline=results(prospective.observations,base,baseS);
 const trainCandidate=results(train.observations,candidate,candidateS);
 const testCandidate=results(test.observations,candidate,candidateS);
 const testBase=results(test.observations,base,baseS);
@@ -179,19 +184,21 @@ const audit={
  methodology:'Season-only walk-forward snapshots. 2024 weeks 5–13 train ridge-regularized nonnegative performance factors, then 2025 weeks 5–13 compare against season-only baseline and prior V5. No future games enter any snapshot or ratings. 2025 reused for model selection, not an untouched final test.',
  featureKeys:keys,
  trainSeason:2024,validationSeason:2025,
- trainingGames:train.observations.length,validationGames:test.observations.length,
+ trainingGames:train.observations.length,validationGames:test.observations.length,prospective2026Games:prospective.observations.length,
  deployedCandidate:chosen,
  selectionReason:useCandidate?'Full-spectrum candidate improved margin MAE and met log-loss gates against the baseline and V5 reference.':'Use existing V5 reference; full-spectrum candidate did not meet the predeclared margin and log-loss validation gates.',
  parameters:params,probabilitiesCalibrated:true,
  validation:{
   candidate2025:testCandidate,baseline2025:testBase,previousV5_2025:testPrevious,
+  candidate2026:test2026Candidate,previousV5_2026:test2026Previous,baseline2026:test2026Baseline,
   candidateTrain2024:trainCandidate,
   candidateCoefficients:candidate,
   pairedWeeklyBootstrap2025:bootstrap(test.observations,candidate,candidateS,previous,previousS),
-  coverage2024:train.weekly,coverage2025:test.weekly
+  coverage2024:train.weekly,coverage2025:test.weekly,coverage2026:prospective.weekly
  },
  caveats:[
   '2025 was used to select both the prior V5 and this expanded candidate; this is an iterative out-of-time comparison, not an unbiased final holdout.',
+  '2026 weekly results are prospectively evaluated as of the available cutoff but not used to fit, choose or recalibrate the model; retrospective source corrections can still affect reconstructed as-of values.',
   'Red-zone finishing and game control may be less stable than EPA/success; coefficients shrink or reach zero when incremental signal is not established.',
   'Offensive and defensive scoring diagnostics overlap the game-margin baseline; regularization prevents double-counted strength.',
   'Neither recruiting, conferences, betting markets, polls nor preseason team priors determine ratings.',
@@ -203,5 +210,6 @@ fs.writeFileSync(path.join(DIR,'backtest_v5.json'),JSON.stringify(audit,null,2)+
 console.log('CFMI V5.1 POWER COMPARISON',JSON.stringify({
  training:train.observations.length,validation:test.observations.length,
  choice:chosen,params,trainCandidate,testCandidate,testPrevious,testBase,
+ prospective2026:{candidate:test2026Candidate,previous:test2026Previous,baseline:test2026Baseline},
  uncertainty:audit.validation.pairedWeeklyBootstrap2025
 },null,2));
