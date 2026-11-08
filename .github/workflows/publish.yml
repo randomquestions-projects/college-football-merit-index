@@ -33,6 +33,8 @@ jobs:
         run: python scripts/update_data.py
       - name: Refresh published AP and CFP poll snapshots
         run: python scripts/update_polls.py
+      - name: Audit weekly ranking results and data coverage
+        run: node scripts/audit_dashboard.cjs
       - name: Upload validated site artifact
         uses: actions/upload-pages-artifact@v4
         with:
