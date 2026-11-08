@@ -54,7 +54,7 @@ function v5PowerSignals(teams,advancedAvailable){
  const centers={};
  for(const f of V5_POWER_FACTORS){
    const valid=teams.filter(t=>Number.isFinite(t[f.field]) &&
-     (!f.advanced||t.advMetricCounts?.[f.field]>0));
+     (!f.advanced||(f.field==='consistencyScore'?t.advMetricCounts?.ppaNet>0:t.advMetricCounts?.[f.field]>0)));
    centers[f.key]=valid.length?valid.reduce((z,t)=>z+t[f.field],0)/valid.length:0;
  }
  const out=new Map();
