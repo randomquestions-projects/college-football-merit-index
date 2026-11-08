@@ -50,6 +50,7 @@ function readSeason(season){
    const home=r.signals.get(h.name),away=r.signals.get(a.name);
    const x=[h.power-a.power,...keys.slice(1).map(k=>home[k]-away[k])];
    observations.push({
+    gameId:String(g.game_id),date:g.start_date,home:g.home_team,away:g.away_team,
     year:season,week,neutral:g.neutral_site==='TRUE',
     margin:+g.home_points-(+g.away_points),actual:+(+g.home_points>+g.away_points),
     baseline:h.power-a.power,x,
@@ -179,6 +180,48 @@ const chosen=useCandidate?'full_spectrum_regularized':'validated_v5_reference';
 const params={...Object.fromEntries(keys.slice(1).map(k=>[k,selected[k]||0])),
  baseScale:selected.baseScale,homePoints:selected.homePoints,logisticScale:selectedS,
  source:chosen,trainedOn:[2024],validatedOn:[2025]};
+// Export exact pregame same-week CFMI projections used for 2026 evaluation.
+const gameAhead2026={
+ season:2026,generatedAtUtc:new Date().toISOString(),
+ model:'CFMI Power V5.1 deployed via 2024-trained and 2025-selected parameters',
+ trainingSeasons:[2024],selectionSeasons:[2025],
+ note:'Reconstructed strict prior-week predictions; source corrections may change retrospectively.',
+ games:prospective.observations.map(g=>{
+  const prior=predictedEdge(g,previous,8);
+  const expanded=predictedEdge(g,candidate);
+  return {gameId:g.gameId,date:g.date,week:g.week,home:g.home,away:g.away,
+    neutral:g.neutral,homePoints:g.margin,homeWon:g.actual===1,
+    cfmiPredictedMargin:prior,cfmiNeutralMargin:prior-(g.neutral?0:previous.homePoints),
+    cfmiHomeWinProb:sigmoid(prior/previousS),
+    expandedPredictedMargin:expanded,
+    opponentBaselineMargin:predictedEdge(g,base)};
+ })
+};
+fs.writeFileSync(path.join(DIR,'research_cfmi_2026_pregame.json'),JSON.stringify(gameAhead2026,null,2)+'\n');
+const same2025=test.observations.filter(g=>g.week<=10);
+const same2026=prospective.observations.filter(g=>g.week<=10);
+const breakdown=(sample,p,scale)=>{
+ const overall=results(sample,p,scale);
+ const favorites=sample.map(g=>{
+  const edge=predictedEdge(g,p);
+  const f=sigmoid(Math.abs(edge)/scale);
+  const correct=(edge>=0)===Boolean(g.actual);
+  return {week:g.week,predictedFavoriteWinProb:f,correct,upset:!correct,edge:Math.abs(edge),homeWon:!!g.actual};
+ });
+ return {...overall,expectedWinnerAccuracy:mean(favorites.map(x=>x.predictedFavoriteWinProb)),
+   medianFavoriteWinChance:favorites.map(x=>x.predictedFavoriteWinProb).sort((a,b)=>a-b)[Math.floor(favorites.length/2)],
+   lowConfidenceGames:favorites.filter(x=>x.predictedFavoriteWinProb<.65).length,
+   upsetsAgainst70pctFavorites:favorites.filter(x=>x.predictedFavoriteWinProb>=.7&&!x.correct).length,
+   shareHomeWon:mean(sample.map(g=>+Boolean(g.actual))),
+   perWeek:[...new Set(sample.map(g=>g.week))].sort((a,b)=>a-b)
+      .map(week=>({week,...results(sample.filter(x=>x.week===week),p,scale)}))
+ };
+};
+const seasonalDifficulty={weekRange:'5-10',
+  earlier2025:breakdown(same2025,previous,previousS),
+  current2026:breakdown(same2026,previous,previousS)};
+fs.writeFileSync(path.join(DIR,'research_2025_vs_2026.json'),JSON.stringify(seasonalDifficulty,null,2)+'\n');
+console.log('FAIR_SEASON_2025_2026_WEEK_5_10',JSON.stringify(seasonalDifficulty));
 const audit={
  version:'5.1.0',generatedAtUtc:new Date().toISOString(),
  methodology:'Season-only walk-forward snapshots. 2024 weeks 5–13 train ridge-regularized nonnegative performance factors, then 2025 weeks 5–13 compare against season-only baseline and prior V5. No future games enter any snapshot or ratings. 2025 reused for model selection, not an untouched final test.',
