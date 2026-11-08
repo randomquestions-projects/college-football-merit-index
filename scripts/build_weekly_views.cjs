@@ -16,7 +16,9 @@ if(!inline)throw Error('Missing CFMI inline model prelude');
 const boundary=inline[1].indexOf('const submetric=');
 if(boundary<10000)throw Error('CFMI engine prelude moved: update build_weekly_views.cjs');
 const prelude=inline[1].slice(0,boundary);
-const model=fs.readFileSync(path.join(root,'model_v4.js'),'utf8');
+const model=fs.readFileSync(path.join(root,'model_v4.js'),'utf8')+'\n'+fs.readFileSync(path.join(root,'model_v5.js'),'utf8');
+const parameters=JSON.parse(fs.readFileSync(path.join(root,'data','model_v5_params.json'),'utf8'));
+
 const schedule=fs.readFileSync(path.join(root,'data','cfb_schedules_2026.csv'),'utf8');
 const advanced=fs.readFileSync(path.join(root,'data','cfmi_advanced_2026.csv'),'utf8');
 const csvParse=new Function('csv',prelude+'return csvParse(csv)');
@@ -24,8 +26,8 @@ const rows=csvParse(schedule),advRows=csvParse(advanced);
 if(rows.length<300||advRows.length<200)throw Error('Unacceptably incomplete 2026 data');
 const compute=new Function('raw','advanced','cutoff',
  model+'\n'+prelude+'\n'+
- 'state.raw=raw;const result=computeV4(raw,cutoff,2026);'+
- 'attachEfficiencyV4(result.teams,advanced);'+
+ 'state.raw=raw;MODEL_V5.setParameters(parameters);const result=computeV5(raw,cutoff,2026);'+
+ 'attachEfficiencyV5(result.teams,advanced);'+
  'return {teams:result.teams,gameCount:result.games.length,modelVersion:result.modelVersion,coverage:{measured:state.advCovered,expected:state.advExpected,full:state.fullModel}};'
 );
 const validScore=r=>r.season===year&&r.season_type==='regular'&&r.completed==='TRUE'&&
@@ -44,7 +46,7 @@ const summarize=t=>{
   name:t.name,conference:t.conference,rank:t.rank,powerRank:t.powerRank,
   score:t.score,powerScore:t.powerScore,won:t.won,lost:t.lost,
   wab:t.wab,sor:t.sor,sos:t.sos,mov:t.mov,
-  quality:t.qualityComponent,eff:t.effScore,
+  quality:t.qualityComponent,eff:t.effScore,meritRecordScore:t.meritRecordScore,meritQualityResidual:t.meritQualityResidual,meritQualityScore:t.meritQualityScore,meritControlScore:t.meritControlScore,powerPoints:t.powerPoints,powerEvidence:t.powerEvidence,
   opponentStrength:t.power,baselineRank:t.baselinePowerRank,
   ppaNet:t.ppaNet,successNet:t.successNet,explosiveNet:t.explosiveNet,
   off:t.off,def:t.def,top25Wins:t.top25Wins,
@@ -94,29 +96,29 @@ const matchups=nextWeek===null?[]:future.filter(x=>Number(x.week)===nextWeek)
  .map(g=>{
   const home=byName.get(g.home_team),away=byName.get(g.away_team);
   if(!home||!away)return null;
-  const eligible=latest.teams.filter(t=>Number.isFinite(t.powerScore)&&Number.isFinite(t.opponentStrength));
-  const mx=eligible.reduce((s,t)=>s+t.powerScore,0)/Math.max(1,eligible.length);
-  const my=eligible.reduce((s,t)=>s+t.opponentStrength,0)/Math.max(1,eligible.length);
-  const cov=eligible.reduce((s,t)=>s+(t.powerScore-mx)*(t.opponentStrength-my),0);
-  const vx=eligible.reduce((s,t)=>s+(t.powerScore-mx)*(t.powerScore-mx),0);
-  // This scale is diagnostic-only; never display it as a calibrated point spread.
-  const pointsPerIndex=vx?Math.max(.05,cov/vx):.25;
+  const eligible=latest.teams.filter(t=>Number.isFinite(t.powerPoints));
   const neutral=g.neutral_site==='TRUE';
-  const homeEdge=pointsPerIndex*(home.powerScore-away.powerScore)+(neutral?0:2.5);
+  // V5 predictive strength is in estimated point margins, not percentile index units.
+  const homeEdge=(home.powerPoints-away.powerPoints)+(neutral?0:parameters.parameters.homePoints);
+  const probability=parameters.probabilitiesCalibrated===true?
+    1/(1+Math.exp(-Math.max(-30,Math.min(30,homeEdge/parameters.parameters.logisticScale)))):null;
   return {
     gameId:String(g.game_id),week:nextWeek,date:g.start_date,
     venue:g.venue||null,neutral,home:home.name,away:away.name,
     predictedWinner:homeEdge>=0?home.name:away.name,
-    predictionBasis:'Power scores + 2.5-point venue edge mapped to internal point scale; NOT calibrated.',
+    predictionBasis:'V5 opponent-adjusted predictive point ratings + trained home advantage',
     edgePointsDiagnostic:homeEdge,
+    homeWinProbability:probability,
+    awayWinProbability:probability===null?null:1-probability,
+    calibrated:probability!==null,
     homeMetrics:home,awayMetrics:away
   };
  }).filter(Boolean);
 const document={
- season:2026,version:'CFMI V4.1 historical/matchups extension',
+ season:2026,version:'CFMI V5.0 historical/matchups extension',
  generatedAtUtc:new Date().toISOString(),
  historicalMode:'RECONSTRUCTED_AS_OF_CUTOFF',
- warning:'Historical ranks use only games preceding their weekly cutoff, but were recomputed with the current model, currently published source files, and retrospective revisions. They are not immutable original-publication archives.',
+ warning:'Historical rankings use only completed games preceding each weekly cutoff, but are V5 as-of reconstructions from the current sources. They are not immutable original-publication archives; retrospective source revisions can affect historical values.',
  history:weeks,upcoming:{week:nextWeek,games:matchups}
 };
 const filename=path.join(root,'data','weekly_views_2026.json');
