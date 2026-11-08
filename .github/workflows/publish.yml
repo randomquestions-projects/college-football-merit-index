@@ -33,6 +33,8 @@ jobs:
           python-version: '3.12'
       - name: Research historical preseason roster talent source coverage
         run: python scripts/probe_talent_sources.py
+      - name: Collect and independently audit 2024-2026 historical roster talent
+        run: python scripts/collect_talent_research.py
       - name: Download 2026 scores and advanced statistics
         run: python scripts/update_data.py
       - name: Refresh published AP and CFP poll snapshots
