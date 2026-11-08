@@ -1,57 +1,91 @@
 #!/usr/bin/env node
-"use strict";
-/* Independent weekly runtime audit of the SAME JavaScript CFMI engine used on the website.
- * Never uses AP/CFP or any preseason priors. Fails the publishing job for an invalid result.
- */
-const fs=require("fs"),path=require("path");
-const base=path.join(__dirname,"..","site"),html=fs.readFileSync(path.join(base,"index.html"),"utf8");
-const match=html.match(/<script>([\s\S]*?)<\/script>/i);
-if(!match)throw Error("Cannot find CFMI inline calculation engine");
-const code=match[1],endpoint=code.indexOf("const submetric=");
-if(endpoint<10000)throw Error("Invalid CFMI JS extraction");
-const model=fs.readFileSync(path.join(base,"model_v4.js"),"utf8");
-const body=code.slice(0,endpoint)+String.raw`
-const records=csvParse(scores), advanced=csvParse(advCsv);
-const {teams,games}=computeV4(records,'live');
-state.raw=records;
-attachEfficiencyV4(teams,advanced);
-return {teams:teams.map(t=>({
- rank:t.rank,team:t.name,score:t.score,record:t.won+'-'+t.lost,
- sorRank:t.sorRank,movRank:t.movRank,qualityRank:t.qualityComponentRank,
- sorPct:t.sor,movPct:t.movPct,qualityPct:t.qualityComponent,effPct:t.effScore,
- powerRank:t.powerRank,powerScore:t.powerScore,powerMethod:t.powerMethod,
- baselineOpponentRank:t.baselinePowerRank,opponentPower:t.power,
- powerComponents:t.powerComponents,
- qualityTop25Wins:t.top25Wins,roadTop25Wins:t.top25RoadWins,
- efficiencyRank:t.effScoreRank,efficiencyScore:t.effScore,
- efficiencyDetails:Object.fromEntries(['ppaNet','successNet','explosiveNet','control','redzoneNet','turnoverNet','penaltyNet','consistencyScore'].map(k=>[k,{percentile:t[k+'Pct'],nationalRank:t[k+'Rank'],coverage:t.advMetricCoverage?.[k]}])),
- advancedGames:t.advCoreGames,expectedAdvancedGames:t.fbsGames
-})),gameCount:games.length,advancedCoverage:{numerator:state.advCovered,denominator:state.advExpected},fourComponentModelActive:state.fullModel};
-`;
-const executor=new Function("scores","advCsv",model+"\n"+body);
-const csv=fs.readFileSync(path.join(base,"data","cfb_schedules_2026.csv"),"utf8");
-const adv=fs.readFileSync(path.join(base,"data","cfmi_advanced_2026.csv"),"utf8");
-const result=executor(csv,adv);
-if(result.teams.length<130||result.gameCount<300||result.teams.some(t=>!Number.isFinite(t.score)||t.score<0||t.score>100||!Number.isFinite(t.powerScore)||t.powerScore<0||t.powerScore>100||!Number.isInteger(t.powerRank)))throw Error("CFMI V4 audit failed: invalid team scores or game count");
-const georgia=result.teams.find(t=>t.team==="Georgia");
-const powerRanks=result.teams.map(t=>t.powerRank);
-// Legitimate exact ties share the same rank; validate rank bounds and monotonic scoring.
-if(result.teams.some(t=>!Number.isInteger(t.powerRank)||t.powerRank<1||t.powerRank>result.teams.length))
- throw Error("Invalid Power rank bounds");
-const sortedPower=result.teams.slice().sort((a,b)=>b.powerScore-a.powerScore);
-for(let i=1;i<sortedPower.length;i++){
- if(sortedPower[i].powerScore<sortedPower[i-1].powerScore-1e-9 && sortedPower[i].powerRank<=sortedPower[i-1].powerRank)
-   throw Error("Power ranks do not follow model scores");
+'use strict';
+const fs=require('fs'),path=require('path'),assert=require('assert/strict');
+const base=path.join(__dirname,'..','site'),data=path.join(base,'data');
+const html=fs.readFileSync(path.join(base,'index.html'),'utf8');
+const m=html.match(/<script>([\s\S]*?)<\/script>/i);
+if(!m)throw Error('Missing inline calculation engine');
+const boundary=m[1].indexOf('const submetric=');
+if(boundary<10000)throw Error('Invalid engine boundary');
+const prelude=m[1].slice(0,boundary);
+const model=fs.readFileSync(path.join(base,'model_v4.js'),'utf8')+'\n'+fs.readFileSync(path.join(base,'model_v5.js'),'utf8');
+const doc=JSON.parse(fs.readFileSync(path.join(data,'model_v5_params.json'),'utf8'));
+const history=JSON.parse(fs.readFileSync(path.join(data,'weekly_views_2026.json'),'utf8'));
+assert.equal(doc.version,'5.0.0');
+assert.deepEqual(doc.parameters.trainedOn,[2024]);
+assert.deepEqual(doc.parameters.validatedOn,[2025]);
+assert(doc.trainingGames>=300&&doc.validationGames>=300);
+assert(doc.validation?.baseline2025?.logLoss>0);
+const body=prelude+[
+"if(!MODEL_V5.setParameters(parameters))throw Error('Model parameters invalid');",
+"const records=csvParse(scores),advanced=csvParse(advCsv);",
+"const {teams,games}=computeV5(records,cutoff,2026);",
+"state.raw=records;attachEfficiencyV5(teams,advanced);",
+"return {gameCount:games.length,coverage:{measured:state.advCovered,eligible:state.advExpected,full:state.fullModel},",
+"teams:teams.map(t=>({name:t.name,rank:t.rank,merit:t.score,power:t.powerScore,",
+"powerPoints:t.powerPoints,powerRank:t.powerRank,won:t.won,lost:t.lost,wab:t.wab,",
+"residual:t.meritQualityResidual,meritRecord:t.meritRecordScore,meritControl:t.meritControlScore,",
+"advanced:t.advCoreGames,fbsGames:t.fbsGames})),version:MODEL_V5.version};"
+].join('\n');
+const compute=new Function('scores','advCsv','parameters','cutoff',model+'\n'+body);
+const csv=fs.readFileSync(path.join(data,'cfb_schedules_2026.csv'),'utf8');
+const adv=fs.readFileSync(path.join(data,'cfmi_advanced_2026.csv'),'utf8');
+const latest=compute(csv,adv,doc,Date.now());
+assert.equal(latest.version,'5.0.0');
+assert(latest.gameCount>=300,'Expected substantial 2026 games');
+assert(latest.teams.length>=130,'Expected complete FBS coverage');
+assert(latest.coverage.eligible>=300,'Missing advanced data eligibility');
+assert(latest.teams.every(t=>Number.isFinite(t.merit)&&t.merit>=0&&t.merit<=100
+ &&Number.isFinite(t.power)&&t.power>=0&&t.power<=100&&Number.isFinite(t.powerPoints)
+ &&Number.isInteger(t.rank)&&Number.isInteger(t.powerRank)&&t.fbsGames>=t.advanced),
+ 'Invalid Merit, Power, coverage or ranks');
+for(const key of ['rank','powerRank']){
+ const ranks=latest.teams.map(t=>t[key]).sort((a,b)=>a-b);
+ assert.deepEqual(ranks,Array.from({length:latest.teams.length},(_,i)=>i+1),'Invalid ranking sequence: '+key);
 }
-if(result.teams.some(t=>t.powerMethod!=='predictive_efficiency_blend'))throw Error("Predictive Power unexpectedly unavailable with full advanced data");
-const oleMiss=csv.split(/\r?\n/).some(row=>row.includes('"Ole Miss"')&&row.includes('"Georgia"')&&row.includes(",2026,10,")&&row.includes(",42,"));
-console.log("CFMI LIVE AUDIT:",JSON.stringify({gameCount:result.gameCount,Georgia:georgia,advancedCoverage:result.advancedCoverage,fourComponentModelActive:result.fourComponentModelActive,GeorgiaOleMiss42_7InScores:oleMiss,Top25:result.teams.slice(0,25)},null,2));
-// Sensitivity is descriptive only; it never changes the published CFMI weights.
-const compareWeighting=(weights)=>{
- const list=result.teams.map(t=>({...t,scenarioScore:weights[0]*t.sorPct/100+weights[1]*t.movPct/100+weights[2]*t.qualityPct/100+weights[3]*t.effPct/100})).sort((a,b)=>b.scenarioScore-a.scenarioScore);
- return {georgiaRank:list.findIndex(t=>t.team==='Georgia')+1,top10:list.slice(0,10).map(t=>t.team)};
+for(const [key,rank] of [['merit','rank'],['power','powerRank']]){
+ const sorted=latest.teams.slice().sort((a,b)=>a[rank]-b[rank]);
+ for(let i=1;i<sorted.length;i++)assert(sorted[i-1][key]>=sorted[i][key]-1e-8,'Nonmonotone '+rank);
+}
+assert(Array.isArray(history.history)&&history.history.length>=6,'Weekly snapshots missing');
+assert.equal(history.season,2026);
+let previous=-1;
+for(const snapshot of history.history){
+ assert(snapshot.gameCount>=previous,'Game counts must not decrease');
+ previous=snapshot.gameCount;
+ assert(snapshot.teams.length===latest.teams.length,'History must include entire FBS');
+ assert(snapshot.teams.every(t=>Number.isFinite(t.score)&&Number.isFinite(t.powerScore)
+  &&t.rank>=1&&t.powerRank>=1&&t.rank<=snapshot.teams.length
+  &&t.powerRank<=snapshot.teams.length),'History has invalid rank/score');
+ const recomputed=compute(csv,adv,doc,Date.parse(snapshot.cutoffUtc));
+ for(const name of ['Georgia','Alabama','Utah']){
+  const t=snapshot.teams.find(x=>x.name===name),a=recomputed.teams.find(x=>x.name===name);
+  if(t)assert(a&&a.won===t.won&&a.lost===t.lost&&a.rank===t.rank&&a.powerRank===t.powerRank,
+   'As-of mismatch '+name+' week '+snapshot.week);
+ }
+}
+for(const game of history.upcoming.games||[]){
+ assert(Date.parse(game.date)>Date.now()-3600000,'Slate contains completed event');
+ assert(Number.isFinite(game.homeMetrics.powerPoints)&&Number.isFinite(game.awayMetrics.powerPoints));
+ assert([game.home,game.away].includes(game.predictedWinner),'Missing match pick');
+ if(doc.probabilitiesCalibrated){
+  assert(Number.isFinite(game.homeWinProbability)&&game.homeWinProbability>=0&&game.homeWinProbability<=1);
+  assert(Math.abs(game.homeWinProbability+game.awayWinProbability-1)<1e-9);
+ }else assert.equal(game.homeWinProbability,null);
+}
+const output={
+ modelVersion:'5.0.0',generatedAtUtc:new Date().toISOString(),
+ provenance:{trainSeason:doc.trainSeason,validationSeason:doc.validationSeason,
+  selected:doc.deployedCandidate,validation:doc.validation},
+ coverage:latest.coverage,totalGames:latest.gameCount,teamCount:latest.teams.length,
+ weeklySnapshots:history.history.map(x=>({week:x.week,asOf:x.asOfDate,games:x.gameCount})),
+ upcomingGames:history.upcoming.games?.length||0,teams:latest.teams
 };
-const sensitivity={v4:compareWeighting([30,20,15,35]),v3weights:compareWeighting([35,20,20,25]),moreQuality:compareWeighting([30,20,20,30])};
-console.log('CFMI WEIGHT SENSITIVITY:',JSON.stringify(sensitivity,null,2));
-const dst=path.join(base,"data","cfmi_ranking_audit.json");
-fs.writeFileSync(dst,JSON.stringify({compiled_at:new Date().toISOString(),...result,sensitivity},null,2)+"\n");
+fs.writeFileSync(path.join(data,'cfmi_ranking_audit.json'),JSON.stringify(output,null,2)+'\n');
+console.log('CFMI V5 AUDIT PASSED',JSON.stringify({
+ games:latest.gameCount,teams:latest.teams.length,coverage:latest.coverage,
+ weeks:history.history.length,matchups:history.upcoming.games?.length||0,
+ selection:doc.deployedCandidate,heldout2025:{
+  candidate:doc.validation.candidate2025,baseline:doc.validation.baseline2025
+ }
+},null,2));
