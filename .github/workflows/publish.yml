@@ -7,6 +7,10 @@ on:
   schedule:
     - cron: '0 9 * * 0'
       timezone: America/New_York
+    - cron: '0 20 * * 0' # AP poll post-publication check
+      timezone: America/New_York
+    - cron: '0 23 * * 2' # CFP poll post-publication check
+      timezone: America/New_York
 
 permissions:
   contents: read
@@ -27,6 +31,8 @@ jobs:
           python-version: '3.12'
       - name: Download 2026 scores and advanced statistics
         run: python scripts/update_data.py
+      - name: Refresh published AP and CFP poll snapshots
+        run: python scripts/update_polls.py
       - name: Upload validated site artifact
         uses: actions/upload-pages-artifact@v4
         with:
