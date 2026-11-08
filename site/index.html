@@ -930,12 +930,12 @@ loadExternalComparison();
   $('historicalAccuracy').textContent=entries.map(x=>'V4 selected '+(100*x.accuracy.v4).toFixed(1)+'% of '+x.heldoutGames+' held-out games in '+x.season+' (V3: '+(100*x.accuracy.v3).toFixed(1)+'%).').join(' ');
  }catch(error){$('historicalAccuracy').textContent='Current historical results are available via the linked backtest report.';}
 })();
-const initialPage=location.hash==='#comparison'?'comparison':location.hash==='#resume'?'resume':h==='#history'?'history':h==='#matchups'?'matchups':location.hash==='#history'?'history':location.hash==='#matchups'?'matchups':
+const initialPage=location.hash==='#comparison'?'comparison':location.hash==='#resume'?'resume':location.hash==='#history'?'history':location.hash==='#matchups'?'matchups':
  ['#method','#variables','#sources','#methodology'].includes(location.hash)?'methodology':'rankings';
 switchDashboardPage(initialPage);
 window.addEventListener('hashchange',()=>{
  const h=location.hash;
- switchDashboardPage(h==='#comparison'?'comparison':h==='#resume'?'resume':
+ switchDashboardPage(h==='#comparison'?'comparison':h==='#resume'?'resume':h==='#history'?'history':h==='#matchups'?'matchups':
    ['#method','#variables','#sources','#methodology'].includes(h)?'methodology':'rankings');
 });
 </script>
