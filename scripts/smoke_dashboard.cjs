@@ -40,8 +40,8 @@ async function waitForServer(){
   assert.equal(await page.locator("#resumeHead [data-open-team]").count(),4,"Fourth team selection failed");
   await page.locator('#resumeHead [data-open-team="Georgia"]').click();
   await page.locator("#detailScrim.open").waitFor();
-  const detail=await page.locator("#detailBody").innerText();
-  assert(detail.includes("Game performance")&&detail.includes("Opponent power"),"Team detail game-quality audit not visible");
+  const detail=(await page.locator("#detailBody").innerText()).toLowerCase();
+  assert(detail.includes("game performance")&&detail.includes("opponent power"),"Team detail game-quality audit not visible");
   await page.locator("#closeModal").click();
   await page.locator('#pageSwitch [data-page="comparison"]').click();
   await page.locator("#compareBody tr").first().waitFor();
