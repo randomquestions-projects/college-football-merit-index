@@ -15,9 +15,10 @@ const v4mean=xs=>xs.length?xs.reduce((s,v)=>s+v,0)/xs.length:0;
 const v4sd=xs=>{if(xs.length<2)return .6;const m=v4mean(xs);return Math.sqrt(v4mean(xs.map(x=>(x-m)*(x-m))))};
 const v4sigmoid=x=>1/(1+Math.exp(-v4clamp(x,-32,32)));
 const v4margin=m=>Math.sign(m)*(Math.min(Math.abs(m),17)+.42*Math.min(Math.max(0,Math.abs(m)-17),45));
-function computeV4(rows,cutoffMode){
-  const cutoff=cutoffMode==='live'?Date.now():CUTOFF[cutoffMode];
-  const games=rows.filter(r=>r.season==='2026'&&r.season_type==='regular'&&r.completed==='TRUE'
+function computeV4(rows,cutoffMode,seasonYear=2026){
+  const season=String(seasonYear);
+  const cutoff=typeof cutoffMode==='number'?cutoffMode:cutoffMode==='live'?Date.now():CUTOFF[cutoffMode];
+  const games=rows.filter(r=>r.season===season&&r.season_type==='regular'&&r.completed==='TRUE'
     &&r.home_points!==''&&r.away_points!==''&&r.home_points!=='NA'&&r.away_points!=='NA'
     &&Number.isFinite(Number(r.home_points))&&Number.isFinite(Number(r.away_points))
     &&Date.parse(r.start_date)<=cutoff).map(r=>({
@@ -28,7 +29,7 @@ function computeV4(rows,cutoffMode){
     }));
   const map=new Map();
   for(const r of rows){
-    if(r.season!=='2026')continue;
+    if(r.season!==season)continue;
     for(const side of ['home','away']){
       if(r[side+'_division']!=='fbs')continue;
       const name=r[side+'_team'];
