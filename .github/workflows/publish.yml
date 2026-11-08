@@ -54,6 +54,8 @@ jobs:
         run: node scripts/test_joint_opponent_network.cjs
       - name: Evaluate incremental opponent reliability correction on 2024 train / 2025 validation
         run: node scripts/test_opponent_corrections.cjs
+      - name: Promote validated joint opponent-network Power or retain reference
+        run: node scripts/promote_opponent_network.cjs
       - name: Diagnose current opponent strength and rating contributions
         run: node scripts/diagnose_opponent_strength.cjs
       - name: Reconstruct weekly V5 history and upcoming matchup predictions
