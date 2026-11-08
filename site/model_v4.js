@@ -186,7 +186,11 @@ function attachEfficiencyV4(teams,rows){
   const byKey=new Map();
   const fields=['off_ppa','def_ppa','off_success_rate','def_success_rate','off_explosive_rate','def_explosive_rate',
     'lead_share','penalty_yards','opp_penalty_yards','turnovers_lost','turnovers_gained',
-    'redzone_td','redzone_trips','opp_redzone_td','opp_redzone_trips','expected_turnover_margin'];
+    'redzone_td','redzone_trips','opp_redzone_td','opp_redzone_trips','expected_turnover_margin',
+    'possession_control_wp','off_finish_pp40','def_finish_pp40',
+    'off_redzone_td_rate','def_redzone_td_rate',
+    'off_ppa_nongarbage','def_ppa_nongarbage','off_success_nongarbage','def_success_nongarbage',
+    'off_explosive_nongarbage','def_explosive_nongarbage'];
   for(const row of rows){
     const t=teamByName.get(normalizeTeam(row.team)),id=String(row.game_id||'');
     if(!t||!t.fbsG.some(g=>String(g.id)===id))continue;
@@ -194,11 +198,23 @@ function attachEfficiencyV4(teams,rows){
     for(const k of fields){
       let x=String(row[k]??'').trim(),n=x!==''&&!/^(NA|null|nan|none)$/i.test(x)?Number(x):NaN;
       if(!Number.isFinite(n))continue;
-      if(['off_success_rate','def_success_rate','off_explosive_rate','def_explosive_rate','lead_share','redzone_td','opp_redzone_td'].includes(k)&&n>1&&n<=100)n/=100;
-      if(['off_success_rate','def_success_rate','off_explosive_rate','def_explosive_rate','lead_share','redzone_td','opp_redzone_td'].includes(k)&&!(n>=0&&n<=1))continue;
-      if(['off_ppa','def_ppa'].includes(k)&&Math.abs(n)>10)continue;
+      if(['off_success_rate','def_success_rate','off_explosive_rate','def_explosive_rate','lead_share','redzone_td','opp_redzone_td','possession_control_wp','off_success_nongarbage','def_success_nongarbage','off_explosive_nongarbage','def_explosive_nongarbage','off_redzone_td_rate','def_redzone_td_rate'].includes(k)&&n>1&&n<=100)n/=100;
+      if(['off_success_rate','def_success_rate','off_explosive_rate','def_explosive_rate','lead_share','redzone_td','opp_redzone_td','possession_control_wp','off_success_nongarbage','def_success_nongarbage','off_explosive_nongarbage','def_explosive_nongarbage','off_redzone_td_rate','def_redzone_td_rate'].includes(k)&&!(n>=0&&n<=1))continue;
+      if(['off_ppa','def_ppa','off_ppa_nongarbage','def_ppa_nongarbage'].includes(k)&&Math.abs(n)>10)continue;
+      if(['off_finish_pp40','def_finish_pp40'].includes(k)&&!(n>=0&&n<=8))continue;
       if(['penalty_yards','opp_penalty_yards','turnovers_lost','turnovers_gained','redzone_trips','opp_redzone_trips'].includes(k)&&n<0)continue;
       v[k]=n;
+    }
+    // Prefer neutral-state garbage-excluded play metrics when both sides
+    // are present. No mixing filtered offense with unfiltered defense.
+    for(const [off,def,offPbp,defPbp] of [
+      ['off_ppa','def_ppa','off_ppa_nongarbage','def_ppa_nongarbage'],
+      ['off_success_rate','def_success_rate','off_success_nongarbage','def_success_nongarbage'],
+      ['off_explosive_rate','def_explosive_rate','off_explosive_nongarbage','def_explosive_nongarbage']
+    ]){
+      if(Number.isFinite(v[offPbp])&&Number.isFinite(v[defPbp])){
+        v[off]=v[offPbp];v[def]=v[defPbp];
+      }
     }
     // At least one observable play-level measure; other fields may be missing.
     if(!['off_ppa','off_success_rate','off_explosive_rate','lead_share'].some(k=>Number.isFinite(v[k])))continue;
@@ -210,6 +226,7 @@ function attachEfficiencyV4(teams,rows){
     // score-derived quarter-lead or a partial box-score observation.
     t.advCoreGames=t.advGames.filter(g=>Number.isFinite(g.off_ppa)&&Number.isFinite(g.def_ppa)).length;
     t.advAnyGames=t.advGames.length;
+    t.advPbpGames=t.advGames.filter(g=>Number.isFinite(g.off_ppa_nongarbage)&&Number.isFinite(g.def_ppa_nongarbage)).length;
     t.advCoverage=t.fbsGames?t.advCoreGames/t.fbsGames:0;
     t.advMetricCoverage={};t.advMetricCounts={};
     t.effScore=NaN;
@@ -218,6 +235,12 @@ function attachEfficiencyV4(teams,rows){
   const expected=teams.reduce((s,t)=>s+t.fbsGames,0);
   const covered=observations.filter(g=>Number.isFinite(g.off_ppa)&&Number.isFinite(g.def_ppa)).length;
   state.advCovered=covered;state.advExpected=expected;
+  const controlObserved=observations.filter(x=>Number.isFinite(x.possession_control_wp)).length;
+  const finishObserved=observations.filter(x=>Number.isFinite(x.off_finish_pp40)&&Number.isFinite(x.def_finish_pp40)).length;
+  state.controlMode=expected&&controlObserved/expected>=.65?'neutral_possession_wp':'quarter_lead_fallback';
+  state.finishMode=expected&&finishObserved/expected>=.40?'points_per_scoring_opportunity':'redzone_play_proxy';
+  state.controlMeasured=controlObserved;
+  state.finishMeasured=finishObserved;
   state.fullModel=expected>0&&covered/expected>=MODEL_V4.minimumAdvancedCoverage;
   if(!state.fullModel){
     for(const t of teams){
@@ -228,7 +251,7 @@ function attachEfficiencyV4(teams,rows){
     return;
   }
   const base={};
-  const tracked=['off_ppa','def_ppa','off_success_rate','def_success_rate','off_explosive_rate','def_explosive_rate','redzone_td','opp_redzone_td','penalty_yards','turnovers_lost','turnovers_gained'];
+  const tracked=['off_ppa','def_ppa','off_success_rate','def_success_rate','off_explosive_rate','def_explosive_rate','redzone_td','opp_redzone_td','off_finish_pp40','def_finish_pp40','penalty_yards','turnovers_lost','turnovers_gained'];
   for(const field of tracked){
     const vals=observations.map(x=>x[field]).filter(Number.isFinite);
     base[field]=vals.length?v4mean(vals):0;
@@ -264,9 +287,10 @@ function attachEfficiencyV4(teams,rows){
         const def=a.def_explosive_rate+f*(base.off_explosive_rate-opponentMean(opp,id,'off_explosive_rate'));
         sample.explosiveNet.push(off-def);
       }
-      if(Number.isFinite(a.lead_share)){
+      const controlValue=state.controlMode==='neutral_possession_wp'?a.possession_control_wp:a.lead_share;
+      if(Number.isFinite(controlValue)){
         const venue=a.gm.site==='A'?.04:a.gm.site==='H'?-.04:0;
-        sample.control.push(a.lead_share-.5+venue+.15*Math.tanh((a.gm.opRating||0)/12));
+        sample.control.push(controlValue-.5+venue+.15*Math.tanh((a.gm.opRating||0)/12));
       }
       if(Number.isFinite(a.penalty_yards)&&Number.isFinite(a.opp_penalty_yards)){
         // Net discipline, corrected slightly for opposition's own typical
@@ -280,7 +304,15 @@ function attachEfficiencyV4(teams,rows){
         // Substantially shrink raw turnover differential; recoveries are noisy.
         sample.turnoverNet.push(.45*v4clamp(a.turnovers_gained-a.turnovers_lost,-3,3));
       }
-      if(Number.isFinite(a.redzone_td)&&Number.isFinite(a.opp_redzone_td)){
+      if(state.finishMode==='points_per_scoring_opportunity'){
+        if(Number.isFinite(a.off_finish_pp40)&&Number.isFinite(a.def_finish_pp40)){
+          // Points per actual drive reaching opponent 40; opponent corrected.
+          const off=a.off_finish_pp40+.6*(base.def_finish_pp40-opponentMean(opp,id,'def_finish_pp40'));
+          const def=a.def_finish_pp40+.6*(base.off_finish_pp40-opponentMean(opp,id,'off_finish_pp40'));
+          sample.redzoneNet.push(off-def);
+        }
+      }else if(Number.isFinite(a.redzone_td)&&Number.isFinite(a.opp_redzone_td)){
+        // All teams use one season-wide measurement definition.
         const off=a.redzone_td+.6*(base.opp_redzone_td-opponentMean(opp,id,'opp_redzone_td'));
         const def=a.opp_redzone_td+.6*(base.redzone_td-opponentMean(opp,id,'redzone_td'));
         sample.redzoneNet.push(off-def);
