@@ -57,11 +57,25 @@ async function waitForServer(){
   await page.locator('#pageSwitch [data-page="methodology"]').click();
   assert(await page.locator("#purposeMethodTitle").isVisible(),"Purpose & Methodology not visible");
   const purpose=await page.locator('#methodologyPage').innerText();
-  assert(purpose.includes('Who has earned the strongest season?') &&
-    purpose.includes('Who is the strongest team right now?') &&
+  assert(purpose.includes('Who deserves to be ranked highest?') &&
+    purpose.includes('Who is actually the strongest team?') &&
     purpose.includes('Two questions. Two independent answers.') &&
+    purpose.includes('Credibility and independence were always essential') &&
+    purpose.includes('biases and inertia') &&
     purpose.includes('Matchup Predictor'),
-    "Public purpose does not clearly distinguish Merit, Power and secondary matchups");
+    "Original purpose, Merit, Power, credibility and secondary matchup language must be visible");
+  for(const exact of [
+    'Wins and losses: Results matter, but not every win is equal.',
+    'Strength of schedule: Beating Alabama should be worth significantly more than beating a weak opponent.',
+    'Quality wins: Reward teams that beat elite competition.',
+    'Head-to-head: Direct results should carry meaningful weight when comparing similarly accomplished teams.',
+    'Quality of losses: A narrow road loss to an elite team shouldn',
+    'EPA, success rate, explosiveness, scoring performance',
+    'Comprehensive, high-quality football data',
+    'Statistically defensible methodologies',
+    'Historical analysis and validation',
+    'Clear explanations for why teams are ranked where they are'
+  ])assert(purpose.includes(exact),'Original screenshot-derived passage missing: '+exact);
   assert(!/V4\.1|V5\.5|55% \/ 25%|how to recreate|Historical held-out check|SRS\(team\)/.test(purpose),
     "Detailed model/version implementation leaked into public purpose page");
   assert(model.coreCount/model.expected>=.70,"Core EPA coverage below required threshold");
