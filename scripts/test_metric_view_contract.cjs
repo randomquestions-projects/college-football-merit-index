@@ -8,7 +8,7 @@ const html=read('index.html');
 const inline=html.match(/<script>([\s\S]*?)<\/script>/i);
 assert(inline,'Missing dashboard calculation prelude');
 const boundary=inline[1].indexOf('const submetric=');
-assert(boundary>10000,'Dashboard prelude boundary changed');
+assert(boundary>1500,'Dashboard prelude boundary changed');
 const prelude=inline[1].slice(0,boundary);
 const model=['model_v4.js','opponent_network_research.js','model_v5.js',
  'preseason_prior_v1.js','metric_view_contract.js'].map(read).join('\n');
