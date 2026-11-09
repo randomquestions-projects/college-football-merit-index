@@ -168,7 +168,7 @@ body.cfmi-matchups #rankings,body.cfmi-matchups #comparison,body.cfmi-matchups #
  <div class="cfmi-ext-panel" style="margin-top:18px">
   <div class="cfmi-ext-title"><h3>2025–2026 Power forecast benchmark</h3><small>Only games both CFMI and each provider can evaluate</small></div>
   <div id="matchupIndustryBenchmark" class="cfmi-section-note">Loading matched-game historical comparison…</div>
-  <p class="cfmi-section-note">FPI and SP+ picks are reconstructed from dated ratings using a common 2.5-point home adjustment; FEI uses native rating order. These are not official provider game-level prediction feeds. Our 2025 model and talent decay were partly selected on 2025 data, so 2025 is retrospective development evidence, not a blind test.</p>
+  <p class="cfmi-section-note">FPI and SP+ picks are reconstructed from weekly ratings using a common 2.5-point home adjustment; FEI uses native rating order. The 2025 FEI source is a retrospective weekly table without a verifiable original publication timestamp; 2025 SP+ currently lacks a verified comparable archive. These are not official provider game-level prediction feeds. Our 2025 model and talent decay were partly selected on 2025 data, so 2025 is retrospective development evidence, not a blind test.</p>
  </div>
 </section>
 <div class="cfmi-dialog" id="matchupDialog" role="dialog" aria-modal="true" aria-label="Matchup analysis"><div class="cfmi-dialog-inner">
@@ -995,23 +995,27 @@ function renderIndustryBenchmark(){
  if(!benchmark){root.textContent='Historical industry comparison is unavailable or still loading.';return;}
  const year=String(weeklyView.matchSeason);
  const comparisons=benchmark.seasons?.[year];
- if(!comparisons){root.textContent='No verified dated benchmark for '+year+'.';return;}
+ if(!comparisons){root.textContent='No verified benchmark for '+year+'.';return;}
  const systems=['cfmi','fpi','sp_plus','fei'];
  const names={cfmi:'CFMI V5.3',fpi:'ESPN FPI',sp_plus:'SP+',fei:'FEI'};
- const common=comparisons.commonScorecard||{};
+ const rows=comparisons.systems||{};
  const fmt=x=>Number.isFinite(x)?(100*x).toFixed(1)+'%':'—';
+ const count=x=>x?.games?x.correct+'/'+x.games:'Not available';
+ const sourceNotes=(comparisons.sourceWarnings||[]).map(esc).join(' ');
  root.innerHTML=
-  '<p><strong>'+year+' · '+comparisons.commonGames+' identical evaluated games across all four rating systems</strong></p>'+
-  '<div class="cfmi-scroll"><table class="cfmi-ext-table"><thead><tr><th>System</th><th>Correct</th><th>Accuracy</th><th>CFMI on matched games</th></tr></thead><tbody>'+
+  '<p><strong>'+year+' · comparison against the same completed games for each available system</strong></p>'+
+  '<div class="cfmi-scroll"><table class="cfmi-ext-table"><thead><tr><th>System</th><th>Correct</th><th>Accuracy</th><th>CFMI on those exact games</th></tr></thead><tbody>'+
   systems.map(key=>{
-   const row=common[key],baseline=common.cfmi;
-   return '<tr><td>'+names[key]+'</td><td>'+(row?.games?row.correct+'/'+row.games:'—')+
-    '</td><td>'+fmt(row?.accuracy)+'</td><td>'+fmt(baseline?.accuracy)+'</td></tr>';
+   const row=key==='cfmi'?comparisons.entireCFMI:rows[key];
+   return '<tr><td>'+names[key]+'</td><td>'+count(row)+'</td><td>'+
+    fmt(row?.accuracy)+'</td><td>'+
+    fmt(key==='cfmi'?comparisons.entireCFMI.accuracy:row?.cfmiAccuracy)+'</td></tr>';
   }).join('')+'</tbody></table></div>'+
-  '<p class="cfmi-section-note">CFMI full evaluated season: '+comparisons.entireCFMI.correct+'/'+
-  comparisons.entireCFMI.games+' ('+fmt(comparisons.entireCFMI.accuracy)+').'+
-  (comparisons.sourceError?' External rating archive warning: '+esc(comparisons.sourceError):'')+
-  ' All comparisons use pre-week original-source-dated snapshots. Archived source corrections may still affect reconstructed history.</p>';
+  '<p class="cfmi-section-note">CFMI full season evaluation: '+comparisons.entireCFMI.correct+'/'+
+  comparisons.entireCFMI.games+' ('+fmt(comparisons.entireCFMI.accuracy)+'). '+
+  (comparisons.commonGames?'All-four-system overlap: '+comparisons.commonGames+' games. ':
+  'An identical four-system sample is not available; pairwise denominators are shown separately. ')+
+  sourceNotes+'</p>';
 }
 function renderMatchups(){
  const data=weeklyView.data,year=String(weeklyView.matchSeason);
