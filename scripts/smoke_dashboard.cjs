@@ -242,6 +242,40 @@ async function waitForServer(){
   }
   await page.locator('#pageSwitch [data-page="rankings"]').click();
   assert(await page.locator('#rankings').isVisible()&&!(await page.locator('#methodologyPage').isVisible()),"Home tab did not restore rankings");
+  const auditDataset=await page.evaluate(async()=>{
+    const res=await fetch('./data/public_metric_audit_2026.json',{cache:'no-store'});
+    if(!res.ok)throw Error('Public audit dataset missing: HTTP '+res.status);
+    const audit=await res.json();
+    const nd=audit.teamAudit.find(x=>x.team.team==='Notre Dame');
+    const wins=nd?.games.filter(x=>x.win&&x.isFbs).sort((a,b)=>b.meritSignatureWinUnits-a.meritSignatureWinUnits);
+    return {schools:audit.manifest.population.schools,fields:Object.keys(audit.manifest.fieldDefinitions||{}).length,
+      hashes:Object.keys(audit.manifest.sourceSha256||{}).length,model:audit.manifest.scoringModel,
+      firstNotreDameWin:wins?.[0]?.opponent,viewContract:audit.manifest.contractSchema};
+  });
+  assert(auditDataset.schools>=130&&auditDataset.fields>=15&&auditDataset.hashes>=10&&
+    auditDataset.firstNotreDameWin==='Miami'&&auditDataset.model==='5.5.0',
+    'Public audit export not reconciled with active published rankings');
+  const mobile=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1});
+  const mobileErrors=[];mobile.on('pageerror',error=>mobileErrors.push(String(error)));
+  await mobile.goto(url,{waitUntil:'domcontentloaded'});
+  await mobile.waitForFunction(()=>Boolean(state.metricContractAudit?.allScoresReconciled&&state.fullModel),null,{timeout:35000});
+  const mobileLayout=await mobile.evaluate(()=>({
+    width:window.innerWidth,documentWidth:document.documentElement.scrollWidth,
+    rankScrollWidth:document.querySelector('#rankingTable')?.scrollWidth,
+    containerWidth:document.querySelector('#rankingTable')?.closest('.table-scroll')?.clientWidth
+  }));
+  assert(mobileLayout.documentWidth<=mobileLayout.width+8,
+    'Mobile dashboard has uncontrolled horizontal overflow: '+JSON.stringify(mobileLayout));
+  const mobileRow=mobile.locator('#body tr[data-team]').first();
+  await mobileRow.focus();
+  await mobile.keyboard.press('Enter');
+  await mobile.locator('#detailScrim.open').waitFor();
+  const modalWidth=await mobile.evaluate(()=>document.querySelector('#detailScrim .modal')?.getBoundingClientRect().width);
+  assert(modalWidth<=390&&modalWidth>=250,'Mobile team audit dialog cannot fit viewport: '+modalWidth);
+  await mobile.keyboard.press('Escape');
+  assert.equal(await mobile.locator('#detailScrim.open').count(),0,'Mobile team popup must close via keyboard');
+  assert.equal(mobileErrors.length,0,'Mobile browser exception: '+mobileErrors.join('; '));
+  await mobile.close();
   assert.equal(errors.length,0,"Browser console exceptions: "+errors.join("; "));
   console.log("CFMI V5 BROWSER SMOKE PASSED",JSON.stringify(model));
  }catch(err){console.error("CFMI V5 BROWSER SMOKE FAILED:",err.stack||String(err));process.exitCode=1}
