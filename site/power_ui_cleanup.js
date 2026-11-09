@@ -36,6 +36,40 @@ const CFMI_POWER_UI = Object.freeze({
       'Drive finishing, consistency, game control, offense and defense remain separately measured diagnostics when their independent Power coefficients are zero. '+
       (agrees?'Components reconcile to '+fmt(team.powerPoints,2)+' neutral-field points.':'The component total is not reconciled; check this snapshot before interpreting the breakdown.')+'</p>';
   },
+  breakdownFromView(power,fmt){
+    const components=power.components||{};
+    const active=Object.entries(components).filter(([key,val])=>Number.isFinite(val)&&(key==='baseline'||Math.abs(val)>=.005));
+    const rows=active.map(([key,val])=>'<div><small>'+this.escape(this.names[key]||key)+'</small><strong class="'+(val>0?'good':val<0?'weak':'')+'">'+(val>0?'+':'')+fmt(val,2)+' pts</strong></div>').join('');
+    const total=Object.values(components).reduce((a,b)=>a+b,0);
+    if(!Number.isFinite(power.neutralPoints)||Math.abs(total-power.neutralPoints)>1e-6)
+      throw Error('Power view model does not reconcile to its component sum');
+    return '<div class="power-breakdown">'+rows+'</div><p class="note"><strong>Reconciled:</strong> '+fmt(power.neutralPoints,2)+' neutral-field Power points. Only nonzero active formula components appear above; measured but inactive features are presented separately.</p>';
+  },
+  priorFromView(power,fmt){
+    const weight=power.preseasonWeight;
+    if(!Number.isFinite(weight))return '<p class="note">Preseason-prior weight not measured in this snapshot. Coaching continuity is not an active verified source.</p>';
+    const sources=power.priorSources||{};
+    return '<p class="note"><strong>Preseason prior:</strong> '+fmt(100*weight,1)+'%'+
+      (Number.isFinite(power.effectiveGames)?' after '+fmt(power.effectiveGames,2)+' effective FBS games':'')+
+      '. Roster talent: '+(Number.isFinite(sources.rosterTalentIndex)?fmt(sources.rosterTalentIndex,2):'not measured')+
+      '; returning production: '+(Number.isFinite(sources.returningProduction)?fmt(100*sources.returningProduction,1)+'%':'not verified')+
+      '; transfer percentile: '+(Number.isFinite(sources.transferPercentile)?fmt(100*sources.transferPercentile,1):'not measured')+
+      '; coaching continuity: not a verified model input.</p>';
+  },
+  networkFromView(diagnostics,fmt){
+    const s=diagnostics.opponentAdjustedNetwork;
+    if(!s)return '<p class="note">Opponent-adjusted offense and defense splits are unavailable for this snapshot.</p>';
+    const fields=[
+      ['EPA · offense','epaOffense','EPA/play relative to FBS mean'],
+      ['EPA · defense','epaDefense','EPA/play prevented relative to FBS mean'],
+      ['Success · offense','successOffense','Rate relative to FBS mean'],
+      ['Success · defense','successDefense','Rate prevented relative to FBS mean'],
+      ['Explosiveness · offense','explosiveOffense','Rate relative to FBS mean'],
+      ['Explosiveness · defense','explosiveDefense','Rate prevented relative to FBS mean']
+    ];
+    return '<h4>Measured offense and defense · opponent-adjusted</h4><p class="note">These are football performance diagnostics, not additional independently weighted Power points. Unavailable inputs are not displayed as zeros.</p><div class="power-support-grid">'+
+      fields.map(([name,key,desc])=>'<div><small>'+name+'</small><strong>'+(Number.isFinite(s[key])?fmt(s[key],3):'Not measured')+'</strong><small>'+desc+'</small></div>').join('')+'</div>';
+  },
   prior(team,fmt){
     const weight=team.preseasonPriorWeight;
     if(!Number.isFinite(weight))return '<p class="note">Preseason-prior contribution unavailable for this snapshot. Coaching continuity is not included in the scoring model.</p>';
