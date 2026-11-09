@@ -155,8 +155,8 @@ body.cfmi-matchups #rankings,body.cfmi-matchups #comparison,body.cfmi-matchups #
  <div class="cfmi-ext-panel"><div class="cfmi-ext-title"><h3 id="historyDetailedTitle">All FBS Teams · Merit</h3><small>Sort by rank · weekly YTD</small></div><div class="cfmi-scroll"><table class="cfmi-ext-table"><thead><tr><th>Rank</th><th>Team</th><th>W–L</th><th>Merit / 100</th><th>Power / 100</th><th>Merit #</th><th>Power #</th><th>WAB</th><th>SOS</th><th>Adj. Margin</th><th>Advanced Coverage</th></tr></thead><tbody id="historyDetailed"></tbody></table></div></div>
 </section>
 <section id="matchupsPage" class="cfmi-page" aria-labelledby="matchupsTitle">
- <div class="subhead"><div><h2 id="matchupsTitle">Upcoming Week · CFMI Matchups</h2><p>Power-based picks, with a separate résumé comparison and team-specific keys to winning.</p></div></div>
- <p class="cfmi-section-note" id="matchupsSource">Predictions are based only on data already completed. CFMI Power scores are comparative index scores, NOT calibrated win probabilities. Predictions are calibrated against earlier-season game outcomes when a validated parameter file is available; any probability is an estimate, not a guarantee. Betting spreads, injuries, live lineups and roster changes are not modeled.</p>
+ <div class="subhead"><div><h2 id="matchupsTitle">Upcoming Week · CFMI Matchups</h2><p>Merit measures earned résumé, Power measures neutral-field team strength, and Matchup Score predicts the winner of this particular game.</p></div></div>
+ <p class="cfmi-section-note" id="matchupsSource">Matchup Score is a game-specific estimated win likelihood based on underlying neutral-field Power points, home-field advantage, and any historically validated rushing/passing offense-versus-defense interaction. Power and Merit rankings are not changed by a favorable matchup. Predictions are calibrated against earlier-season game outcomes when a validated parameter file is available; any probability is an estimate, not a guarantee. Betting spreads, injuries, live lineups and roster changes are not modeled.</p>
  <div class="cfmi-ext-panel" style="margin-bottom:16px">
   <div class="cfmi-inline-controls"><label for="matchupSeason">Season</label><select id="matchupSeason"><option value="2026">2026</option><option value="2025">2025</option></select>
    <label for="matchupWeek">Prediction week</label><select id="matchupWeek"><option value="current">Upcoming · current</option></select></div>
@@ -250,7 +250,7 @@ body.cfmi-matchups #rankings,body.cfmi-matchups #comparison,body.cfmi-matchups #
 </main>
 <input style="display:none" type="file" id="fileInput" accept=".csv,text/csv"><input style="display:none" type="file" id="advancedInput" accept=".csv,text/csv">
 <div class="modalscrim" id="detailScrim" role="dialog" aria-modal="true" aria-label="Team breakdown"><div class="modal"><div class="modal-top"><div><span class="eyebrow">CFMI Team audit</span><h2 id="detailTitle"></h2><div class="muted" id="detailSubtitle"></div></div><button class="modal-close" id="closeModal">Close ×</button></div><div class="modal-body" id="detailBody"></div></div></div>
-<script src="./model_v4.js"></script><script src="./opponent_network_research.js"></script><script src="./model_v5.js"></script><script src="./preseason_prior_v1.js"></script>
+<script src="./model_v4.js"></script><script src="./opponent_network_research.js"></script><script src="./model_v5.js"></script><script src="./preseason_prior_v1.js"></script><script src="./model_matchup_v1.js"></script>
 <script>
 'use strict';
 const SOURCE='./data/cfb_schedules_2026.csv';
@@ -1075,38 +1075,92 @@ function renderMatchups(){
    '<div class="cfmi-match-line"><span class="cfmi-match-name">'+esc(g.away)+' @ '+esc(g.home)+'</span></div>'+
    '<div class="cfmi-match-line"><span>'+esc(g.away)+' · Merit '+ranking(g.awayMetrics.rank)+
    ' · Power '+ranking(g.awayMetrics.powerRank)+'</span><span>M '+show(g.awayMetrics.score)+' / P '+
-   show(g.awayMetrics.powerScore)+'</span></div>'+
+   show(g.awayMetrics.powerScore)+' / X '+show(g.awayMatchupScore)+'</span></div>'+
    '<div class="cfmi-match-line"><span>'+esc(g.home)+' · Merit '+ranking(g.homeMetrics.rank)+
    ' · Power '+ranking(g.homeMetrics.powerRank)+'</span><span>M '+show(g.homeMetrics.score)+' / P '+
-   show(g.homeMetrics.powerScore)+'</span></div>'+
-   '<div class="cfmi-match-line"><span>CFMI Power pick</span><span class="cfmi-pick">'+esc(g.predictedWinner)+
+   show(g.homeMetrics.powerScore)+' / X '+show(g.homeMatchupScore)+'</span></div>'+
+   '<div class="cfmi-match-line"><span>CFMI Matchup pick</span><span class="cfmi-pick">'+esc(g.predictedWinner)+
    (Number.isFinite(p)?' · '+(100*p).toFixed(1)+'%':'')+'</span></div>'+status+
    '<small>View prediction drivers, key takeaways and pregame team metrics →</small></button>';
  }).join(''):'<p class="muted">No matchups match your filters.</p>';
 }
 function analysisFor(g){
  const home=g.homeMetrics,away=g.awayMetrics;
- const stronger=g.predictedWinner===g.home?home:away,weaker=stronger===home?away:home;
- const label=(v)=>v===null||v===undefined||!Number.isFinite(v)?'n/a':wNum(v,2);
- const winnerP=g.homeWinProbability===null?null:(g.predictedWinner===g.home?g.homeWinProbability:g.awayWinProbability);
- const higher=(key)=>Number.isFinite(home[key])&&Number.isFinite(away[key])?(home[key]>away[key]?home.name:away.name):'Not enough coverage';
- const ability=(t)=>[
-  ['Power rank','#'+t.powerRank],['Merit rank','#'+t.rank],['Power score',wNum(t.powerScore,2)],
-  ['Merit score',wNum(t.score,2)],['Record',t.won+'–'+t.lost],
-  ['Adjusted scoring margin',wNum(t.mov,2)],['Net EPA / play',wNum(t.ppaNet,3)],
-  ['Success rate (adjusted signal)',wNum(t.successNet,3)],['Explosive play signal',wNum(t.explosiveNet,3)],
-  ['Wins above benchmark',wNum(t.wab,2)],['Core data coverage',t.coreGames+'/'+t.fbsGames]
+ const valid=x=>Number.isFinite(x);
+ const num=(x,d=2)=>valid(x)?x.toFixed(d):'—';
+ const signed=(x,d=2)=>valid(x)?(x>=0?'+':'')+x.toFixed(d):'—';
+ const rank=x=>Number.isInteger(x)&&x>0?'#'+x:'—';
+ const strong=home.powerPoints>=away.powerPoints?home:away;
+ const other=strong===home?away:home;
+ const ability=t=>[
+  ['Merit rank',rank(t.rank)],['Merit score',num(t.score)],
+  ['Neutral Power rank',rank(t.powerRank)],['Neutral Power index',num(t.powerScore)],
+  ['Neutral-field strength in points',signed(t.powerPoints)],
+  ['Record',t.won+'–'+t.lost],['Adjusted scoring margin',num(t.mov)],
+  ['Net adjusted EPA / play',num(t.ppaNet,3)],['Adjusted success',num(t.successNet,3)],
+  ['Explosive-play performance',num(t.explosiveNet,3)],
+  ['Core data coverage',(t.coreGames??0)+'/'+(t.fbsGames??0)]
  ];
- const keyA='Sustain efficient drives. '+esc(stronger.name)+' has the stronger overall Power profile; moving the chains and avoiding negative plays protects that edge.';
- const keyB='Force high-variance chances. '+esc(weaker.name)+' must win explosive-play and field-position battles to upset the higher-rated team.';
- const edgeEPA=higher('ppaNet');
- const keyC='Win the efficiency swing. '+esc(edgeEPA)+' currently has the stronger adjusted EPA signal; third-down execution, finishing drives and limiting turnovers could determine the result.';
- const row=(t)=>ability(t).map(([n,v])=>'<p><strong>'+esc(n)+':</strong> '+esc(v)+'</p>').join('');
- return '<p class="cfmi-section-note"><strong>Power prediction:</strong> '+esc(g.predictedWinner)+'. '+(g.neutral?'Neutral venue; no home advantage.':'Venue-adjusted for the designated home team.')+' '+(winnerP===null?'This is a directional pick; model probability unavailable.':('Historical-model winning estimate: '+(100*winnerP).toFixed(1)+'%.'))+' Predictive model uncertainty remains especially high early in the season; not a betting spread.</p>'+
- '<div class="cfmi-explain"><div><h4>'+esc(away.name)+' · AWAY</h4>'+row(away)+'</div><div><h4>'+esc(home.name)+' · HOME</h4>'+row(home)+'</div></div>'+
- '<h3>Three key takeaways</h3><ol class="cfmi-section-note"><li>'+keyA+'</li><li>'+keyB+'</li><li>'+keyC+'</li></ol>'+
- '<div class="cfmi-explain"><div><h4>How '+esc(away.name)+' can win</h4><p>'+esc(away.name===stronger.name?'Protect the Power advantage through sustainable offense, possession efficiency and limiting negative plays.':'Reduce the efficiency gap: create turnovers, generate explosive gains and convert short-field opportunities.')+'</p></div><div><h4>How '+esc(home.name)+' can win</h4><p>'+esc(home.name===stronger.name?'Exploit the strength advantage while controlling turnovers and finishing scoring opportunities.':'Use the home environment and field-position advantages; disrupt the stronger team’s efficiency and capitalize on explosive opportunities.')+'</p></div></div>'+
- '<p class="cfmi-section-note">Takeaways are generated from season-level rating factors; they are not opponent film analysis, a personnel scouting report, or injury-aware tactical forecasts.</p>';
+ const rows=t=>ability(t).map(([k,v])=>'<p><strong>'+esc(k)+':</strong> '+esc(v)+'</p>').join('');
+ const neutral=g.neutralPowerDifference??((home.powerPoints??0)-(away.powerPoints??0));
+ const venue=g.venueAdjustment??(g.neutral?0:3.54);
+ const impact=g.matchupAdjustment??0;
+ const finalEdge=g.edgePointsDiagnostic??g.predictedMargin??(neutral+venue+impact);
+ const favorite=g.predictedWinner;
+ const p=g.predictedWinner===g.home?g.homeWinProbability:g.awayWinProbability;
+ const scoreHome=g.homeMatchupScore??(valid(g.homeWinProbability)?100*g.homeWinProbability:null);
+ const scoreAway=g.awayMatchupScore??(valid(g.awayWinProbability)?100*g.awayWinProbability:null);
+ const styles=g.matchupStyles||{};
+ const rushH=styles.home&&valid(styles.home.rushOffEPA)&&valid(styles.home.rushDefenseWeak)
+  ?styles.home.rushOffEPA+styles.home.rushDefenseWeak:null;
+ const rushA=styles.away&&valid(styles.away.rushOffEPA)&&valid(styles.away.rushDefenseWeak)
+  ?styles.away.rushOffEPA+styles.away.rushDefenseWeak:null;
+ const passH=styles.home&&valid(styles.home.passOffEPA)&&valid(styles.home.passDefenseWeak)
+  ?styles.home.passOffEPA+styles.home.passDefenseWeak:null;
+ const passA=styles.away&&valid(styles.away.passOffEPA)&&valid(styles.away.passDefenseWeak)
+  ?styles.away.passOffEPA+styles.away.passDefenseWeak:null;
+ const edge=(h,a)=>valid(h)&&valid(a)?h>a?home.name:away.name:'insufficient historical data';
+ const rushWinner=edge(rushH,rushA),passWinner=edge(passH,passA);
+ const caution=Math.abs(impact)<.005?'No extra matchup residual was statistically selected in the historical test; this forecast is Power plus venue.':
+  'The additional matchup residual uses historically selected coefficients, shrunk opponent-adjusted rushing/passing signals, and a bounded points cap.';
+ const rowsBreak=[
+  ['Neutral-field team-strength edge (home perspective)',neutral],
+  ['Home-field adjustment',venue],
+  ['Opponent-specific run/pass matchup adjustment',impact],
+  ['Predicted home scoring margin',finalEdge]
+ ];
+ const breakout=rowsBreak.map(([label,value])=>'<div class="cfmi-match-line"><span>'+esc(label)+'</span><strong>'+signed(value)+' pts</strong></div>').join('');
+ const keyA='Overall strength: '+esc(strong.name)+' carries the stronger neutral-field Power rating than '+esc(other.name)+
+  ' by '+num(Math.abs(neutral),2)+' expected points, before venue and matchup adjustments.';
+ const keyB='Rushing matchup: '+esc(rushWinner)+' has the stronger opponent-adjusted rushing offense-versus-defense pairing'+
+  (valid(rushH)&&valid(rushA)?' ('+signed(rushH,3)+' vs '+signed(rushA,3)+' EPA/play relative to FBS average).':'.')+
+  ' This is measured separately from the overall Power ranking.';
+ const keyC='Passing matchup: '+esc(passWinner)+' has the stronger opponent-adjusted passing pairing'+
+  (valid(passH)&&valid(passA)?' ('+signed(passH,3)+' vs '+signed(passA,3)+' EPA/play relative to FBS average).':'.')+
+  ' The final pick also includes '+(g.neutral?'no venue advantage.':'the trained home-field points adjustment.');
+ const needs=t=>{
+  const isHome=t.name===home.name;
+  const ownR=isHome?rushH:rushA,ownP=isHome?passH:passA;
+  const preferred=valid(ownR)&&valid(ownP)?(ownR>=ownP?'run':'pass'):null;
+  return preferred
+   ?'Prioritize '+preferred+' efficiency against the opposing defense ('+
+    signed(preferred==='run'?ownR:ownP,3)+' opponent-adjusted EPA/play). '+
+    'Limit negative plays, defend the opponent’s most efficient phase and finish drives.'
+   :'Sustain efficient drives, exploit opponent weaknesses and defend both rushing and passing explosiveness; more completed games are needed to establish reliable style-specific edges.';
+ };
+ return '<p class="cfmi-section-note"><strong>Matchup Score:</strong> '+esc(away.name)+' '+num(scoreAway,1)+
+  ' / '+esc(home.name)+' '+num(scoreHome,1)+'. These are game-specific 0–100 winning-likelihood scores, NOT new national Power rankings.'+
+  ' Pick: <strong>'+esc(favorite)+'</strong>'+(valid(p)?' ('+(100*p).toFixed(1)+'%).':'')+
+  ' '+caution+'</p>'+
+  '<div class="cfmi-ext-panel"><h3>How the prediction is calculated</h3>'+breakout+
+  '<p class="cfmi-section-note">Positive predicted margin favors the listed home team. Underlying Power points, not the rounded Power index or its rank, enter the calculation.</p></div>'+
+  '<div class="cfmi-explain"><div><h4>'+esc(away.name)+' · AWAY</h4>'+rows(away)+
+  '</div><div><h4>'+esc(home.name)+' · HOME</h4>'+rows(home)+'</div></div>'+
+  '<h3>Three matchup-specific takeaways</h3><ol class="cfmi-section-note"><li>'+keyA+
+  '</li><li>'+keyB+'</li><li>'+keyC+'</li></ol>'+
+  '<div class="cfmi-explain"><div><h4>How '+esc(away.name)+' can win</h4><p>'+esc(needs(away))+
+  '</p></div><div><h4>How '+esc(home.name)+' can win</h4><p>'+esc(needs(home))+'</p></div></div>'+
+  '<p class="cfmi-section-note">Rushing and passing matchup estimates use opponent-adjusted historical game metrics; they are not injury-aware player scouting, guaranteed EPA in this future game, or an assertion that a particular play call will succeed.</p>';
 }
 $('matchupGrid').addEventListener('click',e=>{
  const card=e.target.closest('[data-matchup]');if(!card)return;
