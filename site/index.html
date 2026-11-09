@@ -64,10 +64,11 @@ body.cfmi-matchups #rankings,body.cfmi-matchups #comparison,body.cfmi-matchups #
 <div class="page-switch" id="pageSwitch" role="tablist" aria-label="Dashboard pages"><button type="button" class="selected" data-page="rankings" aria-selected="true">Merit &amp; Power</button><button type="button" data-page="comparison" aria-selected="false">Compare Rankings</button><button type="button" data-page="resume" aria-selected="false">Compare Teams</button><button type="button" data-page="history" aria-selected="false">Historical Results</button><button type="button" data-page="preseason" aria-selected="false">Preseason</button><button type="button" data-page="methodology" aria-selected="false">Methodology</button><button type="button" data-page="matchups" aria-selected="false">Matchups · Secondary</button></div>
 <section id="rankings"><div class="subhead"><div><h2 id="rankTitle">2026 FBS Merit Rankings</h2><p id="rankingSub">Calculated from completed games on or before the selected as-of cutoff.</p></div><span class="pill" id="dataBadge">Awaiting source</span></div>
 <div class="rank-lens"><div><h3 id="lensTitle">MERIT · Who has earned the strongest season?</h3><p id="lensSummary">Earned results: 55% schedule-adjusted record, 25% opponent-quality and road wins, 20% adjusted margins against FBS competition.</p></div><div class="rank-lens-controls" id="rankingLens" role="group" aria-label="Select ranking purpose"><button type="button" class="selected" data-lens="merit" aria-pressed="true">Merit Ranking</button><button type="button" data-lens="power" aria-pressed="false">Power Ranking</button></div></div>
-<div class="panel"><div class="toolbar"><div class="tabs" id="viewTabs"><button class="tab" data-view="25">Top 25</button><button class="tab active" data-view="50">Top 50</button><button class="tab" data-view="all">All FBS</button></div><div class="search"><input id="q" type="search" aria-label="Search teams" placeholder="Search teams…"></div><select id="conference"><option value="">All conferences</option></select><select id="cutoff" aria-label="Game cutoff"><option value="live">Latest completed games</option></select><div class="actions"><button id="reset" class="action" title="Reset search and filters">Reset</button><button id="export" class="action" disabled>Export ranking CSV</button><button id="offline" class="action" disabled>Save offline HTML</button><button id="refresh" class="action">↻ Reload snapshot</button></div></div>
+<div class="panel"><div class="toolbar"><div class="tabs" id="viewTabs"><button class="tab" data-view="25">Top 25</button><button class="tab active" data-view="50">Top 50</button><button class="tab" data-view="all">All FBS</button></div><div class="search"><input id="q" type="search" aria-label="Search teams" placeholder="Search teams…"></div><select id="conference"><option value="">All conferences</option></select><select id="cutoff" aria-label="Game cutoff"><option value="live">Latest completed games</option></select><div class="actions"><button id="reset" class="action" title="Reset search and filters">Reset</button><button id="export" class="action" disabled>Export ranking CSV</button><button id="refresh" class="action">↻ Reload snapshot</button></div></div>
 <div class="status" id="tableStatus">Obtaining verified 2026 games…</div><div class="table-scroll"><table class="rank" id="rankingTable"><thead><tr>
-<th id="primaryRankHeader" data-sort="rank">MERIT #</th><th id="secondaryRankHeader" data-sort="powerRank" title="Predictive Power Rank from SRS/Elo strength and adjusted EPA, success and explosive plays">POWER #</th><th data-sort="name">TEAM</th><th data-sort="won">W–L</th><th data-sort="score">MERIT SCORE</th><th data-sort="powerScore" title="Predictive strength score from opponent baseline and adjusted efficiency">POWER SCORE</th><th data-sort="sor" title="Achievement versus top-25-strength benchmark, derived from WAB">RECORD ACHIEVEMENT / #</th><th data-sort="wab">WAB / #</th><th data-sort="sos">SOS / #</th><th data-sort="mov" title="Opponent- and venue-adjusted FBS-only margin; FCS blowout margins excluded from V5.1 Merit">ADJ MOV / #</th><th data-sort="qualityComponent" title="Earned victories over strong opponents, with explicit road/neutral result credit; not a second WAB">QUALITY WINS / #</th><th data-sort="qRoadWins">Q ROAD WINS / #</th><th data-sort="effScore" title="V4-era aggregate on-field diagnostic; displayed for context but not a separately weighted V5.1 Merit or Power component">ON-FIELD DIAGNOSTIC / #</th><th data-sort="advCoverage">ADV COVERAGE</th><th data-sort="ppaNet" title="Opponent-adjusted expected points per play. Evaluated for Power; a zero incremental fitted coefficient means overlap with stronger predictive factors">PPA / #</th><th data-sort="successNet">SUCCESS / #</th><th data-sort="control" title="Possession-based game control. Different from the V5.1 Merit adjusted-margin component">POSSESSION CONTROL / #</th><th data-sort="explosiveNet">EXPLOSIVE / #</th><th data-sort="penaltyNet">PENALTIES / #</th><th data-sort="turnoverNet">TURNOVERS / #</th><th data-sort="consistencyScore">CONSISTENCY / #</th><th data-sort="redzoneNet">RED ZONE / #</th><th data-sort="roadWins">ROAD WINS / #</th><th data-sort="off">OFF / #</th><th data-sort="def">DEF / #</th></tr></thead><tbody id="body"><tr><td colspan="25" class="waiting">Loading the latest published weekly football data. No uploads required.</td></tr></tbody></table></div><div class="footer-row"><span id="shown">—</span><span>Tap/click any team to inspect its complete game ledger and scoring breakdown. Scroll horizontally for all metrics.</span></div></div>
-<div class="disclaimer" id="coverageNote"><strong>Live model status:</strong> Loading completed games and advanced statistics automatically. Verified results always appear first. All eight on-field measures use available verified observations, adjust for opponent strength, and shrink missing measurements toward neutral. No CSV or API key is required.</div><div class="disclaimer"><strong>Live data:</strong> This is a publicly hosted GitHub Pages website. It loads the latest validated weekly snapshot stored alongside this website. No CSV upload or paid key is required. The published snapshot is served by this website. Completed games only; no preseason polls used.</div></section>
+<th id="primaryRankHeader" data-sort="rank">MERIT #</th><th id="secondaryRankHeader" data-sort="powerRank" title="Predictive Power Rank from SRS/Elo strength and adjusted EPA, success and explosive plays">POWER #</th><th data-sort="name">TEAM</th><th data-sort="won">W–L</th><th data-sort="score">MERIT SCORE</th><th data-sort="powerScore" title="Predictive strength score from opponent baseline and adjusted efficiency">POWER SCORE</th><th data-sort="sor" title="Achievement versus top-25-strength benchmark, derived from WAB">RECORD ACHIEVEMENT / #</th><th data-sort="wab">WAB / #</th><th data-sort="sos">SOS / #</th><th data-sort="mov" title="Opponent- and venue-adjusted FBS-only margin; FCS blowout margins excluded from V5.1 Merit">ADJ MOV / #</th><th data-sort="qualityComponent" title="Earned victories over strong opponents, with explicit road/neutral result credit; not a second WAB">QUALITY WINS / #</th><th data-sort="meritHeadToHeadAdjustment" title="Active bounded head-to-head Merit adjustment in index points">H2H Δ · PTS</th><th data-sort="meritFcsPerformancePenalty" title="Bounded penalty for underwhelming FCS performance">FCS Δ · PTS</th><th data-sort="effScore" title="Archived V4 aggregate is a supporting research diagnostic, not a separately weighted v5.5 Merit or Power component">LEGACY ON-FIELD DIAGNOSTIC / #</th><th data-sort="advCoverage">ADV COVERAGE</th><th data-sort="ppaNet" title="Opponent-adjusted expected points per play. Evaluated for Power; a zero incremental fitted coefficient means overlap with stronger predictive factors">PPA / #</th><th data-sort="successNet">SUCCESS / #</th><th data-sort="control" title="Possession-based game control. Different from the V5.1 Merit adjusted-margin component">POSSESSION CONTROL / #</th><th data-sort="explosiveNet">EXPLOSIVE / #</th><th data-sort="penaltyNet">PENALTIES / #</th><th data-sort="turnoverNet">TURNOVERS / #</th><th data-sort="consistencyScore">CONSISTENCY / #</th><th data-sort="redzoneNet">RED ZONE / #</th><th data-sort="roadWins">ROAD WINS / #</th><th data-sort="off">OFF / #</th><th data-sort="def">DEF / #</th></tr></thead><tbody id="body"><tr><td colspan="26" class="waiting">Loading the latest published weekly football data. No uploads required.</td></tr></tbody></table></div><div class="footer-row"><span id="shown">—</span><span>Tap/click any team to inspect its complete game ledger and scoring breakdown. Scroll horizontally for all metrics.</span></div></div>
+<div class="disclaimer" id="coverageNote"><strong>Live model status:</strong> Loading completed games and advanced statistics automatically. Verified results always appear first. All eight on-field measures use available verified observations, adjust for opponent strength, and shrink missing measurements toward neutral. No CSV or API key is required.</div><div class="disclaimer"><strong>Public audit and provenance:</strong> Every current Merit score, Power contribution and game-level quality credit is recorded with the active v5.5 source fields, v6 display schema and SHA-256 input-file fingerprints. <a href="./data/public_metric_audit_2026.json" download="CFMI_public_metric_audit_2026.json">Download full 138-team audit JSON</a>. Supporting statistics and legacy research data remain preserved separately; no obsolete V4 quality scores determine the current best-win cards. This is a reconstructed snapshot, not immutable historical as-of evidence.</div>
+<div class="disclaimer"><strong>Live data:</strong> This is a publicly hosted GitHub Pages website. It loads the latest validated weekly snapshot stored alongside this website. No CSV upload or paid key is required. The published snapshot is served by this website. Completed games only; no preseason polls used.</div></section>
 <section id="comparison" aria-labelledby="comparisonTitle">
 <div class="subhead"><div><h2 id="comparisonTitle">Rankings Comparison</h2><p>Compare our independent Merit and Power rankings with the AP poll, CFP committee, and established performance metrics—ESPN FPI, SP+ and FEI. All sources are labeled by snapshot date.</p></div><span class="pill">External rankings are comparison-only</span></div>
 <div class="panel compare-panel">
@@ -108,8 +109,8 @@ body.cfmi-matchups #rankings,body.cfmi-matchups #comparison,body.cfmi-matchups #
 <section id="resume" aria-labelledby="resumeTitle"><div class="subhead"><div><h2 id="resumeTitle">Team résumé & performance comparison</h2><p>Select up to five teams. Compare record, opponent strength, signature road wins, adjusted margin, on-field efficiency and the evidence behind each ranking.</p></div><span class="pill">2026 Merit &amp; Power comparison</span></div>
 <div class="panel" style="padding:20px"><div id="resumeControls" class="resume-controls"></div><div id="resumeMessage" class="compare-caption">Use the selectors to compare up to five different FBS teams.</div>
 <div id="resumeNarratives" class="resume-summary"></div><h3 style="margin:18px 0 10px;font-size:17px">Side-by-side comparison</h3><div class="table-scroll"><table class="resume-table"><thead id="resumeHead"></thead><tbody id="resumeBody"></tbody></table></div>
-<h3 style="margin:25px 0 8px;font-size:17px">Best wins & common opponents</h3><div id="resumeGames" class="resume-games"></div><div id="resumeCommon"></div>
-<p class="resume-disclaimer">Interpretation is rule-based from the published CFMI metrics, not AI opinion. Every team's opponent power is inferred from current-season FBS games and Elo-style results, not AP/CFP or conference membership. “Top 25 opponent” means CFMI's internal season-only SRS/Elo opponent-strength baseline. Partial advanced-stat coverage is disclosed per team. Click a team name to open its full game-by-game audit.</p></div></section>
+<h3 style="margin:25px 0 8px;font-size:17px">Earned quality wins, strongest performances &amp; common opponents</h3><div id="resumeGames" class="resume-games"></div><div id="resumeCommon"></div>
+<p class="resume-disclaimer"><strong>How to interpret:</strong> "Quality-win credit" is the active v5.5 résumé signature-win contribution, not the obsolete V4 road-multiplied q value. "Allocated uplift" is a proportional share of the team’s nonlinear quality-score uplift, not an independent causal effect or an extra score added twice. On-field results are ordered separately by adjusted winning margin. Opponent baseline ranks use the season-to-date model and include the game being evaluated; they are not independent pregame forecasts. Direct comparisons remain based on full Merit and Power scores, never a single game card. Metrics are sourced from the current scoring version. All original game, possession and advanced data are retained.</p></div></section>
 
 <section id="preseasonPage" class="cfmi-page" aria-labelledby="preseasonTitle">
  <div class="subhead"><div><div class="eyebrow">CFMI v5.5 · Early-season Power</div><h2 id="preseasonTitle">Week 0 Power & Playoff Outlook</h2><p>What every FBS team looked like before kickoff — current roster talent, the previous season, returning production and transfers.</p></div></div>
@@ -254,7 +255,7 @@ body.cfmi-matchups #rankings,body.cfmi-matchups #comparison,body.cfmi-matchups #
 </main>
 <input style="display:none" type="file" id="fileInput" accept=".csv,text/csv"><input style="display:none" type="file" id="advancedInput" accept=".csv,text/csv">
 <div class="modalscrim" id="detailScrim" role="dialog" aria-modal="true" aria-label="Team breakdown"><div class="modal"><div class="modal-top"><div><span class="eyebrow">CFMI Team audit</span><h2 id="detailTitle"></h2><div class="muted" id="detailSubtitle"></div></div><button class="modal-close" id="closeModal">Close ×</button></div><div class="modal-body" id="detailBody"></div></div></div>
-<script src="./model_v4.js"></script><script src="./opponent_network_research.js"></script><script src="./model_v5.js"></script><script src="./preseason_prior_v1.js"></script><script src="./model_matchup_v1.js"></script><script src="./power_ui_cleanup.js"></script>
+<script src="./model_v4.js"></script><script src="./opponent_network_research.js"></script><script src="./model_v5.js"></script><script src="./preseason_prior_v1.js"></script><script src="./model_matchup_v1.js"></script><script src="./power_ui_cleanup.js"></script><script src="./metric_view_contract.js"></script>
 <script>
 'use strict';
 const SOURCE='./data/cfb_schedules_2026.csv';
@@ -274,149 +275,72 @@ function csvParse(s){ // Handles quoted commas and escaped quotes; newline insid
 }
 function setStatus(msg,ok=false){$('stamp').textContent=msg;$('healthDot').className='dot'+(ok?' ok':'')}
 function pctRanks(rows,key,out){let vals=rows.map((t,i)=>({i,v:t[key]})).sort((a,b)=>b.v-a.v);let n=vals.length;for(let p=0;p<n;){let end=p+1;while(end<n&&Math.abs(vals[end].v-vals[p].v)<1e-9)end++;const rank=p+1,mid=(p+end-1)/2;const pct=n<=1?50:100*(n-1-mid)/(n-1);for(let j=p;j<end;j++){const t=rows[vals[j].i];t[out+'Rank']=rank;t[out+'Pct']=pct;}p=end}}
-function compute(rows,cutoffMode){
-  const minElapsed=0;
-  const cutoff=cutoffMode==='live'?Date.now():CUTOFF[cutoffMode];
-  let games=rows.filter(r=>r.season==='2026'&&r.season_type==='regular'&&r.completed==='TRUE'&&r.home_points!=='NA'&&r.away_points!=='NA'&&r.home_points!==''&&r.away_points!==''&&Date.parse(r.start_date)+minElapsed<=cutoff&&Number.isFinite(+r.home_points)&&Number.isFinite(+r.away_points)).map(r=>({id:r.game_id,week:+r.week,date:r.start_date,home:r.home_team,away:r.away_team,hConf:r.home_conference,aConf:r.away_conference,hDiv:r.home_division,aDiv:r.away_division,neutral:r.neutral_site==='TRUE',hp:+r.home_points,ap:+r.away_points}));
-  // The FBS universe comes from the 2026 schedule as published by CFBD/sportsdataverse, not poll membership.
-  const map=new Map();
-  for(const r of rows){if(r.season!=='2026')continue;for(let side of ['home','away'])if(r[side+'_division']==='fbs') {const name=r[side+'_team'];if(!map.has(name))map.set(name,{name,conference:r[side+'_conference']||'Independent',rating:0,won:0,lost:0,ties:0,played:[],fbsG:[],roadWins:0,roadLosses:0,qualityRoadWins:0,rawMOV:0});}}
-  for(const g of games){g.hfbs=map.has(g.home)&&g.hDiv==='fbs';g.afbs=map.has(g.away)&&g.aDiv==='fbs';for(const side of ['h','a']){const ishome=side==='h',name=ishome?g.home:g.away;if(!map.has(name)||!(ishome?g.hfbs:g.afbs))continue;const t=map.get(name);let op=ishome?g.away:g.home,opFbs=ishome?g.afbs:g.hfbs;const pf=ishome?g.hp:g.ap,pa=ishome?g.ap:g.hp;const site=g.neutral?'N':ishome?'H':'A';const gm={id:g.id,date:g.date,week:g.week,op,opFbs,site,pf,pa,margin:pf-pa,win:pf>pa?1:0,loss:pf<pa?1:0,neutral:g.neutral};t.played.push(gm);if(opFbs)t.fbsG.push(gm);t.won+=gm.win;t.lost+=gm.loss;if(!gm.win&&!gm.loss)t.ties++;if(site==='A'){t.roadWins+=gm.win;t.roadLosses+=gm.loss}t.rawMOV+=gm.margin;}}
-  const teams=[...map.values()].sort((a,b)=>a.name.localeCompare(b.name));
-  // Ridge SRS solution via damped coordinate fixed-point iterations, initialized neutrally.
-  const ridge=3,H=2.5;
-  for(let it=0;it<250;it++){let max=0;const next=[];for(let i=0;i<teams.length;i++){const t=teams[i];let sum=0;for(const g of t.fbsG){const opp=map.get(g.op);const venue=g.site==='N'?0:g.site==='H'?H:-H;sum+=capMargin(g.margin)-venue+opp.rating;}const value=sum/(t.fbsG.length+ridge),upd=.65*t.rating+.35*value;next.push(upd);max=Math.max(max,Math.abs(upd-t.rating));}teams.forEach((t,i)=>t.rating=next[i]);if(max<0.000001)break;}
-  const rs=teams.map(t=>t.rating).sort((a,b)=>b-a),bench=rs[Math.min(24,rs.length-1)],median=rs[Math.floor(rs.length/2)];
-  const natMean=games.filter(g=>g.hfbs&&g.afbs).reduce((acc,g)=>{acc.sum+=g.hp+g.ap;acc.n+=2;return acc},{sum:0,n:0});const mean=natMean.n?natMean.sum/natMean.n:27;
-  for(const t of teams){t.winpct=t.played.length?t.won/t.played.length:0;t.sos=t.played.length?t.played.reduce((s,g)=>s+(g.opFbs?map.get(g.op).rating:-25),0)/t.played.length:-25;
-    t.expected=0;t.wab=0;t.mov=0;t.qSum=0;t.roadQSum=0;t.qWins=0;t.qualityRoadWins=0;t.qualityGames=[];let offTotal=0,defTotal=0,ng=0;
-    for(const g of t.played){const or=g.opFbs?map.get(g.op).rating:-25;const venue=g.site==='N'?0:g.site==='H'?H:-H;
-      g.opRating=or;g.q=0;g.expected=sigmoid((bench-or+venue)/10);t.expected+=g.expected;
-      // FCS wins cannot create positive adjusted-MOV credit; FCS defeats carry a material penalty.
-      g.adjustedMOV=g.opFbs?capMargin(g.margin)-venue+or:(g.win?0:-24);
-      t.mov+=g.adjustedMOV;
-      if(g.win&&g.opFbs){g.q=clamp((or-median+3)/Math.max(5,(bench-median+12)),0,1.5);const mult=g.site==='A'?1.5:g.site==='N'?1.15:1;t.qSum+=g.q*mult;if(g.q>0.00001)t.qWins++;if(g.site==='A'){t.roadQSum+=g.q*1.5;if(or>median)t.qualityRoadWins++;}}
-      if(g.opFbs){const opp=map.get(g.op); // exclude the game being rated; apply 2 pseudo-games at league average
-        let n=Math.max(0,opp.fbsG.length-1),oppPF=opp.fbsG.reduce((s,x)=>s+x.pf,0)-g.pa,oppPA=opp.fbsG.reduce((s,x)=>s+x.pa,0)-g.pf;
-        let expAllowed=(oppPA+2*mean)/(n+2),expScored=(oppPF+2*mean)/(n+2);
-        offTotal+=g.pf-expAllowed;defTotal+=expScored-g.pa;ng++;
-      }
-    }
-    t.wab=t.won-t.expected;t.mov=t.played.length?t.mov/t.played.length:0;
-    const shrink=ng/(ng+2);t.off=ng?offTotal/ng*shrink:0;t.def=ng?defTotal/ng*shrink:0;
-    t.fbsGames=ng;t.games=t.played.length;
-    t.quality=t.qSum; t.qRoadWins=t.qualityRoadWins;
-  }
-  ['wab','winpct','mov','sos','quality','roadQSum','off','def','rating','roadWins','qRoadWins'].forEach(k=>pctRanks(teams,k,k));
-  for(const t of teams){t.sor=.7*t.wabPct+.3*t.winpctPct;t.qualityComponent=.7*t.qualityPct+.3*t.roadQSumPct;t.balance=Math.sqrt(Math.max(0,t.offPct*t.defPct));}
-  pctRanks(teams,'sor','sor');pctRanks(teams,'qualityComponent','qualityComponent');pctRanks(teams,'balance','balance');
-  for(const t of teams)t.score=(.35*t.sor+.20*t.movPct+.20*t.qualityComponent)/.75;
-  teams.sort((a,b)=>b.score-a.score||(b.wab-a.wab)||a.name.localeCompare(b.name));teams.forEach((t,i)=>t.rank=i+1);
-  return {teams,games,bench,median,mean};
-}
 const ADV_HEADERS=['game_id','team','off_ppa','def_ppa','off_success_rate','def_success_rate','off_explosive_rate','def_explosive_rate','lead_share','penalty_yards','opp_penalty_yards','turnovers_lost','turnovers_gained','redzone_td','redzone_trips','opp_redzone_td','opp_redzone_trips'];
 const ADV_RANK_FIELDS=['ppaNet','successNet','control','explosiveNet','penaltyNet','turnoverNet','redzoneNet','effWinRate','effStability'];
 const normalizeTeam=x=>String(x||'').trim().toLowerCase().replace(/[^a-z0-9]/g,'');
 const std=arr=>{if(arr.length<2)return 0;const m=arr.reduce((s,x)=>s+x,0)/arr.length;return Math.sqrt(arr.reduce((s,x)=>s+(x-m)*(x-m),0)/arr.length)};
 const meanArr=arr=>arr.length?arr.reduce((a,b)=>a+b,0)/arr.length:0;
-function attachEfficiency(teams,rows){
- const byTeamName=new Map(teams.map(t=>[normalizeTeam(t.name),t]));
- const valid=new Map(),byTeam=new Map();let matched=0;
- for(const row of rows){
-   const t=byTeamName.get(normalizeTeam(row.team)),key=String(row.game_id||'').trim();if(!t||!t.fbsG.some(g=>String(g.id)===key))continue;
-   const values={};let ok=true;
-   for(const k of ADV_HEADERS.slice(2)) {let x=String(row[k]??'').trim();if(x===''||x.toLowerCase()==='na'){ok=false;break}let n=Number(x);if(!Number.isFinite(n)){ok=false;break}if(['off_success_rate','def_success_rate','off_explosive_rate','def_explosive_rate','lead_share'].includes(k)&&n>1&&n<=100)n/=100;values[k]=n;}
-   if(!ok||Math.abs(values.off_ppa)>10||Math.abs(values.def_ppa)>10)continue;
-   if(['off_success_rate','def_success_rate','off_explosive_rate','def_explosive_rate','lead_share'].some(k=>values[k]<0||values[k]>1))continue;
-   if(['penalty_yards','opp_penalty_yards','turnovers_lost','turnovers_gained','redzone_td','redzone_trips','opp_redzone_td','opp_redzone_trips'].some(k=>values[k]<0))continue;
-   if(values.redzone_td>values.redzone_trips||values.opp_redzone_td>values.opp_redzone_trips)continue;
-   let obj={...values,id:key,team:t,gm:t.fbsG.find(g=>String(g.id)===key)};
-   valid.set(key+'|'+normalizeTeam(t.name),obj);
- }
- for(const t of teams){t.advGames=[];for(const gm of t.fbsG){const x=valid.get(String(gm.id)+'|'+normalizeTeam(t.name));if(x)t.advGames.push(x)}t.advCoverage=t.fbsGames?t.advGames.length/t.fbsGames:1;t.effScore=NaN;for(const k of ADV_RANK_FIELDS)t[k]=NaN;}
- const observed=teams.flatMap(t=>t.advGames),expected=teams.reduce((x,t)=>x+t.fbsGames,0),covered=observed.length;
- const eligible=teams.filter(t=>t.fbsGames>0);
- // Keep the 35/20/20/25 model running whenever any verified advanced games exist.
- // Missing team-games are NOT fabricated: observed efficiency is reliability-shrunk.
- // A severe source outage should not masquerade as a valid on-field rating.
- // With >=70% FBS team-game coverage, rank using shrinkage; below it, label the
- // result as a résumé-only fallback while scores/results still refresh.
- const full=expected>0 && covered/expected>=.70;
- state.advCovered=covered;state.advExpected=expected;state.fullModel=full;
- if(!full){for(const t of teams)t.score=(.35*t.sor+.20*t.movPct+.20*t.qualityComponent)/.75;rankTeams(teams);return;}
- for(const o of observed){if(!byTeam.has(o.team.name))byTeam.set(o.team.name,[]);byTeam.get(o.team.name).push(o)}
- const base={};for(const k of ['off_ppa','def_ppa','off_success_rate','def_success_rate','off_explosive_rate','def_explosive_rate'])base[k]=meanArr(observed.map(r=>r[k]));
- const oppAverage=(opp,id,key)=>{const r=(byTeam.get(opp)||[]).filter(a=>a.id!==id);return (r.reduce((s,a)=>s+a[key],0)+2*base[key])/(r.length+2)};
- const effTeams=eligible;
- for(const t of teams){if(!t.advGames.length){t.ppaNet=0;t.successNet=0;t.control=0;t.explosiveNet=0;t.penaltyNet=0;t.turnoverNet=0;t.redzoneNet=0;t.effWinRate=0;t.effStability=0;continue;}
-  let ep=[],es=[],ex=[],controls=[],pn=[],to=[],offVol=[],defVol=[],rzOff=0,rzOffTrips=0,rzDef=0,rzDefTrips=0;
-  for(const a of t.advGames){const other=a.gm.op,id=a.id,f=.5;
-   const op=f*(base.def_ppa-oppAverage(other,id,'def_ppa'))+a.off_ppa;
-   const dp=f*(base.off_ppa-oppAverage(other,id,'off_ppa'))+a.def_ppa;
-   offVol.push(op);defVol.push(dp);ep.push(op-dp);
-   es.push(a.off_success_rate+f*(base.def_success_rate-oppAverage(other,id,'def_success_rate')) - (a.def_success_rate+f*(base.off_success_rate-oppAverage(other,id,'off_success_rate'))));
-   ex.push(a.off_explosive_rate+f*(base.def_explosive_rate-oppAverage(other,id,'def_explosive_rate')) - (a.def_explosive_rate+f*(base.off_explosive_rate-oppAverage(other,id,'off_explosive_rate'))));
-   controls.push(a.lead_share-.5+clamp(a.gm.opRating/60,-.15,.15));
-   pn.push(a.opp_penalty_yards-a.penalty_yards);to.push(clamp(a.turnovers_gained-a.turnovers_lost,-3,3));
-   rzOff+=a.redzone_td;rzOffTrips+=a.redzone_trips;rzDef+=a.opp_redzone_td;rzDefTrips+=a.opp_redzone_trips;
-  }
-  const n=ep.length,shr=n/(n+2);
-  t.ppaNet=meanArr(ep)*shr;t.successNet=meanArr(es)*shr;t.explosiveNet=meanArr(ex)*shr;t.control=meanArr(controls)*shr;
-  t.penaltyNet=meanArr(pn)*shr;t.turnoverNet=meanArr(to)*n/(n+3);
-  t.redzoneNet=(rzOff+4*.6)/(rzOffTrips+4)-(rzDef+4*.6)/(rzDefTrips+4);
-  t.effWinRate=ep.filter(x=>x>0).length/n;
-  t.effStability=-((std(offVol)+std(defVol))*n/(n+4)+.45*4/(n+4));
- }
- for(const k of ADV_RANK_FIELDS)pctRanks(teams,k,k);
- for(const t of teams)t.consistencyScore=.6*t.effWinRatePct+.4*t.effStabilityPct;
- pctRanks(teams,'consistencyScore','consistencyScore');
- for(const t of teams){
-  const observedEfficiency=.10*t.ppaNetPct+.10*t.successNetPct+.16*t.controlPct+.16*t.explosiveNetPct+.08*t.penaltyNetPct+.12*t.turnoverNetPct+.16*t.consistencyScore+.12*t.redzoneNetPct;
-  // Missing games contribute no positive or negative evidence. Shrink the
-  // *entire* efficiency score toward neutral (50), proportional to measured
-  // game coverage. A team with zero advanced games receives neutral 50.
-  t.effScore=t.advGames.length?50+t.advCoverage*(observedEfficiency-50):50;
- }
- pctRanks(teams,'effScore','effScore');
- for(const t of teams)t.score=.35*t.sor+.20*t.movPct+.20*t.qualityComponent+.25*t.effScore;
- rankTeams(teams);
-}
 function rankTeams(teams){teams.sort((a,b)=>b.score-a.score||b.wab-a.wab||a.name.localeCompare(b.name));teams.forEach((t,i)=>t.rank=i+1)}
 function downloadTemplate(){const a=document.createElement('a'),u=URL.createObjectURL(new Blob([ADV_HEADERS.join(',')+'\n'],{type:'text/csv;charset=utf-8'}));a.href=u;a.download='CFMI_advanced_team_game_TEMPLATE.csv';a.click();setTimeout(()=>URL.revokeObjectURL(u),1500)}
 
 const submetric=(t,key,dec=2)=>(state.fullModel&&(Number.isFinite(t[key]))&&((key==='effScore')||Number.isFinite(t[key+'Rank'])))?`${fmt(t[key],dec)}<small>#${t[key+'Rank']}</small>`:'<span class="na">—</span>';
 function render(){if(!state.teams.length)return;const all=state.teams;let filtered=all.filter(t=>(!state.conference||t.conference===state.conference)&&(!state.query||t.name.toLowerCase().includes(state.query)));if(state.view!=='all'&&!state.query&&!state.conference)filtered=filtered.filter(t=>(state.lens==='power'?t.powerRank:t.rank)<=+state.view);
  const key=state.sort;filtered.sort((a,b)=>{if(key==='name')return (state.asc?1:-1)*a.name.localeCompare(b.name);let av=a[key],bv=b[key];if(!Number.isFinite(av))av=-Infinity;if(!Number.isFinite(bv))bv=-Infinity;return (state.asc?1:-1)*(av-bv)||a.rank-b.rank;});
- $('body').innerHTML=filtered.length?filtered.map(t=>`<tr data-team="${esc(t.name)}" title="View team breakdown"><td class="n ${(state.lens==='power'?t.powerRank:t.rank)<=10?'top-n':''}">${state.lens==='power'?t.powerRank:t.rank}</td><td class="metric" title="The other CFMI ranking, calculated independently">#${state.lens==='power'?t.rank:t.powerRank}</td><td class="team">${esc(t.name)}<span class="conf">${esc(t.conference)}</span></td><td><b>${t.won}–${t.lost}</b></td><td class="score">${fmt(t.score,1)}</td><td class="metric" title="Predictive Power index (0–100; not a calibrated win probability)">${fmt(t.powerScore,1)}</td><td class="metric">${fmt(t.sor,1)}<small>#${t.sorRank}</small></td><td class="metric ${t.wab>=0?'good':'weak'}">${t.wab>=0?'+':''}${fmt(t.wab,2)}<small>#${t.wabRank}</small></td><td class="metric">${fmt(t.sos,1)}<small>#${t.sosRank}</small></td><td class="metric">${fmt(t.mov,1)}<small>#${t.movRank}</small></td><td class="metric">${fmt(t.qualityComponent,1)}<small>#${t.qualityComponentRank}</small></td><td class="metric">${t.qRoadWins}<small>#${t.qRoadWinsRank}</small></td><td class="metric">${submetric(t,'effScore',1)}</td><td class="metric" title="${t.advCoreGames} of ${t.fbsGames} FBS games with measured offensive and defensive core EPA">${t.fbsGames?fmt(100*t.advCoverage,0)+'%':'N/A'}<small>${t.advCoreGames}/${t.fbsGames}</small></td><td class="metric">${submetric(t,'ppaNet',3)}</td><td class="metric">${submetric(t,'successNet',3)}</td><td class="metric">${submetric(t,'control',3)}</td><td class="metric">${submetric(t,'explosiveNet',3)}</td><td class="metric">${submetric(t,'penaltyNet',1)}</td><td class="metric">${submetric(t,'turnoverNet',2)}</td><td class="metric">${submetric(t,'consistencyScore',1)}</td><td class="metric">${submetric(t,'redzoneNet',3)}</td><td class="metric">${t.roadWins}<small>#${t.roadWinsRank}</small></td><td class="metric">${fmt(t.off,1)}<small>#${t.offRank}</small></td><td class="metric">${fmt(t.def,1)}<small>#${t.defRank}</small></td></tr>`).join(''):'<tr><td colspan="22" class="waiting">No teams match your filters.</td></tr>';
- $('shown').textContent=`${state.lens==='power'?'POWER':'MERIT'} · Showing ${filtered.length} of ${all.length} FBS teams · ${state.games.length} completed games · ${state.fullModel?(state.lens==='power'?'historically validated predictive Power':'55/25/20 Merit'):'data-limited fallback'} · every # is a national rank`;document.querySelectorAll('th[data-sort]').forEach(th=>th.classList.toggle('active-sort',th.dataset.sort===key));$('body').querySelectorAll('tr[data-team]').forEach(tr=>tr.addEventListener('click',()=>showTeam(tr.getAttribute('data-team'))));
+ $('body').innerHTML=filtered.length?filtered.map(t=>`<tr data-team="${esc(t.name)}" tabindex="0" aria-label="Open team ranking details for ${esc(t.name)}" title="View team breakdown (Enter or Space)"><td class="n ${(state.lens==='power'?t.powerRank:t.rank)<=10?'top-n':''}">${state.lens==='power'?t.powerRank:t.rank}</td><td class="metric" title="The other CFMI ranking, calculated independently">#${state.lens==='power'?t.rank:t.powerRank}</td><td class="team">${esc(t.name)}<span class="conf">${esc(t.conference)}</span></td><td><b>${t.won}–${t.lost}</b></td><td class="score">${fmt(t.score,1)}</td><td class="metric" title="Predictive Power index (0–100; not a calibrated win probability)">${fmt(t.powerScore,1)}</td><td class="metric">${fmt(t.sor,1)}<small>#${t.sorRank}</small></td><td class="metric ${t.wab>=0?'good':'weak'}">${t.wab>=0?'+':''}${fmt(t.wab,2)}<small>#${t.wabRank}</small></td><td class="metric">${fmt(t.sos,1)}<small>#${t.sosRank}</small></td><td class="metric">${fmt(t.mov,1)}<small>#${t.movRank}</small></td><td class="metric">${fmt(t.qualityComponent,1)}<small>#${t.qualityComponentRank}</small></td><td class="metric">${fmt(t.meritHeadToHeadAdjustment,2)}</td><td class="metric">${fmt(t.meritFcsPerformancePenalty,2)}</td><td class="metric">${submetric(t,'effScore',1)}</td><td class="metric" title="${t.advCoreGames} of ${t.fbsGames} FBS games with measured offensive and defensive core EPA">${t.fbsGames?fmt(100*t.advCoverage,0)+'%':'N/A'}<small>${t.advCoreGames}/${t.fbsGames}</small></td><td class="metric">${submetric(t,'ppaNet',3)}</td><td class="metric">${submetric(t,'successNet',3)}</td><td class="metric">${submetric(t,'control',3)}</td><td class="metric">${submetric(t,'explosiveNet',3)}</td><td class="metric">${submetric(t,'penaltyNet',1)}</td><td class="metric">${submetric(t,'turnoverNet',2)}</td><td class="metric">${submetric(t,'consistencyScore',1)}</td><td class="metric">${submetric(t,'redzoneNet',3)}</td><td class="metric">${t.roadWins}<small>#${t.roadWinsRank}</small></td><td class="metric">${fmt(t.off,1)}<small>#${t.offRank}</small></td><td class="metric">${fmt(t.def,1)}<small>#${t.defRank}</small></td></tr>`).join(''):'<tr><td colspan="26" class="waiting">No teams match your filters.</td></tr>';
+ $('shown').textContent=`${state.lens==='power'?'POWER':'MERIT'} · Showing ${filtered.length} of ${all.length} FBS teams · ${state.games.length} completed games · ${state.fullModel?(state.lens==='power'?'historically validated predictive Power':'55/25/20 Merit'):'data-limited fallback'} · Merit ranks may be provisional early in the season`;document.querySelectorAll('th[data-sort]').forEach(th=>th.classList.toggle('active-sort',th.dataset.sort===key));$('body').querySelectorAll('tr[data-team]').forEach(tr=>{
+    const open=()=>showTeam(tr.getAttribute('data-team'));
+    tr.addEventListener('click',open);
+    tr.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open()}});
+  });
 }
-function showTeam(name){const t=state.teams.find(t=>t.name===name);if(!t)return;const meritRank=Number.isFinite(t.meritPublishedRank)?'#'+t.meritPublishedRank:'Provisional';const comps=[['Results vs benchmark',t.meritRecordScore,55,t.sorRank],['Quality wins and road results',t.meritQualityScore,25,t.qualityComponentRank],['Adjusted winning margins',t.meritControlScore,20,t.meritControlScoreRank]];
- $('detailTitle').textContent=`${t.name} · ${state.lens==='power'?'Power #'+t.powerRank+' · Merit '+meritRank:'Merit '+meritRank+' · Power #'+t.powerRank}`;$('detailSubtitle').textContent=`${t.conference} · ${t.won}–${t.lost} · ${state.lens==='power'?'Power '+fmt(t.powerScore,2):'Merit '+fmt(t.score,2)} / 100 · ${t.games} games · ${t.fbsGames} FBS opponents`;
- const cards=comps.map(c=>`<div class="break-item"><small>${c[0]} · ${Number.isFinite(c[3])?'#'+c[3]:'not ranked'}</small><strong>${Number.isFinite(c[1])?fmt(c[1],1):'—'}</strong><span class="muted"> / 100</span><small>${c[2]}% overall weight${state.fullModel?' · '+fmt(c[1]*c[2]/100,2)+' points':''}</small><div class="bar"><i style="width:${Number.isFinite(c[1])?clamp(c[1],0,100):0}%"></i></div></div>`).join('');
+function showTeam(name){
+ const t=state.teams.find(t=>t.name===name);if(!t)return;
+ const view=CFMI_PUBLIC_VIEW.buildTeam(t);
+ const meritRank=view.merit.publishedRank===null?'Provisional':'#'+view.merit.publishedRank;
+ detailReturnFocus=document.activeElement;
+ const components=[['record','Record versus schedule benchmark',t.meritRecordScore,55,t.sorRank],
+   ['quality','Earned quality/road-win achievement',t.meritQualityScore,25,t.qualityComponentRank],
+   ['adjustedMargin','Opponent-adjusted margins',t.meritControlScore,20,t.meritControlScoreRank]];
+ $('detailTitle').textContent=view.team+' · '+(state.lens==='power'?'Power #'+view.power.rank+' · Merit '+meritRank:'Merit '+meritRank+' · Power #'+view.power.rank);
+ $('detailSubtitle').textContent=view.conference+' · '+view.record.wins+'–'+view.record.losses+' · '+(state.lens==='power'?'Power '+fmt(view.power.score,2):'Merit '+fmt(view.merit.score,2))+'/100 · '+view.record.games+' games · '+view.record.fbsGames+' FBS opponents';
+ const cards=components.map(([key,label,raw,weight,rank])=>'<div class="break-item"><small>'+esc(label)+' · '+(Number.isFinite(rank)?'#'+rank:'unranked')+'</small><strong>'+fmt(raw,1)+'</strong><span class="muted"> /100</span><small>'+weight+'% · '+fmt(view.merit.componentScore[key],2)+' active Merit pts</small><div class="bar"><i style="width:'+clamp(raw,0,100)+'%"></i></div></div>').join('');
  const advancedGameIds=new Set((t.advGames||[]).filter(g=>Number.isFinite(g.off_ppa)&&Number.isFinite(g.def_ppa)).map(g=>String(g.id)));
  const pbpByGame=new Map((t.advGames||[]).map(g=>[String(g.id),g]));
- const games=t.played.slice().sort((a,b)=>Date.parse(b.date)-Date.parse(a.date)).map(g=>`<tr><td>${new Date(g.date).toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'America/New_York'})}</td><td>${g.site}</td><td>${esc(g.op)}${!g.opFbs?' <span class="tag off">FCS</span>':''}</td><td class="${g.win?'win':'loss'}">${g.win?'W':g.loss?'L':'T'} ${g.pf}–${g.pa}</td><td>${fmt(g.opRating,1)}</td><td>${fmt(g.margin,0)}</td><td>${fmt(g.adjustedMOV,1)}</td><td>${g.oppRank?'#'+g.oppRank:'FCS'}</td><td>${fmt(g.qualityScore,0)}/100</td><td>${g.win?fmt(g.q,2):'—'}</td><td>${Number.isFinite(pbpByGame.get(String(g.id))?.possession_control_wp)?fmt(pbpByGame.get(String(g.id)).possession_control_wp,3):'—'}</td><td>${Number.isFinite(pbpByGame.get(String(g.id))?.off_finish_pp40)?fmt(pbpByGame.get(String(g.id)).off_finish_pp40,2):'—'}</td><td>${!g.opFbs?'<span class="notranked">FCS</span>':advancedGameIds.has(String(g.id))?'<span class="positive">Core EPA measured</span>':'<span class="notice">Core EPA pending</span>'}</td></tr>`).join('');
+ const games=CFMI_PUBLIC_VIEW.allGames(t).map(g=>{
+   const d=g.diagnostics;
+   return '<tr><td>'+new Date(g.gameDate).toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'America/New_York'})+
+     '</td><td>'+esc(g.site)+'</td><td>'+esc(g.opponent)+(g.isFbs?'':' <span class="tag off">FCS</span>')+
+     '</td><td class="'+(g.win?'win':'loss')+'">'+(g.win?'W':g.loss?'L':'T')+' '+g.scored+'–'+g.conceded+
+     '</td><td>'+(g.isFbs?fmt(g.opponentSeasonBaselineStrength,2):'FCS')+
+     '</td><td>'+(g.isFbs&&Number.isFinite(g.opponentSeasonBaselineRank)?'#'+g.opponentSeasonBaselineRank:'—')+
+     '</td><td>'+fmt(g.adjustedMargin,1)+'</td><td>'+fmt(g.resultAboveBenchmark,3)+
+     '</td><td>'+(g.win&&g.isFbs?fmt(g.meritSignatureWinUnits,3):'—')+
+     '</td><td>'+(g.win&&g.isFbs?fmt(g.allocatedMeritQualityUpliftPoints,2):'—')+
+     '</td><td>'+fmt(d.neutralStatePossessionWP,3)+
+     '</td><td>'+fmt(d.pointsPerScoringOpportunity,2)+
+     '</td><td>'+(g.isFbs?(d.coreEPAMeasured?'<span class="positive">Measured</span>':'<span class="notice">Pending</span>'):'N/A')+'</td></tr>';
+ }).join('');
  const advRows=[['Opponent-adjusted PPA/play','ppaNet',3,10],['Opponent-adjusted success rate','successNet',3,7],[state.controlMode==='neutral_possession_wp'?'Neutral-state possession WP control':'Quarter-end control fallback','control',3,3],['Opponent-adjusted explosiveness','explosiveNet',3,5],['Adjusted penalties','penaltyNet',1,1],['Expected / shrunk turnover margin','turnoverNet',2,2],['Off/def consistency','consistencyScore',1,4],...(state.finishMode==='points_per_scoring_opportunity'?
   [['Points per scoring opportunity','redzoneNet',3,2],['Red-zone drive TD conversion','redzoneTdNet',3,1]]:
   [['Red-zone play-rate fallback','redzoneNet',3,3]])].map(([label,k,places,w])=>`<tr><td>${label}</td><td>${state.fullModel&&Number.isFinite(t[k])&&((t.advMetricCounts?.[k]||0)>0||(k==='consistencyScore'&&(t.advMetricCounts?.ppaNet||0)>0))?fmt(t[k],places):'Not measured'}</td><td>${state.fullModel&&Number.isFinite(t[k+'Rank'])?'#'+t[k+'Rank']:'—'}</td></tr>`).join('');
- $('detailBody').innerHTML=`<div class="team-score-sections ${state.lens==='power'?'power-first':''}"><section class="merit-summary"><h3>Merit breakdown · ${meritRank} · ${fmt(t.score,2)}/100</h3><div class="breakdown">${cards}</div><p class="note"><strong>Earned résumé adjustments:</strong> head-to-head ${(t.meritHeadToHeadAdjustment||0)>=0?'+':''}${fmt(t.meritHeadToHeadAdjustment||0,2)} points; FCS performance ${fmt(t.meritFcsPerformancePenalty||0,2)} points. Quality-win achievement is strengthened, while FCS blowouts do not earn bonus credit. ${t.meritProvisional?'This résumé is provisional until sufficient FBS evidence accumulates.':''}</p>${(t.meritHeadToHeadReasons||[]).length?'<p class="note">Direct results: '+t.meritHeadToHeadReasons.map(r=>(r.won?'Defeated ':'Lost to ')+esc(r.opponent)).join('; ')+'</p>':''}</section>
-<section class="power-summary"><div class="power-pop"><h3>Neutral-field Power · #${t.powerRank} · ${fmt(t.powerScore,2)}/100</h3>
-<p class="note">Power estimates neutral-field expected margin against average FBS opposition. It adjusts EPA, successful plays and explosiveness jointly against every opponent's actual defense and offense, then includes validated opponent-schedule reliability and underwhelming FCS results. Active mode: ${esc(t.powerMethod)}. Current estimated margin vs average FBS: ${fmt(t.powerPoints,2)} points. Evidence level: ${esc(t.powerEvidence)} (${t.fbsGames} FBS games). Preseason influence: ${fmt(100*(t.preseasonPriorWeight||0),1)}% (quality-adjusted effective games: ${fmt(t.preseasonEffectiveGames||0,2)}). Index scores are not win probabilities.</p>
-${CFMI_POWER_UI.breakdown(t,fmt)}
-${CFMI_POWER_UI.prior(t,fmt)}
-${CFMI_POWER_UI.network(t,fmt)}
-</div></section></div><p class="note">${state.fullModel?'Merit rewards results, quality/road victories and opponent-adjusted margins; advanced signals influence Power when historical evidence supports them. Per-metric coverage and uncertain samples are considered.':'Advanced-stat coverage is insufficient for reliable power corrections; baseline-only Power is shown.'} Advanced EPA coverage: ${t.advCoreGames||0}/${t.fbsGames} FBS games; non-garbage play-by-play EPA ${t.advPbpGames||0}/${t.fbsGames}. National game-control method: ${state.controlMode==='neutral_possession_wp'?'neutral-state possession win probability':'quarter-end fallback'}; drive finishing: ${state.finishMode==='points_per_scoring_opportunity'?'points per 40-yard-line scoring opportunity':'legacy red-zone play proxy'}.</p><div class="sep"></div><h3>On-field performance audit · separate from Power point contributions</h3><div class="scrollx"><table class="ledger"><thead><tr><th>Performance measure · diagnostic, not necessarily a Power coefficient</th><th>Measured value</th><th>FBS rank</th></tr></thead><tbody>${advRows}</tbody></table></div><div class="sep"></div><div class="two"><div><h3>Résumé diagnostics</h3><div class="note">WAB: ${fmt(t.wab,2)} (#${t.wabRank}) · benchmark wins: ${fmt(t.expected,2)}<br>SOS: ${fmt(t.sos,2)} (#${t.sosRank}) · adjusted MOV: ${fmt(t.mov,2)} (#${t.movRank})<br>Merit quality and road-win achievement: ${fmt(t.meritQualityResidual,3)} · Game-control score: ${fmt(t.meritControlScore,2)} · Quality road wins (unweighted diagnostic): ${t.qRoadWins}</div></div><div><h3>Unweighted scoring diagnostics</h3><div class="note">Internal opponent-strength baseline: ${fmt(t.power,2)} (#${t.baselinePowerRank})<br>Results-only SRS: ${fmt(t.rating,2)} (#${t.ratingRank})<br>Season-only Elo: ${fmt(t.elo,0)}<br>Offensive scoring surplus: ${fmt(t.off,2)} (#${t.offRank})<br>Defensive scoring suppression: ${fmt(t.def,2)} (#${t.defRank})</div></div></div><div class="sep"></div><h3>Every result included</h3><div class="scrollx"><table class="ledger"><thead><tr><th>Date</th><th>Site</th><th>Opponent</th><th>Final</th><th>Opp rating</th><th>Margin</th><th>Adj MOV</th><th>Opponent baseline #</th><th>Game performance</th><th>Win-quality credit</th><th>Possession WP</th><th>Pts / scoring opp</th><th>Core EPA</th></tr></thead><tbody>${games}</tbody></table></div><p class="note">H = home, A = away, N = neutral. Legacy win-quality credit here is a diagnostic and does not enter V5 Merit; V5 uses the game outcome minus benchmark-expected result. The internal opponent baseline blends season-only results-adjusted margin (78%) and neutral-start Elo (22%); it is not a leave-one-out opponent rating.</p>`;
- $('detailScrim').classList.add('open');document.body.style.overflow='hidden';
+ $('detailBody').innerHTML=`<div class="team-score-sections ${state.lens==='power'?'power-first':''}"><section class="merit-summary"><h3>Merit breakdown · ${meritRank} · ${fmt(view.merit.score,2)}/100</h3><div class="breakdown">${cards}</div><p class="note"><strong>Additional active Merit adjustments:</strong> head-to-head resolution ${fmt(view.merit.componentScore.headToHead,2)} points; FCS performance ${fmt(view.merit.componentScore.fcsPerformance,2)} points. The base 55/25/20 contributions plus these two adjustments reconcile to the displayed Merit score. ${view.merit.provisional?'This résumé is provisional pending sufficient FBS results.':''}</p>${view.merit.headToHeadResults.length?'<p class="note">Direct-matchup evidence: '+view.merit.headToHeadResults.map(r=>(r.won?'Defeated ':'Lost to ')+esc(r.opponent)).join('; ')+'</p>':''}</section>
+<section class="power-summary"><div class="power-pop"><h3>Neutral-field Power · #${view.power.rank} · ${fmt(view.power.score,2)}/100</h3>
+<p class="note">Power estimates neutral-field expected margin against average FBS opposition. It adjusts EPA, successful plays and explosiveness jointly against every opponent's actual defense and offense, then includes validated opponent-schedule reliability and underwhelming FCS results. Active mode: ${esc(t.powerMethod)}. Current estimated margin vs average FBS: ${fmt(view.power.neutralPoints,2)} points. Evidence level: ${esc(view.power.evidence)} (${view.record.fbsGames} FBS games). Preseason influence: ${fmt(100*(view.power.preseasonWeight||0),1)}% (quality-adjusted effective games: ${fmt(view.power.effectiveGames||0,2)}). Index scores are not win probabilities.</p>
+${CFMI_POWER_UI.breakdownFromView(view.power,fmt)}
+${CFMI_POWER_UI.priorFromView(view.power,fmt)}
+${CFMI_POWER_UI.networkFromView(view.diagnostics,fmt)}
+</div></section></div><p class="note">${state.fullModel?'Merit rewards results, quality/road victories and opponent-adjusted margins; advanced signals influence Power when historical evidence supports them. Per-metric coverage and uncertain samples are considered.':'Advanced-stat coverage is insufficient for reliable power corrections; baseline-only Power is shown.'} Advanced EPA coverage: ${t.advCoreGames||0}/${t.fbsGames} FBS games; non-garbage play-by-play EPA ${t.advPbpGames||0}/${t.fbsGames}. National game-control method: ${state.controlMode==='neutral_possession_wp'?'neutral-state possession win probability':'quarter-end fallback'}; drive finishing: ${state.finishMode==='points_per_scoring_opportunity'?'points per 40-yard-line scoring opportunity':'legacy red-zone play proxy'}.</p><div class="sep"></div><h3>On-field performance audit · separate from Power point contributions</h3><div class="scrollx"><table class="ledger"><thead><tr><th>Performance measure · diagnostic, not necessarily a Power coefficient</th><th>Measured value</th><th>FBS rank</th></tr></thead><tbody>${advRows}</tbody></table></div><div class="sep"></div><div class="two"><div><h3>Résumé diagnostics</h3><div class="note">WAB: ${fmt(t.wab,2)} (#${t.wabRank}) · benchmark wins: ${fmt(t.expected,2)}<br>SOS: ${fmt(t.sos,2)} (#${t.sosRank}) · adjusted MOV: ${fmt(t.mov,2)} (#${t.movRank})<br>V5.5 raw signature-win credit: ${fmt(view.merit.qualityRaw,3)} units · Margin achievement subscore: ${fmt(view.merit.componentInputs.adjustedMargin,2)} /100 · Actual quality road wins over baseline top-25 teams: ${CFMI_PUBLIC_VIEW.wins(t,null,'strength').filter(g=>g.site==='A'&&g.opponentSeasonBaselineRank<=25).length}</div></div><div><h3>Unweighted scoring diagnostics</h3><div class="note">Internal opponent-strength baseline: ${fmt(t.power,2)} (#${t.baselinePowerRank})<br>Results-only SRS: ${fmt(t.rating,2)} (#${t.ratingRank})<br>Season-only Elo: ${fmt(t.elo,0)}<br>Offensive scoring surplus: ${fmt(t.off,2)} (#${t.offRank})<br>Defensive scoring suppression: ${fmt(t.def,2)} (#${t.defRank})</div></div></div><div class="sep"></div><h3>Every result included</h3><div class="scrollx"><table class="ledger"><thead><tr><th>Date</th><th>Site</th><th>Opponent</th><th>Final</th><th>Opponent strength · season fitted</th><th>Opponent season-baseline #</th><th>Adjusted margin · pts</th><th>Result − benchmark expectation</th><th>V5.5 signature-win credit · units</th><th>Allocated quality uplift · pts</th><th>Possession WP</th><th>Pts / scoring opp</th><th>Core EPA</th></tr></thead><tbody>${games}</tbody></table></div><p class="note">H = home, A = away, N = neutral. All résumé-credit columns come from active v5.5 fields. Result minus expected win is measured in wins, not index points. Signature-win credits aggregate nonlinearly into the 25% quality component; proportional quality uplift is not a separately added bonus. Opponent baseline strength includes the examined game, not an independent pregame prediction. Possession control, scoring opportunities and EPA coverage are supporting diagnostics only.</p>`;
+ $('detailScrim').classList.add('open');document.body.style.overflow='hidden';$('closeModal').focus();
 }
 
-function recalc(){if(!state.raw.length)return;const res=computeV5(state.raw,state.cutoff);state.teams=res.teams;state.games=res.games;attachEfficiencyV5(state.teams,state.advRows);
+function recalc(){if(!state.raw.length)return;const res=computeV5(state.raw,state.cutoff);state.teams=res.teams;state.games=res.games;attachEfficiencyV5(state.teams,state.advRows);state.metricContractAudit=CFMI_PUBLIC_VIEW.assertUniverse(state.teams);
  let conf=[...new Set(state.teams.map(t=>t.conference).filter(Boolean))].sort();$('conference').innerHTML='<option value="">All conferences</option>'+conf.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('');$('conference').value=state.conference;
  const asof=state.snapshotUpdated?('published '+new Date(state.snapshotUpdated).toLocaleString('en-US',{timeZone:'America/New_York',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'})):'published weekly snapshot';
  $('rankingSub').textContent=`2026 regular season · ${asof} · ${state.teams.length} FBS schools · ${state.fullModel?'V5.5 · VERIFIED OPPONENT-ADJUSTED':'DATA-LIMITED FALLBACK'}`;
  $('dataBadge').textContent=state.fullModel?'Merit + Power · v5.5':'Résumé fallback · limited data';
  $('coverageNote').innerHTML=state.fullModel?`<strong>Advanced-stat coverage:</strong> ${state.advCovered} of ${state.advExpected} FBS team-game observations measured (${fmt(100*state.advCovered/Math.max(1,state.advExpected),1)}%). Merit uses 55% schedule-adjusted record, 25% opponent-quality/road wins, and 20% capped opponent-adjusted margins. FCS blowout margins contribute no extra achievement credit. Power uses a points-scale SRS/Elo baseline with historically tested efficiency corrections and separately fitted win probabilities. Each separately measured efficiency metric shrinks toward 50 according to its valid FBS-game coverage. ADV COVERAGE reports core EPA. <strong>Current game control:</strong> ${state.controlMode==='neutral_possession_wp'?'2023-trained, score-clock-possession-only WP across non-garbage possessions':'quarter-lead fallback'}. <strong>Finishing drives:</strong> ${state.finishMode==='points_per_scoring_opportunity'?'actual points per possession reaching the opponent 40':'red-zone play proxy'}.`:`<strong>Advanced data unavailable:</strong> Advanced-stat coverage fell below the minimum 70% national threshold; the site is temporarily showing a résumé-only ranking. The 35% efficiency weight resumes when usable data is published.`;
  $('tableStatus').innerHTML=`Source: ${esc(state.loadedFrom)} · as-of ${asof} · ${state.games.length} completed games · <span class="notice">${state.fullModel?'CFMI V5 · adjusted for measured coverage':'Résumé-only fallback · advanced data unavailable'}</span> · all metric ranks are national`;
- $('export').disabled=false;$('offline').disabled=false;updateRankingLens();render();renderComparison();renderResume();
+ $('export').disabled=false;updateRankingLens();render();renderComparison();renderResume();
 }
 
 async function importText(text,desc){const records=csvParse(text);if(records.length<200||!('home_team' in records[0])||!('completed' in records[0]))throw Error('The imported file does not look like the 2026 SportsDataverse schedules CSV.');state.raw=records;state.rawCsv=text;state.loadedFrom=desc;recalc();setStatus(`Loaded ${records.length} scheduled matchups · ${state.games.length} completed eligible games · 2026 snapshot`,true)}
@@ -527,18 +451,10 @@ async function load(force=false){
  setStatus('Weekly results snapshot unavailable');
  $('dataBadge').textContent='Source blocked · no invented data';
  $('tableStatus').innerHTML='Could not load the published weekly data ('+esc(errors.join(' · '))+'). The data workflow has not yet produced a verified snapshot. No CSV upload is needed.';
- $('body').innerHTML='<tr><td colspan="22" class="waiting"><strong>Weekly data unavailable.</strong><br>The publishing workflow has not produced a validated weekly snapshot yet.</td></tr>';
+ $('body').innerHTML='<tr><td colspan="26" class="waiting"><strong>Weekly data unavailable.</strong><br>The publishing workflow has not produced a validated weekly snapshot yet.</td></tr>';
 }
 
-function saveOffline(){
- if(!state.rawCsv)return;
- // Materialize a true, self-contained HTML copy containing the source CSV, to make results reproducible without internet.
- const csv=JSON.stringify(state.rawCsv).replace(/</g,'\\u003c'); const adv=JSON.stringify(state.advCsv||'').replace(/</g,'\\u003c');
- const html='<!doctype html>\n'+document.documentElement.outerHTML.replace('<script>', '<script>window.__CFMI_EMBEDDED_CSV='+csv+';window.__CFMI_EMBEDDED_ADV_CSV='+adv+';<\/script><script>');
- const a=document.createElement('a'),u=URL.createObjectURL(new Blob([html],{type:'text/html;charset=utf-8'}));
- a.href=u;a.download=`CFMI_2026_${state.cutoff==='live'?'LIVE':'Nov06'}_OFFLINE_SNAPSHOT.html`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1500);
-}
-function downloadCsv(){const cols=['rank','powerRank','powerScore','name','conference','won','lost','score','sor','sorRank','wab','wabRank','sos','sosRank','mov','movRank','qualityComponent','qualityComponentRank','qRoadWins','qRoadWinsRank','roadWins','roadWinsRank','effScore','effScoreRank',...ADV_RANK_FIELDS.flatMap(k=>[k,k+'Rank']),'consistencyScore','consistencyScoreRank','advCoverage','off','offRank','def','defRank'];let text='model_type,'+cols.join(',')+'\n'+state.teams.map(t=>[state.fullModel?'four-weight-coverage-adjusted':'resume-fallback',...cols.map(c=>{const v=t[c];let s=Number.isNaN(v)||v==null?'':String(v);return /[,\n\"]/.test(s)?'"'+s.replaceAll('"','""')+'"':s})].join(',')).join('\n');const a=document.createElement('a'),url=URL.createObjectURL(new Blob([text],{type:'text/csv;charset=utf-8'}));a.href=url;a.download=`CFMI_2026_${state.cutoff==='live'?'LIVE':'Nov06'}_${state.fullModel?'FULL':'PREVIEW'}_all_FBS.csv`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500)}
+function downloadCsv(){const cols=['rank','meritPublishedRank','powerRank','powerScore','name','conference','won','lost','score','sor','sorRank','wab','wabRank','sos','sosRank','mov','movRank','qualityComponent','qualityComponentRank','meritRawQuality','meritHeadToHeadAdjustment','meritFcsPerformancePenalty','roadWins','roadWinsRank','effScore','effScoreRank',...ADV_RANK_FIELDS.flatMap(k=>[k,k+'Rank']),'consistencyScore','consistencyScoreRank','advCoverage','off','offRank','def','defRank'];let text='model_type,'+cols.join(',')+'\n'+state.teams.map(t=>[state.fullModel?'CFMI-v5.5-active':'data-limited-fallback',...cols.map(c=>{const v=t[c];let s=Number.isNaN(v)||v==null?'':String(v);return /[,\n\"]/.test(s)?'"'+s.replaceAll('"','""')+'"':s})].join(',')).join('\n');const a=document.createElement('a'),url=URL.createObjectURL(new Blob([text],{type:'text/csv;charset=utf-8'}));a.href=url;a.download=`CFMI_2026_${state.cutoff==='live'?'LIVE':'Nov06'}_${state.fullModel?'FULL':'PREVIEW'}_all_FBS.csv`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500)}
 
 
 function updateRankingLens(){
@@ -574,8 +490,9 @@ $('rankingLens').addEventListener('click',e=>{
 $('viewTabs').addEventListener('click',e=>{const btn=e.target.closest('[data-view]');if(!btn)return;state.view=btn.dataset.view;document.querySelectorAll('#viewTabs .tab').forEach(x=>x.classList.toggle('active',x===btn));render()});
 $('q').addEventListener('input',e=>{state.query=e.target.value.toLowerCase().trim();render()});$('conference').addEventListener('change',e=>{state.conference=e.target.value;render()});$('cutoff').addEventListener('change',e=>{state.cutoff=e.target.value;recalc()});$('reset').addEventListener('click',()=>{state.query='';state.conference='';state.view='50';state.sort=state.lens==='power'?'powerRank':'rank';state.asc=true;$('q').value='';$('conference').value='';document.querySelectorAll('#viewTabs .tab').forEach(x=>x.classList.toggle('active',x.dataset.view==='50'));render()});
 document.querySelectorAll('th[data-sort]').forEach(th=>th.addEventListener('click',()=>{const key=th.dataset.sort;if(state.sort===key)state.asc=!state.asc;else{state.sort=key;state.asc=key==='rank'||key==='powerRank'||key==='name'}render()}));
-$('advancedInput').addEventListener('change',async e=>{const f=e.target.files?.[0];if(!f)return;try{const csv=await f.text(),rows=csvParse(csv);if(rows.length<5||!ADV_HEADERS.every(k=>k in rows[0]))throw Error('Advanced file must contain the 17 documented columns and at least five rows. Automatically loads advanced play and box-score data when public releases are accessible.');state.advRows=rows;state.advCsv=csv;if(state.raw.length)recalc();setStatus(`Loaded ${rows.length} advanced team-game rows; ${state.fullModel?'full model active':'résumé preview pending sufficient coverage'}`,true);}catch(err){alert(err.message)}});$('fileInput').addEventListener('change',async e=>{const file=e.target.files?.[0];if(!file)return;try{await importText(await file.text(),'uploaded local CSV')}catch(err){alert(err.message)}});$('export').addEventListener('click',downloadCsv);$('offline').addEventListener('click',saveOffline);
-function close(){ $('detailScrim').classList.remove('open');document.body.style.overflow=''}$('closeModal').addEventListener('click',close);$('detailScrim').addEventListener('click',e=>{if(e.target===$('detailScrim'))close()});document.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
+$('advancedInput').addEventListener('change',async e=>{const f=e.target.files?.[0];if(!f)return;try{const csv=await f.text(),rows=csvParse(csv);if(rows.length<5||!ADV_HEADERS.every(k=>k in rows[0]))throw Error('Advanced file must contain the 17 documented columns and at least five rows. Automatically loads advanced play and box-score data when public releases are accessible.');state.advRows=rows;state.advCsv=csv;if(state.raw.length)recalc();setStatus(`Loaded ${rows.length} advanced team-game rows; ${state.fullModel?'full model active':'résumé preview pending sufficient coverage'}`,true);}catch(err){alert(err.message)}});$('fileInput').addEventListener('change',async e=>{const file=e.target.files?.[0];if(!file)return;try{await importText(await file.text(),'uploaded local CSV')}catch(err){alert(err.message)}});$('export').addEventListener('click',downloadCsv);
+let detailReturnFocus=null;
+function close(){ $('detailScrim').classList.remove('open');document.body.style.overflow='';if(detailReturnFocus?.isConnected)detailReturnFocus.focus();detailReturnFocus=null;}$('closeModal').addEventListener('click',close);$('detailScrim').addEventListener('click',e=>{if(e.target===$('detailScrim'))close()});document.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
 $('refresh').addEventListener('click',()=>load(true));$('refreshTop').addEventListener('click',()=>load(true));
 
 const pollView={data:null,external:null,baseline:'merit',count:'25',reference:'ap',query:'',conference:'',sort:'baseline',asc:true,error:null,externalError:null};
@@ -855,21 +772,22 @@ function resumeSelected(){
  return out;
 }
 function resumeReason(leader,other){
- const components=[
-  {label:'schedule-adjusted earned results',v:leader.meritRecordScore-other.meritRecordScore,w:55},
-  {label:'quality and away-game wins',v:leader.meritQualityScore-other.meritQualityScore,w:25},
-  {label:'opponent-adjusted performance margins',v:leader.meritControlScore-other.meritControlScore,w:20}
- ].map(x=>({...x,points:x.v*x.w/100})).sort((a,b)=>b.points-a.points);
- const positives=components.filter(x=>x.points>.03).slice(0,2);
- const negative=components.filter(x=>x.points<-.03).sort((a,b)=>a.points-b.points)[0];
- const margin=leader.score-other.score;
- const parts=[esc(leader.name)+' ranks '+esc(margin.toFixed(2))+' CFMI points above '+esc(other.name)+'.'];
- if(positives.length)parts.push('Largest advantages: '+positives.map(x=>x.label+' (+'+x.points.toFixed(2)+' pts)').join('; ')+'.');
- if(negative)parts.push(esc(other.name)+' performs better in '+negative.label+' ('+(-negative.points).toFixed(2)+' pts).');
- if(leader.top25RoadWins>other.top25RoadWins)parts.push('Quality road wins against independently rated top-25 opponents: '+leader.top25RoadWins+' vs '+other.top25RoadWins+'.');
- if(leader.closeQualityLosses>0)parts.push('Their résumé includes '+leader.closeQualityLosses+' close loss(es) to top-25 baseline-opponents, treated less harshly via adjusted margin and expected wins.');
- const best=leader.bestWin;
- if(best)parts.push('Signature result: '+esc(best.op)+' ('+best.site+', '+best.pf+'–'+best.pa+', opponent power #'+best.oppRank+').');
+ const left=CFMI_PUBLIC_VIEW.buildTeam(leader),right=CFMI_PUBLIC_VIEW.buildTeam(other);
+ const names={record:'record versus benchmark',quality:'quality/road-win achievement',adjustedMargin:'opponent-adjusted margins',headToHead:'direct head-to-head resolution',fcsPerformance:'FCS-performance evidence'};
+ const differences=Object.entries(left.merit.componentScore).map(([key,value])=>({
+   key,label:names[key]||key,points:value-right.merit.componentScore[key]
+ })).sort((a,b)=>b.points-a.points);
+ const positive=differences.filter(x=>x.points>.03).slice(0,3);
+ const negative=differences.filter(x=>x.points<-.03).sort((a,b)=>a.points-b.points).slice(0,2);
+ const margin=left.merit.score-right.merit.score;
+ const parts=[esc(left.team)+' currently has '+(margin>=0?'+':'')+margin.toFixed(2)+' Merit points relative to '+esc(right.team)+'.'];
+ if(positive.length)parts.push('Advantages: '+positive.map(x=>x.label+' (+'+x.points.toFixed(2)+' pts)').join('; ')+'.');
+ if(negative.length)parts.push('Disadvantages: '+negative.map(x=>x.label+' ('+x.points.toFixed(2)+' pts)').join('; ')+'.');
+ const direct=left.merit.headToHeadResults.find(x=>x.opponent===right.team);
+ if(direct)parts.push('Direct matchup: '+esc(direct.won?left.team:right.team)+' won; the bounded head-to-head adjustment is reflected in the Merit scores.');
+ const best=CFMI_PUBLIC_VIEW.wins(leader,1,'signature')[0];
+ if(best)parts.push('Top active signature-win contribution: '+esc(best.opponent)+' ('+best.site+', '+best.scored+'–'+best.conceded+'), '+best.meritSignatureWinUnits.toFixed(3)+' raw units.');
+ parts.push('Strength-based opponent ranks are season-fitted, not pregame estimates.');
  return parts.join(' ');
 }
 function renderResume(){
@@ -882,43 +800,49 @@ function renderResume(){
  if(!teams.length){$('resumeNarratives').innerHTML='';$('resumeHead').innerHTML='';$('resumeBody').innerHTML='<tr><td>Select one or more teams.</td></tr>';$('resumeGames').innerHTML='';$('resumeCommon').innerHTML='';return;}
  $('resumeNarratives').innerHTML=teams.length>=2?teams.slice(1).map(t=>'<div class="resume-narrative"><strong>'+esc(teams[0].name)+' vs '+esc(t.name)+'</strong><p>'+resumeReason(teams[0],t)+'</p></div>').join(''):'<div class="resume-narrative">Select another team to compare score drivers, schedule quality, signature wins and common opponents.</div>';
  const scores=[
-  ['Merit rank',t=>'#'+t.rank],
-  ['Predictive Power rank',t=>'#'+t.powerRank],
-  ['Predictive Power score',t=>fmt(t.powerScore,2)],
-  ['Neutral-field Power (estimated points)',t=>fmt(t.powerPoints,2)],
-  ['Merit score / 100',t=>fmt(t.score,2)],
+  ['Merit published rank',t=>{const v=CFMI_PUBLIC_VIEW.buildTeam(t);return v.merit.publishedRank===null?'Provisional':'#'+v.merit.publishedRank}],
+  ['Power rank',t=>'#'+CFMI_PUBLIC_VIEW.buildTeam(t).power.rank],
+  ['Power Index · 0–100',t=>fmt(CFMI_PUBLIC_VIEW.buildTeam(t).power.score,2)],
+  ['Neutral-field Power · points',t=>fmt(CFMI_PUBLIC_VIEW.buildTeam(t).power.neutralPoints,2)],
+  ['Merit Index · 0–100',t=>fmt(CFMI_PUBLIC_VIEW.buildTeam(t).merit.score,2)],
   ['Record',t=>t.won+'–'+t.lost],
-  ['Earned record score · 55%',t=>fmt(t.meritRecordScore,1)+' · #'+t.sorRank],
-  ['Wins above expectation',t=>(t.wab>=0?'+':'')+fmt(t.wab,2)],
+  ['Record achievement (55% of Merit)',t=>fmt(CFMI_PUBLIC_VIEW.buildTeam(t).merit.componentScore.record,2)+' pts'],
+  ['Quality / road-win achievement (25%)',t=>fmt(CFMI_PUBLIC_VIEW.buildTeam(t).merit.componentScore.quality,2)+' pts'],
+  ['Adjusted margin achievement (20%)',t=>fmt(CFMI_PUBLIC_VIEW.buildTeam(t).merit.componentScore.adjustedMargin,2)+' pts'],
+  ['Head-to-head adjustment',t=>fmt(CFMI_PUBLIC_VIEW.buildTeam(t).merit.componentScore.headToHead,2)+' pts'],
+  ['FCS performance adjustment',t=>fmt(CFMI_PUBLIC_VIEW.buildTeam(t).merit.componentScore.fcsPerformance,2)+' pts'],
+  ['Wins above benchmark',t=>(t.wab>=0?'+':'')+fmt(t.wab,2)],
   ['Opponent quality / SOS',t=>fmt(t.sos,2)+' · #'+t.sosRank],
-  ['Schedule-adjusted margin',t=>fmt(t.mov,2)+' · #'+t.movRank],
-  ['Quality win/road achievement · 25%',t=>fmt(t.meritQualityScore,1)+' · #'+t.qualityComponentRank],
-  ['Adjusted margin achievement · 20%',t=>fmt(t.meritControlScore,1)],
-  ['Top-25 baseline-opponent wins',t=>t.top25Wins],
-  ['Top-25 baseline-opponent ROAD wins',t=>t.top25RoadWins],
+  ['Signature-win credit · raw total',t=>fmt(CFMI_PUBLIC_VIEW.buildTeam(t).merit.qualityRaw,3)],
+  ['FBS wins over baseline top-25 teams',t=>CFMI_PUBLIC_VIEW.wins(t,null,'strength').filter(g=>g.opponentSeasonBaselineRank<=25).length],
+  ['Quality road wins against baseline top-25 teams',t=>CFMI_PUBLIC_VIEW.wins(t,null,'strength').filter(g=>g.site==='A'&&g.opponentSeasonBaselineRank<=25).length],
   ['Total road wins',t=>t.roadWins],
-  ['Close losses to top-25 baseline-ranked teams',t=>t.closeQualityLosses],
-  ['Opponent-adjusted efficiency',t=>state.fullModel?fmt(t.effScore,1)+' · #'+t.effScoreRank:'Not available'],
-  ['Possession game control',t=>state.fullModel?fmt(t.control,2)+' · #'+t.controlRank:'Not available'],
-  ['Drive finishing (points per 40-yard trip)',t=>state.fullModel?fmt(t.redzoneNet,2)+' · #'+t.redzoneNetRank:'Not available'],
-  ['Red-zone drive TD conversion',t=>state.fullModel&&state.finishMode==='points_per_scoring_opportunity'?fmt(t.redzoneTdNet,2)+' · #'+t.redzoneTdNetRank:'Not available'],
-  ['PBP games (non-garbage EPA)',t=>(t.advPbpGames||0)+' / '+t.fbsGames],
-  ['Advanced games measured',t=>t.advCoreGames+'/'+t.fbsGames+' ('+fmt(100*t.advCoverage,0)+'%)'],
-  ['Opponent-strength baseline rank (internal)',t=>'#'+t.baselinePowerRank],
-  ['Season-only Elo signal',t=>fmt(t.elo,0)],
+  ['On-field EPA (supporting diagnostic)',t=>state.fullModel?fmt(t.ppaNet,3):'Not measured'],
+  ['PBP games with non-garbage EPA',t=>(t.advPbpGames||0)+' / '+t.fbsGames],
+  ['Advanced core game coverage',t=>t.advCoreGames+'/'+t.fbsGames+' ('+(t.fbsGames?fmt(100*t.advCoverage,0):'N/A')+'%)'],
  ];
- $('resumeHead').innerHTML='<tr><th>MERIT FACTOR</th>'+teams.map(t=>'<th class="team-open" data-open-team="'+esc(t.name)+'">'+esc(t.name)+' · #'+t.rank+'</th>').join('')+'</tr>';
+ $('resumeHead').innerHTML='<tr><th>CURRENT MODEL COMPONENT</th>'+teams.map(t=>'<th class="team-open" role="button" tabindex="0" data-open-team="'+esc(t.name)+'">'+esc(t.name)+' · '+(CFMI_PUBLIC_VIEW.buildTeam(t).merit.publishedRank===null?'Provisional':'#'+t.meritPublishedRank)+'</th>').join('')+'</tr>';
  $('resumeBody').innerHTML=scores.map(([label,render],i)=>'<tr><td class="metric-label">'+label+'</td>'+teams.map(t=>'<td'+(i===0&&t===teams[0]?' class="top-value"':'')+'>'+render(t)+'</td>').join('')+'</tr>').join('');
  $('resumeGames').innerHTML=teams.map(t=>{
-  const wins=t.played.filter(g=>g.win&&g.opFbs).sort((a,b)=>b.q-a.q).slice(0,4);
-  return '<div class="resume-games-card"><h3>'+esc(t.name)+' — highest-quality wins</h3>'+(wins.length?wins.map(g=>'<p><strong>'+esc(g.op)+'</strong> · '+g.site+' · '+g.pf+'–'+g.pa+'<br>Opponent baseline #'+g.oppRank+' · quality credit '+fmt(g.q,2)+' · performance '+fmt(g.qualityScore,0)+'/100</p>').join(''):'<p>No FBS wins yet.</p>')+'</div>';
+  const earned=CFMI_PUBLIC_VIEW.wins(t,4,'signature');
+  const strongest=CFMI_PUBLIC_VIEW.wins(t,4,'performance');
+  const describe=g=>'<p><strong>'+esc(g.opponent)+'</strong> · '+g.site+' · '+g.scored+'–'+g.conceded+
+    '<br>Opponent season-baseline #'+(g.opponentSeasonBaselineRank??'N/A')+
+    ' · V5.5 signature credit '+fmt(g.meritSignatureWinUnits,3)+' units'+
+    ' · allocated quality uplift '+fmt(g.allocatedMeritQualityUpliftPoints,2)+' Merit pts'+
+    ' · adjusted margin '+fmt(g.adjustedMargin,1)+' pts</p>';
+  return '<div class="resume-games-card"><h3>'+esc(t.name)+' — strongest earned wins</h3>'+
+    (earned.length?earned.map(describe).join(''):'<p>No FBS wins yet.</p>')+
+    '<h4 style="margin:15px 0 9px;font-size:13px">Best on-field winning margins · separate diagnostic</h4>'+
+    (strongest.length?strongest.map(g=>'<p><strong>'+esc(g.opponent)+'</strong> · '+g.site+' · '+g.scored+'–'+g.conceded+
+      '<br>Opponent-adjusted margin '+fmt(g.adjustedMargin,1)+' pts</p>').join(''):'<p>No FBS wins yet.</p>')+'</div>';
  }).join('');
  if(teams.length>=2){
   const lead=teams[0];
   const common=teams.slice(1).map(other=>{
-   const otherNames=new Map(other.played.filter(g=>g.opFbs).map(g=>[g.op,g]));
-   const shared=lead.played.filter(g=>g.opFbs&&otherNames.has(g.op)).slice(0,5);
-   return shared.length?'<div class="resume-games-card"><h3>Common opponents: '+esc(lead.name)+' / '+esc(other.name)+'</h3>'+shared.map(g=>{const og=otherNames.get(g.op);return '<p>'+esc(g.op)+': '+esc(lead.name)+' '+g.pf+'–'+g.pa+' ('+g.site+') vs '+esc(other.name)+' '+og.pf+'–'+og.pa+' ('+og.site+')</p>'}).join('')+'</div>':'';
+   const otherNames=new Map(CFMI_PUBLIC_VIEW.allGames(other).filter(g=>g.isFbs).map(g=>[g.opponent,g]));
+   const shared=CFMI_PUBLIC_VIEW.allGames(lead).filter(g=>g.isFbs&&otherNames.has(g.opponent)).slice(0,5);
+   return shared.length?'<div class="resume-games-card"><h3>Common opponents: '+esc(lead.name)+' / '+esc(other.name)+'</h3>'+shared.map(g=>{const og=otherNames.get(g.opponent);return '<p>'+esc(g.opponent)+': '+esc(lead.name)+' '+g.scored+'–'+g.conceded+' ('+g.site+') vs '+esc(other.name)+' '+og.scored+'–'+og.conceded+' ('+og.site+')</p>'}).join('')+'</div>':'';
   }).filter(Boolean);
   $('resumeCommon').innerHTML=common.length?'<h3 style="margin-top:20px">Common opponents</h3><div class="resume-games">'+common.join('')+'</div>':'';
  } else $('resumeCommon').innerHTML='';
@@ -933,6 +857,7 @@ $('resumeControls').addEventListener('change',e=>{
  resumeState.names[idx]=name;renderResume();
 });
 $('resumeHead').addEventListener('click',e=>{const th=e.target.closest('[data-open-team]');if(th)showTeam(th.dataset.openTeam)});
+$('resumeHead').addEventListener('keydown',e=>{const th=e.target.closest('[data-open-team]');if(th&&(e.key==='Enter'||e.key===' ')){e.preventDefault();showTeam(th.dataset.openTeam)}});
 
 
 /* Read-only, reproducible weekly views generated by GitHub Actions */
@@ -1231,6 +1156,7 @@ async function loadPredictionLedger(){
   if(!led.seasons?.['2025']?.weeks?.length||!led.seasons?.['2026']?.weeks?.length)
     throw Error('2025/26 prediction records missing');
   weeklyView.predictionLedger=led;
+  renderCurrentValidation();
   updateMatchupWeekOptions();renderMatchups();
  }catch(e){
   $('matchupSummary').textContent='Historical scorecard unavailable: '+e.message;
@@ -1260,6 +1186,28 @@ loadPredictionLedger();loadPowerBenchmark();
 
 
 
+function renderCurrentValidation(){
+ const target=$('v5ValidationSummary');
+ if(!target)return;
+ const ledger=weeklyView.predictionLedger;
+ if(!ledger?.seasons?.['2025']?.overall||!ledger?.seasons?.['2026']?.overall){
+   target.innerHTML='<strong>Current v5.5 model evaluation</strong><p class="note">Waiting for the published pregame prediction ledger. Historical claims are hidden until the matched-game dataset is verified.</p>';
+   return;
+ }
+ const p=x=>Number.isFinite(x)?(100*x).toFixed(2)+'%':'Not available';
+ const n=x=>Number.isFinite(x)?Number(x).toFixed(3):'Not available';
+ const seasons=[2025,2026].map(year=>{
+  const data=ledger.seasons[String(year)].overall;
+  if(!Number.isFinite(data.played)||!Number.isFinite(data.correct)||data.played<100)
+    throw Error('Incomplete model-validation ledger '+year);
+  return '<tr><td>'+year+'</td><td>'+data.correct+'/'+data.played+'</td><td>'+p(data.accuracy)+'</td><td>'+n(data.logLoss)+'</td><td>'+n(data.marginMAE)+' pts</td></tr>';
+ });
+ target.innerHTML='<strong>CFMI v5.5 · reconstructed pregame validation</strong>'+
+  '<p>These are current v5.5 Power + venue forecasts for completed FBS-versus-FBS games, derived from the actual published prediction ledger. Historical source releases can contain retrospective revisions.</p>'+
+  '<div class="cfmi-scroll"><table class="cfmi-ext-table"><thead><tr><th>Season</th><th>Correct winners</th><th>Winner accuracy</th><th>Probability log loss ↓</th><th>Margin MAE ↓</th></tr></thead><tbody>'+
+  seasons.join('')+'</tbody></table></div>'+
+  '<p class="cfmi-section-note"><strong>Limitations:</strong> 2024 source data informed model training; 2025 was used in model selection, and 2026 outcomes were inspected during further refinement. These are <strong>retrospective development comparisons, not untouched prospective proof</strong>. Frozen v5.4 scored 556/762 in 2025 and 397/562 through Week 10 of 2026 on its own reconstructed ledger. Current-model game predictions and the matchup-specific adjustments are independent of the Merit rank ordering.</p>';
+}
 async function loadV5Parameters(){
  try{
    const response=await fetch('./data/model_v5_params.json',{cache:'no-store'});
@@ -1267,41 +1215,7 @@ async function loadV5Parameters(){
    const json=await response.json();
    if(!MODEL_V5.setParameters(json))throw Error('Model parameters failed numerical validation');
    state.v5ParamsLoaded=true;
-   const v=json.validation;
-   if(v&&$('v5ValidationSummary')){
-     const c=v.candidate2025,b=v.baseline2025,old=v.previousV5_2025,ci=v.pairedWeeklyBootstrap2025,c26=v.candidate2026,old26=v.previousV5_2026;
-     const show=x=>Number.isFinite(x)?x.toFixed(4):'—';
-     const pct=x=>Number.isFinite(x)?(100*x).toFixed(1)+'%':'—';
-     const cmp=old?'<tr><td>Previous V5</td><td>'+pct(old.accuracy)+'</td><td>'+show(old.logLoss)+'</td><td>'+old.marginMAE.toFixed(2)+'</td></tr>':'';
-     const ciInfo=ci&&ci.logLoss?('Weekly bootstrap 95% interval for full-spectrum log-loss improvement vs previous V5: ['+show(ci.logLoss.lower95)+', '+show(ci.logLoss.upper95)+'].'):'';
-     const coeffs=['epa','success','explosive','finishing','consistency','control','offense','defense'];
-     const active=coeffs.filter(k=>(json.parameters[k]||0)>0.000001),diagnostic=coeffs.filter(k=>(json.parameters[k]||0)<=0.000001);
-     $('v5ValidationSummary').innerHTML='<strong>V5.1 Power validation · 2025 game-ahead evaluation ('+json.validationGames+' FBS games)</strong>'+
-       '<p>All eight opponent-adjusted football statistics were considered and tested; only independently predictive features retain a direct coefficient.</p>'+
-       '<div class="cfmi-scroll"><table class="cfmi-ext-table"><thead><tr><th>Model</th><th>Winner accuracy</th><th>Log loss ↓</th><th>Margin MAE ↓</th></tr></thead><tbody>'+
-       '<tr><td>Full-spectrum candidate</td><td>'+pct(c.accuracy)+'</td><td>'+show(c.logLoss)+'</td><td>'+c.marginMAE.toFixed(2)+'</td></tr>'+cmp+
-       '<tr><td>Basic opponent-strength</td><td>'+pct(b.accuracy)+'</td><td>'+show(b.logLoss)+'</td><td>'+b.marginMAE.toFixed(2)+'</td></tr></tbody></table></div>'+
-       '<p><strong>Selected:</strong> '+esc(json.deployedCandidate)+'. '+esc(json.selectionReason||'')+'</p>'+
-       '<p><strong>Direct active Power factors:</strong> '+esc(active.join(', ')||'baseline only')+'. <strong>Measured but zero incremental coefficient:</strong> '+esc(diagnostic.join(', ')||'none')+'. A zero here does not mean the football skill is irrelevant; it means the current training data did not establish an additional improvement beyond overlapping factors.</p>'+
-       '<p>'+esc(ciInfo)+' 2025 was used for previous and current model selection, so it is not a pristine independent final holdout.</p>'+ 
-       (c26&&old26?'<p><strong>2026 forward-week check ('+json.prospective2026Games+' FBS games, not used to train or select):</strong> expanded candidate '+pct(c26.accuracy)+' winners vs previous V5 '+pct(old26.accuracy)+'; log loss '+show(c26.logLoss)+' vs '+show(old26.logLoss)+'. This is early-season evidence, not grounds for silently changing Power rankings.</p>':'')+ 
-       '<p>No 2026 outcomes entered coefficient training. New source revisions may affect reconstructed weekly evaluations.</p>';
-   }
-   const op=json.validation?.opponentStrengthComparison;
-   if(op&&$('v5ValidationSummary')){
-     const old=op.candidates.current2025,better=op.candidates.networkPlusOpponent2025;
-     const old26=op.candidates.current2026,better26=op.candidates.networkPlusOpponent2026;
-     const pct=x=>(100*x).toFixed(1)+'%',num=x=>Number(x).toFixed(4);
-     $('v5ValidationSummary').innerHTML=
-      '<strong>V5.2 opponent-adjustment validation · 2024 training / 2025 comparison</strong>'+
-      '<p>Production mode: <strong>'+esc(json.parameters.mode)+'</strong>. '+esc(json.selectionReason||'')+'</p>'+
-      '<div class="cfmi-scroll"><table class="cfmi-ext-table"><thead><tr><th>Season / Model</th><th>Correct winners</th><th>Log loss ↓</th><th>Avg margin error ↓</th></tr></thead><tbody>'+
-      '<tr><td>2025 · V5.1 reference</td><td>'+pct(old.accuracy)+'</td><td>'+num(old.logLoss)+'</td><td>'+old.marginMAE.toFixed(2)+' pts</td></tr>'+
-      '<tr><td>2025 · joint opponent network</td><td>'+pct(better.accuracy)+'</td><td>'+num(better.logLoss)+'</td><td>'+better.marginMAE.toFixed(2)+' pts</td></tr>'+
-      '<tr><td>2026 · V5.1 reference</td><td>'+pct(old26.accuracy)+'</td><td>'+num(old26.logLoss)+'</td><td>'+old26.marginMAE.toFixed(2)+' pts</td></tr>'+
-      '<tr><td>2026 · joint opponent network</td><td>'+pct(better26.accuracy)+'</td><td>'+num(better26.logLoss)+'</td><td>'+better26.marginMAE.toFixed(2)+' pts</td></tr>'+
-      '</tbody></table></div><p class="cfmi-section-note">2025 was previously used in model selection, so these small gains are exploratory. 2026 was excluded from coefficient fitting. Every as-of weekly model uses only games played by its cutoff; reconstructed source data may include later statistical corrections. FPI, SP+, FEI, AP, CFP and conference labels are not scoring inputs.</p>';
-   }
+   renderCurrentValidation();
    if(state.raw.length)recalc();
  }catch(err){
    console.warn('CFMI V5.2 historical calibration not available; using season-only neutral baseline without probabilities',err);

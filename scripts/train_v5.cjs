@@ -13,7 +13,7 @@ const html=fs.readFileSync(path.join(ROOT,'index.html'),'utf8');
 const inline=html.match(/<script>([\s\S]*?)<\/script>/i);
 if(!inline)throw Error('Missing model prelude');
 const end=inline[1].indexOf('const submetric=');
-if(end<10000)throw Error('Model prelude moved');
+if(end<1500)throw Error('Model prelude moved');
 const prelude=inline[1].slice(0,end);
 const library=fs.readFileSync(path.join(ROOT,'model_v4.js'),'utf8')+'\n'+
  fs.readFileSync(path.join(ROOT,'model_v5.js'),'utf8');

@@ -14,7 +14,7 @@ const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
 const inline=html.match(/<script>([\s\S]*?)<\/script>/i);
 if(!inline)throw Error('Missing CFMI inline model prelude');
 const boundary=inline[1].indexOf('const submetric=');
-if(boundary<10000)throw Error('CFMI engine prelude moved: update build_weekly_views.cjs');
+if(boundary<1500)throw Error('CFMI engine prelude moved: update build_weekly_views.cjs');
 const prelude=inline[1].slice(0,boundary);
 const model=fs.readFileSync(path.join(root,'model_v4.js'),'utf8')+'\n'+fs.readFileSync(path.join(root,'opponent_network_research.js'),'utf8')+'\n'+fs.readFileSync(path.join(root,'model_v5.js'),'utf8')+'\n'+fs.readFileSync(path.join(root,'preseason_prior_v1.js'),'utf8')+'\n'+fs.readFileSync(path.join(root,'model_matchup_v1.js'),'utf8');
 const parameters=JSON.parse(fs.readFileSync(path.join(root,'data','model_v5_params.json'),'utf8'));

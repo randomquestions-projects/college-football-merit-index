@@ -25,6 +25,18 @@ async function waitForServer(){
   const errors=[];page.on("pageerror",error=>errors.push(String(error)));
   await page.goto(url,{waitUntil:"domcontentloaded"});
   await page.locator("#body tr[data-team]").first().waitFor({timeout:30000});
+  try{
+    await page.waitForFunction(()=>state.fullModel===true &&
+      state.metricContractAudit?.allScoresReconciled===true &&
+      state.teams.length>=130,null,{timeout:30000});
+  }catch(err){
+    const detail=await page.evaluate(()=>({fullModel:state.fullModel,metricAudit:state.metricContractAudit||null,
+      status:document.querySelector('#stamp')?.textContent,
+      tableStatus:document.querySelector('#tableStatus')?.textContent,
+      scores:state.teams.slice(0,2).map(t=>({team:t.name,score:t.score,powerScore:t.powerScore})),
+      scripts:[...document.scripts].filter(s=>s.src).map(s=>s.src)}));
+    throw Error('Dashboard metric contract failed to reach ready state: '+JSON.stringify({detail,errors}));
+  }
   const names=await page.locator("#body tr[data-team]").allTextContents();
   assert(names.length>=25,"Expected populated Top 50");
   const model=await page.evaluate(()=>({version:MODEL_V5.version,parameters:MODEL_V5.params.source,teamCount:state.teams.length,active:state.fullModel,score:state.teams[0].score,powerScore:state.teams[0].powerScore,powerRank:state.teams[0].powerRank,coreCount:state.advCovered,expected:state.advExpected}));
@@ -51,13 +63,37 @@ async function waitForServer(){
   assert.equal(await page.locator("#resumeControls select").count(),5,"Expected five comparison selectors");
   assert.equal(await page.locator("#resumeHead [data-open-team]").count(),3,"Default three teams missing");
   assert(await page.locator("#resumeNarratives .resume-narrative").count()>=2,"Missing deterministic résumé narratives");
+  const ndAudit=await page.evaluate(()=>{
+    const nd=state.teams.find(x=>x.name==='Notre Dame');
+    const miami=CFMI_PUBLIC_VIEW.wins(nd,null,'signature').find(x=>x.opponent==='Miami');
+    const unc=CFMI_PUBLIC_VIEW.wins(nd,null,'signature').find(x=>x.opponent==='North Carolina');
+    const card=[...document.querySelectorAll('#resumeGames .resume-games-card')]
+      .find(e=>e.querySelector('h3')?.textContent.includes('Notre Dame'));
+    return {miami:miami?.meritSignatureWinUnits,unc:unc?.meritSignatureWinUnits,
+       firstWin:card?.querySelector('p strong')?.textContent,
+       hasLegacyMarkup:card?.textContent.includes('performance 81/100')||card?.textContent.includes('quality credit 1.52'),
+       contract:state.metricContractAudit};
+  });
+  assert(ndAudit.miami>ndAudit.unc&&ndAudit.firstWin==='Miami'&&!ndAudit.hasLegacyMarkup,
+    "Notre Dame best-win card must reflect active Merit over V4 road bonus");
+  assert(ndAudit.contract?.allScoresReconciled&&ndAudit.contract?.schools>=130,
+    "Full-FBS view contracts not verified before serving");
   await page.locator("#resumeTeam3").selectOption("Texas");
   assert.equal(await page.locator("#resumeHead [data-open-team]").count(),4,"Fourth team selection failed");
   await page.locator('#resumeHead [data-open-team="Georgia"]').click();
   await page.locator("#detailScrim.open").waitFor();
   const detail=(await page.locator("#detailBody").innerText()).toLowerCase();
-  assert(detail.includes("game performance")&&detail.includes("opponent baseline")&&detail.includes("estimated margin"),"V5 team detail audit not visible");
+  assert(detail.includes("signature-win")&&detail.includes("opponent")&&detail.includes("estimated margin"),"V6 team audit not aligned to active Merit");
   await page.locator("#closeModal").click();
+  await page.locator('#resumeHead [data-open-team="Georgia"]').focus();
+  await page.keyboard.press('Enter');
+  await page.locator('#detailScrim.open').waitFor();
+  assert((await page.locator('#detailTitle').textContent()).includes('Georgia'),'Keyboard team header did not open popup');
+  await page.keyboard.press('Escape');
+  assert.equal(await page.locator('#detailScrim.open').count(),0,'Escape must close team details');
+  assert.equal(await page.locator('#resumeHead [data-open-team="Georgia"]').evaluate(e=>document.activeElement===e),true,
+    'Team dialog should restore keyboard focus to invoking header');
+
   // Every team popup must reconcile to its exact Power Points (including
   // pre-season adjustment), without inactive 0.00-point football statistic cards.
   const auditedPopups=await page.evaluate(()=>{
@@ -68,7 +104,7 @@ async function waitForServer(){
       const heading=document.querySelector("#detailTitle")?.textContent||"";
       const total=Object.values(team.powerContributionPoints||{}).filter(Number.isFinite).reduce((s,n)=>s+n,0);
       if(!heading.includes(team.name))issues.push(team.name+": wrong heading");
-      if(!body.includes("Components reconcile to"))issues.push(team.name+": bad component display");
+      if(!body.includes("Reconciled:"))issues.push(team.name+": bad component display");
       if(!body.includes("Measured offense and defense"))issues.push(team.name+": missing performance diagnostics");
       if(/Finishing\\s+0\\.00 pts|Consistency\\s+0\\.00 pts|Game control\\s+0\\.00 pts/.test(body))
         issues.push(team.name+": dormant coefficient shown as metric");
@@ -79,6 +115,13 @@ async function waitForServer(){
   });
   assert(auditedPopups.count>=130&&auditedPopups.issues.length===0,
     "Invalid Merit / Power team popups: "+JSON.stringify(auditedPopups));
+  await page.locator('#pageSwitch [data-page="rankings"]').click();
+  const firstRow=page.locator('#body tr[data-team]').first();
+  await firstRow.focus();
+  await page.keyboard.press('Enter');
+  await page.locator('#detailScrim.open').waitFor();
+  await page.keyboard.press('Escape');
+  assert.equal(await page.locator('#detailScrim.open').count(),0,'Ranking row must be operable via keyboard');
   await page.locator('#pageSwitch [data-page="comparison"]').click();
   await page.locator("#compareBody tr").first().waitFor();
   assert.equal(await page.locator("#compareBody tr").count(),25,"Merit Top 25 comparison missing");
@@ -199,6 +242,40 @@ async function waitForServer(){
   }
   await page.locator('#pageSwitch [data-page="rankings"]').click();
   assert(await page.locator('#rankings').isVisible()&&!(await page.locator('#methodologyPage').isVisible()),"Home tab did not restore rankings");
+  const auditDataset=await page.evaluate(async()=>{
+    const res=await fetch('./data/public_metric_audit_2026.json',{cache:'no-store'});
+    if(!res.ok)throw Error('Public audit dataset missing: HTTP '+res.status);
+    const audit=await res.json();
+    const nd=audit.teamAudit.find(x=>x.team.team==='Notre Dame');
+    const wins=nd?.games.filter(x=>x.win&&x.isFbs).sort((a,b)=>b.meritSignatureWinUnits-a.meritSignatureWinUnits);
+    return {schools:audit.manifest.population.schools,fields:Object.keys(audit.manifest.fieldDefinitions||{}).length,
+      hashes:Object.keys(audit.manifest.sourceSha256||{}).length,model:audit.manifest.scoringModel,
+      firstNotreDameWin:wins?.[0]?.opponent,viewContract:audit.manifest.contractSchema};
+  });
+  assert(auditDataset.schools>=130&&auditDataset.fields>=15&&auditDataset.hashes>=10&&
+    auditDataset.firstNotreDameWin==='Miami'&&auditDataset.model==='5.5.0',
+    'Public audit export not reconciled with active published rankings');
+  const mobile=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1});
+  const mobileErrors=[];mobile.on('pageerror',error=>mobileErrors.push(String(error)));
+  await mobile.goto(url,{waitUntil:'domcontentloaded'});
+  await mobile.waitForFunction(()=>Boolean(state.metricContractAudit?.allScoresReconciled&&state.fullModel),null,{timeout:35000});
+  const mobileLayout=await mobile.evaluate(()=>({
+    width:window.innerWidth,documentWidth:document.documentElement.scrollWidth,
+    rankScrollWidth:document.querySelector('#rankingTable')?.scrollWidth,
+    containerWidth:document.querySelector('#rankingTable')?.closest('.table-scroll')?.clientWidth
+  }));
+  assert(mobileLayout.documentWidth<=mobileLayout.width+8,
+    'Mobile dashboard has uncontrolled horizontal overflow: '+JSON.stringify(mobileLayout));
+  const mobileRow=mobile.locator('#body tr[data-team]').first();
+  await mobileRow.focus();
+  await mobile.keyboard.press('Enter');
+  await mobile.locator('#detailScrim.open').waitFor();
+  const modalWidth=await mobile.evaluate(()=>document.querySelector('#detailScrim .modal')?.getBoundingClientRect().width);
+  assert(modalWidth<=390&&modalWidth>=250,'Mobile team audit dialog cannot fit viewport: '+modalWidth);
+  await mobile.keyboard.press('Escape');
+  assert.equal(await mobile.locator('#detailScrim.open').count(),0,'Mobile team popup must close via keyboard');
+  assert.equal(mobileErrors.length,0,'Mobile browser exception: '+mobileErrors.join('; '));
+  await mobile.close();
   assert.equal(errors.length,0,"Browser console exceptions: "+errors.join("; "));
   console.log("CFMI V5 BROWSER SMOKE PASSED",JSON.stringify(model));
  }catch(err){console.error("CFMI V5 BROWSER SMOKE FAILED:",err.stack||String(err));process.exitCode=1}
