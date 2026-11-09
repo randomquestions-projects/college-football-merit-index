@@ -174,14 +174,14 @@ for(const year of [2025,2026]){
 }
 const aud={
  version:'preseason-all-fbs-v0.2',deployed:false,trainingYear:2025,evaluationYear:2026,
- 24MonthReproducibilityCaveat:'Historical files are not independently verified frozen preseason snapshots; 2026 research hypothesis was prompted by observed 2026 standings.',
+ reproducibilityCaveat:'Historical files are not independently verified frozen preseason snapshots; 2026 research hypothesis was prompted by observed 2026 standings.',
  chosenOn2025:winning,trainingAlternatives:training,
  reference:'Current production V5.2 Power; no feature uses Power Four membership.',
  priorFeatures:'previous-season SRS/Elo power, same-year team talent composite, small blue-chip support, offense+defense returning production, small net-transfer residual; coach/coordinator fields unavailable -> omitted, never invented.',
  rosterMissingImputation:'25th percentile of available all-FBS same-year talent; uncertainty flagged; never pretend missing team has observed P4 talent',
  coverage,results,
  sampleCounts:{2025:samples[2025].length,2026:samples[2026].length},
- 2026NotUsedForSelection:true,
+ year2026NotUsedForSelection:true,
  sampleGamePredictions:samples[2026].filter(g=>g.week<=2).slice(0,18).map(g=>({
   home:g.home,away:g.away,week:g.week,baselineMargin:g.originalEdge,
   withPriorMargin:edge(g,winning.curve,winning.intensity),
