@@ -1,11 +1,23 @@
-# College Football Merit Index — CFMI V5.2
+# College Football Merit Index — CFMI V5.3 (V5.2 game-only engine + preseason evidence prior)
 
 **Live dashboard:** https://randomquestions-projects.github.io/college-football-merit-index/  
-**Statistical design:** [CFMI V5.1 model changes](docs/CFMI_V5_1_model_notes.md)  
-**Release:** Feature branch `feature/v5-1-resume-and-power-depth`; merge only after the historical workflow and browser tests pass.
+**Methodology:** [V5.3 Preseason Talent & Continuity](docs/CFMI_V5_3_talent_prior_research.md) · [V5.2 opponent-adjusted game strength](docs/CFMI_V5_2_opponent_adjustment.md)
 
-CFMI ranks every FBS program using two deliberately different systems. Neither uses AP/CFP, SP+, FPI, FEI, school reputation, recruiting, conference-status bonuses, betting lines or preseason team-specific strength as scoring inputs.
+## Week 0 and preseason forecasts
 
+The **Preseason** tab includes independent **Week 0 Power rankings for all 138 FBS teams**, an independent roster Talent Index, a game-by-game fading prior and an exploratory 12-team playoff / national-championship scenario simulator. The historical tab begins at **Week 0 (zero games)**. There are **no Week 0 Merit rankings**: recruiting or roster potential cannot be earned résumé credit.
+
+The points-scale Power prior combines measured current-roster talent and blue-chip mix, previous-season opponent-adjusted on-field results, returning offense/defense production and net transfer talent. We deliberately do not assign hidden points for P4 membership, preseason polls or school reputation. A complete 2026 source covers **137/138** FBS talent composites and **138/138** returning-production/portal records; the single missing roster talent value uses explicitly flagged lower-quartile **FBS** imputation. All source files are retained with year-specific hashes and lineage.
+
+Preseason prior weight after **0/1/2/3/4/5+ completed FBS games** is **100%/55%/35%/20%/8%/0%**, respectively. Once five FBS games have been completed, the model is identical to the current-season V5.2 opponent-network Power rating. **Merit remains unchanged** (55% earned record, 25% quality/road wins, 20% adjusted margin).
+
+In 2026 reconstructed same-week evaluation, the early-game (Weeks 1–4) winner accuracy improved **159/215 → 169/215**; all Weeks 1–10 **386/562 → 396/562**. Historical season-specific data sources can contain retrospective revisions; the source release timestamps are not verified original preseason snapshots, and 2026 observations motivated the design. These figures are **research evidence, not independently preregistered prospective proof**.
+
+Important missing inputs: individual top-30 and depth-player star ratings and head/OC/DC turnover. Those are shown as unverified rather than fabricated or silently treated as confirmed coaching stability. Playoff/title “odds” are **simulation shares under approximated qualification/tiebreaker/committee rules**, not official CFP forecasts or calibrated betting probabilities.
+
+See [full results, data lineage, imputation and simulator caveats](docs/CFMI_V5_3_talent_prior_research.md).
+
+---
 
 ## V5.2 opponent-strength correction
 
