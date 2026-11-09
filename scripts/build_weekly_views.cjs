@@ -76,18 +76,18 @@ weeks.push({week:0,asOfDate:new Date(weekZeroCutoff).toISOString().slice(0,10),
  teams:weekZero.teams.map(summarize)});
 
 for(let week=1;week<=lastWeek;week++){
- const prior=rows.filter(r=>r.season===year&&r.season_type==='regular'&&Number(r.week)>week)
+ const futureKickoffs=rows.filter(r=>r.season===year&&r.season_type==='regular'&&Number(r.week)>week)
   .map(r=>Date.parse(r.start_date)).filter(Number.isFinite);
  const thisWeek=completed.filter(r=>Number(r.week)===week);
  if(!thisWeek.length)continue;
  const lastKick=Math.max(...thisWeek.map(r=>Date.parse(r.start_date)));
  // For the current week, do not wait for a future game to update the dashboard;
  // compute the model only from already-final games as of build time.
- const cutoff=prior.length?Math.min(...prior)-1:Date.now();
+ const cutoff=futureKickoffs.length?Math.min(...futureKickoffs)-1:Date.now();
  const safeCutoff=week===lastWeek?Math.min(cutoff,Date.now()):cutoff;
  const scopedRaw=rows.map(r=>Number(r.week)>week?{...r,completed:'FALSE'}:r);
  const result=compute(scopedRaw,advRows,safeCutoff,parameters,prior);
- const asOf=sundayBefore(prior.length?Math.min(...prior):lastKick+86400000);
+ const asOf=sundayBefore(futureKickoffs.length?Math.min(...futureKickoffs):lastKick+86400000);
  const teams=result.teams.map(summarize);
  const matches=completed.filter(r=>Date.parse(r.start_date)<=safeCutoff&&Number(r.week)<=week);
  weeks.push({
