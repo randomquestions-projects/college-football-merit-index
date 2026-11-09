@@ -40,7 +40,17 @@ For 2026, CFMI, FPI, SP+, FEI have 562 identical game-ahead fixtures with comple
 
 CFMI and FPI/FEI/SP+ remain separate; external metrics never enter the CFMI model.
 
-**2025 source caveat:** CFB TXT's single 2025 historical snapshot CSV is not published at the same path as 2026. The build instead uses season-specific ESPN FPI weekly rating snapshots with a checked as-of/run key, and Brian Fremeau's 2025 weekly FEI tables from BCF Toys. The FEI page contains weekly results but no immutable original publication timestamps; label as *retrospective weekly FEI*, not verified source-date originals. A trustworthy complete 2025 weekly SP+ points-rating archive has not been established. **Never replace missing pregame records with a season-ending rating.** All available 2025 external comparisons use per-provider shared-game samples with CFMI accuracy measured on *those exact games*; if a provider has zero verified records it must say “Not available,” not zero accuracy.
+### 2025 matched original-dated FPI and retrospective weekly FEI
+
+| 2025 comparison | Games included | Provider correct | Provider accuracy | CFMI correct, same games | CFMI accuracy |
+|---|---:|---:|---:|---:|---:|
+| **ESPN FPI** weekly original-dated ratings | **664** | 487 | **73.3%** | 481 | 72.4% |
+| **FEI** retrospective weekly rating table | 751 | 443 | 59.0% | 550 | 73.2% |
+| SP+ | — | — | Unavailable | — | — |
+
+The FPI comparison uses **15 historical source-dated snapshots** (each rating 136 FBS programs). ESPN's 2025 week-1 row was overwritten with December values and is excluded; the first eligible FPI matchup group is Week 3, and thus this covers 664 of 762 full-season FBS fixtures. On exactly those 664 games, FPI gets **six more winners right** than CFMI. The FEI comparison is more uncertain: BCF Toys exposes 2025 weekly FEI team numbers but not an immutable original publish timestamp or its official game-level projected probabilities; the reported 59.0% represents **a neutral-rating-order pick constructed by our study**, not the provider's own scored forecasting system. Its substantial discrepancy requires source/parsing and venue-model review before treating it as an authoritative measure of FEI's predictive quality. No 2025 SP+ weekly point-rating archive passed source checks, and end-of-season SP+ is intentionally never substituted.
+
+**2025 source caveat:** CFB TXT's single 2025 historical snapshot CSV is not published at the same path as 2026. The build instead uses season-specific ESPN FPI weekly rating snapshots with checked as-of/run and update dates, and Brian Fremeau's 2025 weekly FEI tables from BCF Toys. The FEI page contains weekly results but no immutable original publication timestamps; label as *retrospective weekly FEI*, not verified source-date originals. A trustworthy complete 2025 weekly SP+ points-rating archive has not been established. **Never replace missing pregame records with a season-ending rating.** All available 2025 external comparisons use per-provider shared-game samples with CFMI accuracy measured on *those exact games*; if a provider has zero verified records it must say “Not available,” not zero accuracy.
 
 Source links:
 - [CFB TXT 2026 archived source-dated FPI, SP+ and FEI](https://cfbtxt.com/data/ratings_snapshots/2026/historical_ratings.csv)
