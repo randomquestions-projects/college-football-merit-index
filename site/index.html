@@ -667,15 +667,90 @@ function renderComparison(){
    (pollView.query?' · search overrides Top 25/50 cutoff':'')+' · baseline: '+COMPARE_LABELS[pollView.baseline]+
    ' · comparison deltas against: '+COMPARE_LABELS[pollView.reference]+'.';
 }
+const preseasonView={ratings:null,forecast:null,backtest:null,error:null,count:25,query:''};
+function renderPreseason(){
+ const data=preseasonView.ratings;if(!data)return;
+ const ranked=Object.values(data.teams).sort((a,b)=>a.powerRank-b.powerRank);
+ const short=ranked.filter(x=>x.team.toLowerCase().includes(preseasonView.query));
+ $('preseasonCoverage').textContent=data.coverage.talent+'/'+data.coverage.FbsTeams+
+  ' measured talent · '+data.coverage.returning+' returning-production teams · '+
+  data.coverage.portal+' portal teams';
+ $('preseasonDecay').innerHTML=data.decayByCompletedFbsGames.map((w,i)=>
+  '<div><div class="bar" style="height:'+(100*w)+'px"></div><strong>'+(100*w).toFixed(0)+'%</strong><small>'+(
+    i===0?'Week 0':i===5?'5+ games':i+' FBS '+(i===1?'game':'games'))+'</small></div>').join('');
+ $('preseasonTable').innerHTML=short.slice(0,preseasonView.count).map(t=>{
+  const c=t.components;
+  const pct=x=>Number.isFinite(x)?(100*x).toFixed(1)+'%':'—';
+  return '<tr><td>#'+t.powerRank+'</td><td>'+esc(t.team)+(t.imputedTalent?' <span title="Talent imputed from FBS lower quartile">†</span>':'')+'</td>'+
+   '<td>'+Number(t.week0PowerIndex).toFixed(1)+'</td>'+
+   '<td>'+(t.priorPoints>=0?'+':'')+Number(t.priorPoints).toFixed(2)+'</td>'+
+   '<td>#'+t.talentRank+'</td><td>'+t.talentIndex.toFixed(1)+'</td>'+
+   '<td>'+wNum(c.lastYearPowerRaw,2)+'</td><td>'+pct(c.returningOverall)+'</td>'+
+   '<td>'+pct(c.transferNetPercentile)+'</td></tr>';
+ }).join('');
+ const f=preseasonView.forecast;
+ if(f?.contenders?.length){
+  const pick=f.contenders[0];
+  $('preseasonChampionTitle').textContent='Preseason national title favorite · '+pick.team;
+  $('preseasonChampionDetails').textContent=pick.championPct.toFixed(1)+
+    '% simulated title wins; '+pick.playoffPct.toFixed(1)+
+    '% simulated playoff appearances, out of '+f.trials.toLocaleString('en-US')+
+    ' research scenarios. The bracket and committee process are approximated.';
+  $('preseasonPlayoffTable').innerHTML=f.contenders.slice(0,25).map((t,i)=>
+   '<tr><td>#'+(i+1)+'</td><td>'+esc(t.team)+'</td><td>#'+t.preseasonPowerRank+'</td>'+
+   '<td>'+t.playoffPct.toFixed(1)+'%</td><td>'+t.championPct.toFixed(1)+'%</td>'+
+   '<td>'+t.projectedWins.toFixed(1)+'</td></tr>').join('');
+ }
+ const bt=preseasonView.backtest;
+ if(bt?.results){
+  const ref=bt.results.find(x=>x.curve==='none'),candidate=bt.results.find(x=>
+   x.curve===bt.chosenOn2025.curve&&x.intensity===bt.chosenOn2025.intensity);
+  if(ref&&candidate)$('preseasonValidation').innerHTML=
+   'Same-game 2026 Weeks 1–10: <strong>'+ (100*ref.year2026.accuracy).toFixed(1)+'%</strong> Power-only vs '+
+   '<strong>'+(100*candidate.year2026.accuracy).toFixed(1)+'%</strong> with the preseason prior ('+
+   candidate.year2026.games+' FBS games). On Weeks 1–4: '+
+   (100*ref.early2026.accuracy).toFixed(1)+'% vs <strong>'+
+   (100*candidate.early2026.accuracy).toFixed(1)+'%</strong>. 2025 was used to select the decay curve; '+
+   'retrospective archive revisions and coaching data gaps limit certainty.';
+ }
+}
+async function loadPreseasonView(){
+ try{
+  const files=['./data/preseason_prior_2026.json',
+    './data/preseason_playoff_forecast_2026.json',
+    './data/research_full_preseason_backtest.json'];
+  const responses=await Promise.all(files.map(url=>fetch(url,{cache:'no-store'})));
+  for(const resp of responses)if(!resp.ok)throw Error('Missing preseason data: HTTP '+resp.status);
+  const [ratings,forecast,backtest]=await Promise.all(responses.map(r=>r.json()));
+  if(!MODEL_PRESEASON_V53.load(ratings))throw Error('Invalid preseason prior model');
+  preseasonView.ratings=ratings;
+  preseasonView.forecast=forecast;
+  preseasonView.backtest=backtest;
+  if(state.raw.length)recalc();
+  renderPreseason();
+ }catch(e){
+  preseasonView.error=e.message;
+  $('preseasonCoverage').textContent='Preseason model not published: '+e.message;
+  console.warn('Preseason view unavailable:',e);
+ }
+}
+$('preseasonCount').addEventListener('change',e=>{
+ preseasonView.count=Number(e.target.value)||25;renderPreseason();
+});
+$('preseasonSearch').addEventListener('input',e=>{
+ preseasonView.query=String(e.target.value||'').trim().toLowerCase();renderPreseason();
+});
+
 function switchDashboardPage(page){
- const current=['rankings','comparison','resume','history','matchups','methodology'].includes(page)?page:'rankings';
+ const current=['rankings','comparison','resume','history','preseason','matchups','methodology'].includes(page)?page:'rankings';
  document.body.classList.toggle('cfmi-compare',current==='comparison');
  document.body.classList.toggle('cfmi-resume',current==='resume');
  document.body.classList.toggle('cfmi-methodology',current==='methodology');
  document.body.classList.toggle('cfmi-history',current==='history');
+ document.body.classList.toggle('cfmi-preseason',current==='preseason');
  document.body.classList.toggle('cfmi-matchups',current==='matchups');
- for(const id of ['rankings','comparison','resume','history','matchups','methodology']){
-   const el=$(id==='methodology'?'methodologyPage':id==='history'?'historyPage':id==='matchups'?'matchupsPage':id);
+ for(const id of ['rankings','comparison','resume','history','preseason','matchups','methodology']){
+   const el=$(id==='methodology'?'methodologyPage':id==='history'?'historyPage':id==='preseason'?'preseasonPage':id==='matchups'?'matchupsPage':id);
    el?.classList.toggle('page-active',id===current);
  }
  document.querySelectorAll('#pageSwitch [data-page]').forEach(el=>{
@@ -686,6 +761,7 @@ function switchDashboardPage(page){
  if(current==='comparison')renderComparison();
  if(current==='resume')renderResume();
  if(current==='history')renderHistory();
+ if(current==='preseason')renderPreseason();
  if(current==='matchups')renderMatchups();
  const nextHash=current==='rankings'?'':'#'+current;
  if(location.hash!==nextHash)history.replaceState(null,'',location.pathname+location.search+nextHash);
@@ -739,6 +815,7 @@ $('navResume').addEventListener('click',e=>{e.preventDefault();switchDashboardPa
 $('navRanks').addEventListener('click',e=>{e.preventDefault();switchDashboardPage('rankings');$('rankings').scrollIntoView({behavior:'smooth'})});
 $('navMethodology').addEventListener('click',e=>{e.preventDefault();switchDashboardPage('methodology')});
 $('navHistory').addEventListener('click',e=>{e.preventDefault();switchDashboardPage('history')});
+$('navPreseason').addEventListener('click',e=>{e.preventDefault();switchDashboardPage('preseason')});
 $('navMatchups').addEventListener('click',e=>{e.preventDefault();switchDashboardPage('matchups')});
 document.querySelectorAll('.method-index a[href^="#"]').forEach(a=>a.addEventListener('click',e=>{
  e.preventDefault();const target=a.getAttribute('href').slice(1);switchDashboardPage('methodology');document.getElementById('legacyMethod').open=true;$(target)?.scrollIntoView({behavior:'smooth',block:'start'});
@@ -844,9 +921,9 @@ function renderHistory(){
  const index=doc.history.findIndex(x=>x.week===weeklyView.week);
  if(index<0)return;
  const w=doc.history[index],p=doc.history[index-1],previous=new Map((p?.teams||[]).map(t=>[t.name,t]));
- $('historyStats').textContent='Through '+w.asOfDate+' · '+w.gameCount+' completed games · '+w.teams.length+' FBS teams · '+w.modelVersion;
+ $('historyStats').textContent=(w.week===0?'Preseason · no games or Merit rankings · ':'Through ')+w.asOfDate+' · '+w.gameCount+' completed games · '+w.teams.length+' FBS teams · '+w.modelVersion;
  for(const [key,target] of [['rank','historyMeritTrend'],['powerRank','historyPowerTrend']]){
-   const sorted=[...w.teams].sort((a,b)=>a[key]-b[key]).slice(0,25);
+   const sorted=w.week===0&&key==='rank'?[]:[...w.teams].sort((a,b)=>a[key]-b[key]).slice(0,25);
    $(target).innerHTML=sorted.map(t=>{
      const prev=previous.get(t.name)?.[key];
      return '<tr><td>#'+t[key]+'</td><td>'+esc(t.name)+'</td><td>'+
@@ -854,10 +931,10 @@ function renderHistory(){
        '</td><td>'+trendText(t[key],prev)+'</td></tr>';
    }).join('');
  }
- const key=weeklyView.lens==='power'?'powerRank':'rank';
+ const key=w.week===0||weeklyView.lens==='power'?'powerRank':'rank';
  const sorted=[...w.teams].filter(t=>t.name.toLowerCase().includes(weeklyView.query)).sort((a,b)=>a[key]-b[key]);
  $('historyDetailedTitle').textContent='All FBS Teams · '+(key==='rank'?'Merit':'Power')+' · Week '+w.week;
- $('historyDetailed').innerHTML=sorted.map(t=>'<tr><td>#'+t[key]+'</td><td>'+esc(t.name)+'</td><td>'+t.won+'–'+t.lost+'</td><td>'+wNum(t.score,2)+'</td><td>'+wNum(t.powerScore,2)+'</td><td>#'+t.rank+'</td><td>#'+t.powerRank+'</td><td>'+wNum(t.wab,2)+'</td><td>'+wNum(t.sos,1)+'</td><td>'+wNum(t.mov,1)+'</td><td>'+t.coreGames+'/'+t.fbsGames+'</td></tr>').join('');
+ $('historyDetailed').innerHTML=sorted.map(t=>'<tr><td>#'+t[key]+'</td><td>'+esc(t.name)+'</td><td>'+t.won+'–'+t.lost+'</td><td>'+(w.week===0?'N/A':wNum(t.score,2))+'</td><td>'+wNum(t.powerScore,2)+'</td><td>#'+t.rank+'</td><td>#'+t.powerRank+'</td><td>'+wNum(t.wab,2)+'</td><td>'+wNum(t.sos,1)+'</td><td>'+wNum(t.mov,1)+'</td><td>'+t.coreGames+'/'+t.fbsGames+'</td></tr>').join('');
 }
 function renderMatchups(){
  const doc=weeklyView.data;if(!doc)return;
@@ -989,6 +1066,7 @@ async function loadV5Parameters(){
  }
 }
 loadV5Parameters();
+loadPreseasonView();
 
 // Published data changes weekly via GitHub Actions.
 load();
@@ -1004,12 +1082,12 @@ loadExternalComparison();
   $('historicalAccuracy').textContent=entries.map(x=>'V4 selected '+(100*x.accuracy.v4).toFixed(1)+'% of '+x.heldoutGames+' held-out games in '+x.season+' (V3: '+(100*x.accuracy.v3).toFixed(1)+'%).').join(' ');
  }catch(error){$('historicalAccuracy').textContent='Current historical results are available via the linked backtest report.';}
 })();
-const initialPage=location.hash==='#comparison'?'comparison':location.hash==='#resume'?'resume':location.hash==='#history'?'history':location.hash==='#matchups'?'matchups':
+const initialPage=location.hash==='#comparison'?'comparison':location.hash==='#resume'?'resume':location.hash==='#history'?'history':location.hash==='#preseason'?'preseason':location.hash==='#matchups'?'matchups':
  ['#method','#variables','#sources','#methodology'].includes(location.hash)?'methodology':'rankings';
 switchDashboardPage(initialPage);
 window.addEventListener('hashchange',()=>{
  const h=location.hash;
- switchDashboardPage(h==='#comparison'?'comparison':h==='#resume'?'resume':h==='#history'?'history':h==='#matchups'?'matchups':
+ switchDashboardPage(h==='#comparison'?'comparison':h==='#resume'?'resume':h==='#history'?'history':h==='#preseason'?'preseason':h==='#matchups'?'matchups':
    ['#method','#variables','#sources','#methodology'].includes(h)?'methodology':'rankings');
 });
 </script>
