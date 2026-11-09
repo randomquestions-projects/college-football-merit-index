@@ -88,7 +88,7 @@ for(let week=1;week<=lastWeek;week++){
  const cutoff=futureKickoffs.length?Math.min(...futureKickoffs)-1:Date.now();
  const safeCutoff=week===lastWeek?Math.min(cutoff,Date.now()):cutoff;
  const scopedRaw=rows.map(r=>Number(r.week)>week?{...r,completed:'FALSE'}:r);
- const result=compute(scopedRaw,advRows,safeCutoff,parameters,prior);
+ const result=compute(scopedRaw,advRows,safeCutoff,parameters,prior,matchupParams);
  const asOf=sundayBefore(futureKickoffs.length?Math.min(...futureKickoffs):lastKick+86400000);
  const teams=result.teams.map(summarize);
  const matches=completed.filter(r=>Date.parse(r.start_date)<=safeCutoff&&Number(r.week)<=week);
