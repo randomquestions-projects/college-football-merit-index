@@ -80,6 +80,10 @@ jobs:
         run: node scripts/build_weekly_views.cjs
       - name: Reconstruct game-ahead CFMI Power matchup ledgers for 2025 and 2026
         run: node scripts/build_prediction_ledger.cjs
+      - name: Research original-dated 2025 weekly FPI and FEI rating archives
+        run: |
+          python -m pip install beautifulsoup4==4.14.2
+          python scripts/probe_2025_industry.py
       - name: Benchmark same-game historic CFMI versus FPI SP+ and FEI, and diagnose misses
         run: python scripts/benchmark_power_2025_2026.py
       - name: Audit V5 model, weekly data quality and season cutoff invariants
