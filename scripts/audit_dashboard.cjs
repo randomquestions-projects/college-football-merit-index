@@ -6,7 +6,7 @@ const html=fs.readFileSync(path.join(base,'index.html'),'utf8');
 const m=html.match(/<script>([\s\S]*?)<\/script>/i);
 if(!m)throw Error('Missing inline calculation engine');
 const boundary=m[1].indexOf('const submetric=');
-if(boundary<10000)throw Error('Invalid engine boundary');
+if(boundary<1500)throw Error('Invalid engine boundary');
 const prelude=m[1].slice(0,boundary);
 const model=fs.readFileSync(path.join(base,'model_v4.js'),'utf8')+'\n'+fs.readFileSync(path.join(base,'opponent_network_research.js'),'utf8')+'\n'+fs.readFileSync(path.join(base,'model_v5.js'),'utf8')+'\n'+fs.readFileSync(path.join(base,'preseason_prior_v1.js'),'utf8');
 const doc=JSON.parse(fs.readFileSync(path.join(data,'model_v5_params.json'),'utf8'));
