@@ -9,10 +9,10 @@ const MODEL_PRESEASON_V53={
  data:null,
  load(doc){
   if(!doc||doc.version!==this.version||doc.season!==2026||!doc.teams||
-     !Array.isArray(doc.decayByCompletedFbsGames)||doc.decayByCompletedFbsGames.length<6)return false;
-  if(Object.keys(doc.teams).length<125)return false;
+     !Array.isArray(doc.decayByCompletedFbsGames)||doc.decayByCompletedFbsGames.length<6)throw Error('Invalid prior document header '+JSON.stringify({version:doc?.version,expected:this.version,season:doc?.season,decay:doc?.decayByCompletedFbsGames}));
+  if(Object.keys(doc.teams).length<125)throw Error('Too few preseason teams: '+Object.keys(doc.teams).length);
   for(const [name,t] of Object.entries(doc.teams)){
-    if(!name||!Number.isFinite(t.priorPoints)||!Number.isFinite(t.talentIndex))return false;
+    if(!name||!Number.isFinite(t.priorPoints)||!Number.isFinite(t.talentIndex))throw Error('Invalid preseason rating '+name+' '+JSON.stringify({points:t.priorPoints,talent:t.talentIndex}));
   }
   this.data=doc;this.enabled=true;return true;
  },
