@@ -1,7 +1,9 @@
-/* CFMI V5: earned-resume Merit and points-scale predictive Power.
- * Season-only. No AP, CFP, FPI, SP+, FEI, recruiting, preseason or conference
- * indicators enter either rating. Opponent context is inferred from games.
- * Version parameters are fitted using PRIOR seasons only (see train_v5.cjs).
+/* CFMI V5.2 season-only Power engine + optional V5.3 Week0 prior overlay.
+ * Merit never includes recruiting, preseason, AP/CFP, external indices or conference labels.
+ * Power's early-game prior uses current-roster talent, last-year performance,
+ * returning production and transfers when MODEL_PRESEASON_V53 is loaded.
+ * This prior fades entirely after five completed FBS games.
+ * The base network is fitted using PRIOR seasons (see train_v5.cjs).
  */
 'use strict';
 const MODEL_V5={
