@@ -843,7 +843,7 @@ function renderResume(){
   const common=teams.slice(1).map(other=>{
    const otherNames=new Map(CFMI_PUBLIC_VIEW.allGames(other).filter(g=>g.isFbs).map(g=>[g.opponent,g]));
    const shared=CFMI_PUBLIC_VIEW.allGames(lead).filter(g=>g.isFbs&&otherNames.has(g.opponent)).slice(0,5);
-   return shared.length?'<div class="resume-games-card"><h3>Common opponents: '+esc(lead.name)+' / '+esc(other.name)+'</h3>'+shared.map(g=>{const og=otherNames.get(g.op);return '<p>'+esc(g.opponent)+': '+esc(lead.name)+' '+g.scored+'–'+g.conceded+' ('+g.site+') vs '+esc(other.name)+' '+og.scored+'–'+og.conceded+' ('+og.site+')</p>'}).join('')+'</div>':'';
+   return shared.length?'<div class="resume-games-card"><h3>Common opponents: '+esc(lead.name)+' / '+esc(other.name)+'</h3>'+shared.map(g=>{const og=otherNames.get(g.opponent);return '<p>'+esc(g.opponent)+': '+esc(lead.name)+' '+g.scored+'–'+g.conceded+' ('+g.site+') vs '+esc(other.name)+' '+og.scored+'–'+og.conceded+' ('+og.site+')</p>'}).join('')+'</div>':'';
   }).filter(Boolean);
   $('resumeCommon').innerHTML=common.length?'<h3 style="margin-top:20px">Common opponents</h3><div class="resume-games">'+common.join('')+'</div>':'';
  } else $('resumeCommon').innerHTML='';
