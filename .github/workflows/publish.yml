@@ -96,6 +96,8 @@ jobs:
         run: node scripts/analyze_power_misses.cjs
       - name: Audit V5 model, weekly data quality and season cutoff invariants
         run: node scripts/audit_dashboard.cjs
+      - name: Enforce v6 public metric lineage and full-FBS reconciliation
+        run: node scripts/test_metric_view_contract.cjs
       - name: Historical V4 versus V3 walk-forward benchmark (reference only)
         run: |
           node scripts/backtest_v4.cjs
