@@ -10,11 +10,12 @@ const html=fs.readFileSync(path.join(root,"index.html"),"utf8");
 const m=html.match(/<script>([\s\S]*?)<\/script>/i);
 if(!m)throw Error("Missing inline engine");
 const idx=m[1].indexOf("const submetric=");
-if(idx<10000)throw Error("Missing engine boundary");
+if(idx<1500)throw Error("Missing engine boundary");
 const prelude=m[1].slice(0,idx);
 const model=fs.readFileSync(path.join(root,"model_v4.js"),"utf8");
+const archivedV3=fs.readFileSync(path.join(__dirname,"..","archive","legacy_v3_engine.js"),"utf8");
 const executor=new Function("scores","advanced","season","cutoff",
-model+"\n"+prelude+"\n"+
+model+"\n"+archivedV3+"\n"+prelude+"\n"+
 "const rows=csvParse(scores),adv=csvParse(advanced);"+
 "const result=computeV4(rows,cutoff,season);state.raw=rows;attachEfficiencyV4(result.teams,adv);"+
 "const v4=result.teams.map(t=>({name:t.name,score:t.score,elo:t.elo,power:t.power,powerScore:t.powerScore,powerRank:t.powerRank,winpct:t.winpct,rank:t.rank}));"+
