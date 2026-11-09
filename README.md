@@ -3,6 +3,16 @@
 **Live dashboard:** https://randomquestions-projects.github.io/college-football-merit-index/  
 **Methodology:** [V5.3 Preseason Talent & Continuity](docs/CFMI_V5_3_talent_prior_research.md) · [V5.2 opponent-adjusted game strength](docs/CFMI_V5_2_opponent_adjustment.md)
 
+## Weekly predictions, historical scorecards and industrial benchmarks
+
+The **Matchups** tab now has **Season (2025/2026)** and **Prediction week** selectors, with reconstructed **before-kickoff** predictions for every FBS-versus-FBS regular-season game. On a past week you can see all Power/Merit rankings and Power-based picks as of before that week's first kickoff, plus the final score and whether CFMI was correct. The scorecard shows both the selected week's record and season-to-date cumulative record. The current week shows the upcoming slate and the full 2026 YTD record.
+
+The live builder also publishes a detailed game-by-game 2025 and 2026 prediction ledger, plus a **matched-game** rating-derived comparison to ESPN FPI, SP+ and FEI (where genuinely pregame weekly ratings can be verified), and error analysis. External metrics are **comparison benchmarks only**; they are not inputs to CFMI Power or Merit. Missing historical snapshots are shown as unavailable, never silently backfilled with end-of-season ratings.
+
+**Current reconstructed CFMI Power winner accuracy**: 2025 full regular season **556/762 = 73.0%**, 2026 through Week 10 **397/562 = 70.6%**. Those are current-model retrospective reconstructions, not saved historic publication-time picks; 2025 was part of model selection and must not be called an untouched blind test.
+
+In the **2026 same 562 games** ESPN FPI and FEI each got 407 (72.4%) and SP+ got 409 (72.8%). CFMI remains slightly behind the top competitors in this sample. See [2025–2026 winner prediction research and model-error analysis](docs/CFMI_2025_2026_prediction_accuracy_and_model_errors.md).
+
 ## Week 0 and preseason forecasts
 
 The **Preseason** tab includes independent **Week 0 Power rankings for all 138 FBS teams**, an independent roster Talent Index, a game-by-game fading prior and an exploratory 12-team playoff / national-championship scenario simulator. The historical tab begins at **Week 0 (zero games)**. There are **no Week 0 Merit rankings**: recruiting or roster potential cannot be earned résumé credit.
