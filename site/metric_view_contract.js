@@ -76,6 +76,7 @@ const CFMI_PUBLIC_VIEW = Object.freeze({
        score:t.score,publishedRank:t.meritPublishedRank,provisional:!!t.meritProvisional,
        internalResearchRank:t.rank,componentScore,
        componentInputs:{record:t.meritRecordScore,quality:t.meritQualityScore,adjustedMargin:t.meritControlScore},
+       adjustmentDetail:{headToHeadCap:3,fcsPenaltyFloor:-5,qualityAggregation:'Saturated sum with shrinkage; individual game raw signature units do not add directly to total Merit points'},
        qualityRaw:t.meritRawQuality,qualityUplift,
        headToHeadResults:(t.meritHeadToHeadReasons||[]).map(x=>({opponent:x.opponent,won:!!x.won,gameId:String(x.gameId)})),
        wab:t.wab,sos:t.sos,adjustedMarginRaw:t.meritMarginRaw
@@ -112,6 +113,7 @@ const CFMI_PUBLIC_VIEW = Object.freeze({
      resultAboveBenchmark:this.safeNumber(g.meritResultContribution),
      meritSignatureWinUnits:this.safeNumber(signatureUnits),
      allocatedMeritQualityUpliftPoints:this.safeNumber(signatureUplift),
+     allocatedPointsMethod:'Proportional allocation of the current team quality-subscore uplift over neutral 50; allocations sum, not independent causal marginal values',
      adjustedMargin:this.safeNumber(g.adjustedMOV)
    };
  },
