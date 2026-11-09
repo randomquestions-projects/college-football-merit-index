@@ -17,7 +17,7 @@ const parse=new Function('raw',prelude+'return csvParse(raw)');
 const run=new Function('scores','advanced','year','cutoff','params',
  library+'\n'+prelude+'\nstate.raw=scores;MODEL_PRESEASON_V53.enabled=false;MODEL_V5.setParameters(params);'+
  'const result=computeV5(scores,cutoff,year);attachEfficiencyV5(result.teams,advanced);'+
- 'return {teams:result.teams,profiles:CFMI_MATCHUP.profiles(result.teams,advanced)};');
+ 'const profiles=CFMI_MATCHUP.profiles(result.teams,advanced);return {teams:result.teams,profiles,features:(home,away)=>CFMI_MATCHUP.features(home,away,profiles).values};');
 const params=JSON.parse(fs.readFileSync(path.join(DATA,'model_v5_params.json'),'utf8')).parameters;
 const ledger=JSON.parse(fs.readFileSync(path.join(DATA,'prediction_ledger_2025_2026.json'),'utf8'));
 const read=(year)=>{
@@ -42,14 +42,14 @@ function season(year){
   const games=played.filter(g=>+g.week===week);
   const first=Math.min(...games.map(g=>Date.parse(g.start_date)));
   if(!Number.isFinite(first))continue;
-  const {teams,profiles}=run(raw,data.advanced,year,first-1,{parameters:params});
+  const {teams,profiles,features}=run(raw,data.advanced,year,first-1,{parameters:params});
   const byName=new Map(teams.map(t=>[t.name,t]));
   const ledgerGames=priorLedger?.weeks.find(w=>w.week===week)?.games||[];
   const byId=new Map(ledgerGames.map(g=>[String(g.gameId),g]));
   for(const game of games){
    const h=byName.get(game.home_team),a=byName.get(game.away_team);
    if(!h||!a)continue;
-   const x=CFMI_FEATURES(h,a,profiles);
+   const x=features(h,a);
    const neutral=game.neutral_site==='TRUE';
    const archived=byId.get(String(game.game_id));
    // 2025–2026 actual exact baseline includes the published V5.3 prior;
@@ -65,13 +65,10 @@ function season(year){
  }
  return rows;
 }
-function CFMI_FEATURES(home,away,profiles){
- return CFMI_MATCHUP.features(home,away,profiles).values;
-}
 const rows={2024:season(2024),2025:season(2025),2026:season(2026)};
 if(rows[2024].length<350||rows[2025].length<600||rows[2026].length<450)
  throw Error('Too few original-week compatible matchup games '+JSON.stringify(Object.fromEntries(Object.entries(rows).map(([k,v])=>[k,v.length]))));
-const keys=CFMI_MATCHUP.keys;
+const keys=['runExploit','passExploit','runFit','passFit','runStyle','firstDownFit','explosiveFit'];
 function fitRidge(games,lambda){
  const d=keys.length,coef=Array(d).fill(0);
  // Efficient deterministic coordinate-descent ridge regression:
