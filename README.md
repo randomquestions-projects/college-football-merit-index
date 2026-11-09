@@ -1,7 +1,15 @@
-# College Football Merit Index — CFMI V5.3 (V5.2 game-only engine + preseason evidence prior)
+# College Football Merit Index — CFMI V5.4 (Merit, neutral Power, matchup-specific win likelihood)
 
 **Live dashboard:** https://randomquestions-projects.github.io/college-football-merit-index/  
 **Methodology:** [V5.3 Preseason Talent & Continuity](docs/CFMI_V5_3_talent_prior_research.md) · [V5.2 opponent-adjusted game strength](docs/CFMI_V5_2_opponent_adjustment.md)
+
+## Third metric: CFMI Matchup Score
+
+CFMI now distinguishes three purposes: **Merit (earned résumé), Power (neutral-field team strength), and Matchup Score (specific-game win likelihood)**. The third metric does **not** re-rank schools or alter either Merit or Power.
+
+Predicted neutral-field point advantage is the difference between teams' underlying **Power Points**, corresponding to displayed Power index `clip(50 + 1.6 × Power Points, 0, 100)`. The matchup forecast then adds the fitted home advantage (zero at neutral venues) and a bounded, separately trained rushing/passing offense-versus-defense interaction if and only if it improves historical validation. The resulting expected margin is converted to two 0–100 opponent-specific Matchup Scores, which sum to 100 and are estimated winning likelihoods. This also explains why the team ranked higher in Power can be the underdog on the road.
+
+Game-level rushing/passing EPA, explosiveness, first-down creation and pass tendency are ingested from verified completed-game source fields, opponent adjusted and regularized, and shown in each matchup drilldown. **No extra matchup effect is activated without evidence of improving predictive performance.** See [precise formula, model selection, data coverage and limitations](docs/CFMI_MATCHUP_SCORE_V1.md).
 
 ## Weekly predictions, historical scorecards and industrial benchmarks
 
