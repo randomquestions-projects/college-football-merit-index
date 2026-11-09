@@ -221,6 +221,9 @@ function attachEfficiencyV5(teams,advRows){
      t.powerModelStatus='opponent_network_adjusted';
    }
  }
+ // V5.3 early-season preseason evidence overlay, calibrated to decay using 2025 games.
+ if(typeof MODEL_PRESEASON_V53!=='undefined'&&MODEL_PRESEASON_V53.enabled)
+   MODEL_PRESEASON_V53.apply(teams);
  v5percentiles(teams,'powerScore','powerScore');
  for(const t of teams)t.powerRank=t.powerScoreRank;
  // Original V4 raw "baselinePowerRank" still shown separately in diagnostics.
