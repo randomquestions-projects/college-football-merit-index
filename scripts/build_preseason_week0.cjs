@@ -72,7 +72,8 @@ assert(Object.keys(teams).length>=135);
 const mean=Object.values(teams).reduce((z,t)=>z+t.priorPoints,0)/Object.keys(teams).length;
 for(const t of Object.values(teams))t.priorPoints-=mean;
 const rated=Object.values(teams).sort((a,b)=>b.priorPoints-a.priorPoints||a.team.localeCompare(b.team));
-rated.forEach((t,i)=>{t.powerRank=i+1;t.talentRank=i+1;t.week0PowerIndex=clip(50+1.6*t.priorPoints,0,100)});
+rated.forEach((t,i)=>{t.powerRank=i+1;t.week0PowerIndex=clip(50+1.6*t.priorPoints,0,100)});
+Object.values(teams).sort((a,b)=>b.talentIndex-a.talentIndex||a.team.localeCompare(b.team)).forEach((t,i)=>t.talentRank=i+1);
 const doc={
  version:'5.3-research-v1',season:2026,generatedAtUtc:new Date().toISOString(),
  deployed:false,availableForReview:true,
