@@ -108,8 +108,8 @@ body.cfmi-matchups #rankings,body.cfmi-matchups #comparison,body.cfmi-matchups #
 <section id="resume" aria-labelledby="resumeTitle"><div class="subhead"><div><h2 id="resumeTitle">Team résumé & performance comparison</h2><p>Select up to five teams. Compare record, opponent strength, signature road wins, adjusted margin, on-field efficiency and the evidence behind each ranking.</p></div><span class="pill">2026 Merit &amp; Power comparison</span></div>
 <div class="panel" style="padding:20px"><div id="resumeControls" class="resume-controls"></div><div id="resumeMessage" class="compare-caption">Use the selectors to compare up to five different FBS teams.</div>
 <div id="resumeNarratives" class="resume-summary"></div><h3 style="margin:18px 0 10px;font-size:17px">Side-by-side comparison</h3><div class="table-scroll"><table class="resume-table"><thead id="resumeHead"></thead><tbody id="resumeBody"></tbody></table></div>
-<h3 style="margin:25px 0 8px;font-size:17px">Best wins & common opponents</h3><div id="resumeGames" class="resume-games"></div><div id="resumeCommon"></div>
-<p class="resume-disclaimer">Interpretation is rule-based from the published CFMI metrics, not AI opinion. Every team's opponent power is inferred from current-season FBS games and Elo-style results, not AP/CFP or conference membership. “Top 25 opponent” means CFMI's internal season-only SRS/Elo opponent-strength baseline. Partial advanced-stat coverage is disclosed per team. Click a team name to open its full game-by-game audit.</p></div></section>
+<h3 style="margin:25px 0 8px;font-size:17px">Earned quality wins, strongest performances &amp; common opponents</h3><div id="resumeGames" class="resume-games"></div><div id="resumeCommon"></div>
+<p class="resume-disclaimer"><strong>How to interpret:</strong> "Quality-win credit" is the active v5.5 résumé signature-win contribution, not the obsolete V4 road-multiplied q value. "Allocated uplift" is a proportional share of the team’s nonlinear quality-score uplift, not an independent causal effect or an extra score added twice. On-field results are ordered separately by adjusted winning margin. Opponent baseline ranks use the season-to-date model and include the game being evaluated; they are not independent pregame forecasts. Direct comparisons remain based on full Merit and Power scores, never a single game card. Metrics are sourced from the current scoring version. All original game, possession and advanced data are retained.</p></div></section>
 
 <section id="preseasonPage" class="cfmi-page" aria-labelledby="preseasonTitle">
  <div class="subhead"><div><div class="eyebrow">CFMI v5.5 · Early-season Power</div><h2 id="preseasonTitle">Week 0 Power & Playoff Outlook</h2><p>What every FBS team looked like before kickoff — current roster talent, the previous season, returning production and transfers.</p></div></div>
@@ -254,7 +254,7 @@ body.cfmi-matchups #rankings,body.cfmi-matchups #comparison,body.cfmi-matchups #
 </main>
 <input style="display:none" type="file" id="fileInput" accept=".csv,text/csv"><input style="display:none" type="file" id="advancedInput" accept=".csv,text/csv">
 <div class="modalscrim" id="detailScrim" role="dialog" aria-modal="true" aria-label="Team breakdown"><div class="modal"><div class="modal-top"><div><span class="eyebrow">CFMI Team audit</span><h2 id="detailTitle"></h2><div class="muted" id="detailSubtitle"></div></div><button class="modal-close" id="closeModal">Close ×</button></div><div class="modal-body" id="detailBody"></div></div></div>
-<script src="./model_v4.js"></script><script src="./opponent_network_research.js"></script><script src="./model_v5.js"></script><script src="./preseason_prior_v1.js"></script><script src="./model_matchup_v1.js"></script><script src="./power_ui_cleanup.js"></script>
+<script src="./model_v4.js"></script><script src="./opponent_network_research.js"></script><script src="./model_v5.js"></script><script src="./preseason_prior_v1.js"></script><script src="./model_matchup_v1.js"></script><script src="./power_ui_cleanup.js"></script><script src="./metric_view_contract.js"></script>
 <script>
 'use strict';
 const SOURCE='./data/cfb_schedules_2026.csv';
@@ -855,21 +855,22 @@ function resumeSelected(){
  return out;
 }
 function resumeReason(leader,other){
- const components=[
-  {label:'schedule-adjusted earned results',v:leader.meritRecordScore-other.meritRecordScore,w:55},
-  {label:'quality and away-game wins',v:leader.meritQualityScore-other.meritQualityScore,w:25},
-  {label:'opponent-adjusted performance margins',v:leader.meritControlScore-other.meritControlScore,w:20}
- ].map(x=>({...x,points:x.v*x.w/100})).sort((a,b)=>b.points-a.points);
- const positives=components.filter(x=>x.points>.03).slice(0,2);
- const negative=components.filter(x=>x.points<-.03).sort((a,b)=>a.points-b.points)[0];
- const margin=leader.score-other.score;
- const parts=[esc(leader.name)+' ranks '+esc(margin.toFixed(2))+' CFMI points above '+esc(other.name)+'.'];
- if(positives.length)parts.push('Largest advantages: '+positives.map(x=>x.label+' (+'+x.points.toFixed(2)+' pts)').join('; ')+'.');
- if(negative)parts.push(esc(other.name)+' performs better in '+negative.label+' ('+(-negative.points).toFixed(2)+' pts).');
- if(leader.top25RoadWins>other.top25RoadWins)parts.push('Quality road wins against independently rated top-25 opponents: '+leader.top25RoadWins+' vs '+other.top25RoadWins+'.');
- if(leader.closeQualityLosses>0)parts.push('Their résumé includes '+leader.closeQualityLosses+' close loss(es) to top-25 baseline-opponents, treated less harshly via adjusted margin and expected wins.');
- const best=leader.bestWin;
- if(best)parts.push('Signature result: '+esc(best.op)+' ('+best.site+', '+best.pf+'–'+best.pa+', opponent power #'+best.oppRank+').');
+ const left=CFMI_PUBLIC_VIEW.buildTeam(leader),right=CFMI_PUBLIC_VIEW.buildTeam(other);
+ const names={record:'record versus benchmark',quality:'quality/road-win achievement',adjustedMargin:'opponent-adjusted margins',headToHead:'direct head-to-head resolution',fcsPerformance:'FCS-performance evidence'};
+ const differences=Object.entries(left.merit.componentScore).map(([key,value])=>({
+   key,label:names[key]||key,points:value-right.merit.componentScore[key]
+ })).sort((a,b)=>b.points-a.points);
+ const positive=differences.filter(x=>x.points>.03).slice(0,3);
+ const negative=differences.filter(x=>x.points<-.03).sort((a,b)=>a.points-b.points).slice(0,2);
+ const margin=left.merit.score-right.merit.score;
+ const parts=[esc(left.team)+' currently has '+(margin>=0?'+':'')+margin.toFixed(2)+' Merit points relative to '+esc(right.team)+'.'];
+ if(positive.length)parts.push('Advantages: '+positive.map(x=>x.label+' (+'+x.points.toFixed(2)+' pts)').join('; ')+'.');
+ if(negative.length)parts.push('Disadvantages: '+negative.map(x=>x.label+' ('+x.points.toFixed(2)+' pts)').join('; ')+'.');
+ const direct=left.merit.headToHeadResults.find(x=>x.opponent===right.team);
+ if(direct)parts.push('Direct matchup: '+esc(direct.won?left.team:right.team)+' won; the bounded head-to-head adjustment is reflected in the Merit scores.');
+ const best=CFMI_PUBLIC_VIEW.wins(leader,1,'signature')[0];
+ if(best)parts.push('Top active signature-win contribution: '+esc(best.opponent)+' ('+best.site+', '+best.scored+'–'+best.conceded+'), '+best.meritSignatureWinUnits.toFixed(3)+' raw units.');
+ parts.push('Strength-based opponent ranks are season-fitted, not pregame estimates.');
  return parts.join(' ');
 }
 function renderResume(){
@@ -882,43 +883,49 @@ function renderResume(){
  if(!teams.length){$('resumeNarratives').innerHTML='';$('resumeHead').innerHTML='';$('resumeBody').innerHTML='<tr><td>Select one or more teams.</td></tr>';$('resumeGames').innerHTML='';$('resumeCommon').innerHTML='';return;}
  $('resumeNarratives').innerHTML=teams.length>=2?teams.slice(1).map(t=>'<div class="resume-narrative"><strong>'+esc(teams[0].name)+' vs '+esc(t.name)+'</strong><p>'+resumeReason(teams[0],t)+'</p></div>').join(''):'<div class="resume-narrative">Select another team to compare score drivers, schedule quality, signature wins and common opponents.</div>';
  const scores=[
-  ['Merit rank',t=>'#'+t.rank],
-  ['Predictive Power rank',t=>'#'+t.powerRank],
-  ['Predictive Power score',t=>fmt(t.powerScore,2)],
-  ['Neutral-field Power (estimated points)',t=>fmt(t.powerPoints,2)],
-  ['Merit score / 100',t=>fmt(t.score,2)],
+  ['Merit published rank',t=>{const v=CFMI_PUBLIC_VIEW.buildTeam(t);return v.merit.publishedRank===null?'Provisional':'#'+v.merit.publishedRank}],
+  ['Power rank',t=>'#'+CFMI_PUBLIC_VIEW.buildTeam(t).power.rank],
+  ['Power Index · 0–100',t=>fmt(CFMI_PUBLIC_VIEW.buildTeam(t).power.score,2)],
+  ['Neutral-field Power · points',t=>fmt(CFMI_PUBLIC_VIEW.buildTeam(t).power.neutralPoints,2)],
+  ['Merit Index · 0–100',t=>fmt(CFMI_PUBLIC_VIEW.buildTeam(t).merit.score,2)],
   ['Record',t=>t.won+'–'+t.lost],
-  ['Earned record score · 55%',t=>fmt(t.meritRecordScore,1)+' · #'+t.sorRank],
-  ['Wins above expectation',t=>(t.wab>=0?'+':'')+fmt(t.wab,2)],
+  ['Record achievement (55% of Merit)',t=>fmt(CFMI_PUBLIC_VIEW.buildTeam(t).merit.componentScore.record,2)+' pts'],
+  ['Quality / road-win achievement (25%)',t=>fmt(CFMI_PUBLIC_VIEW.buildTeam(t).merit.componentScore.quality,2)+' pts'],
+  ['Adjusted margin achievement (20%)',t=>fmt(CFMI_PUBLIC_VIEW.buildTeam(t).merit.componentScore.adjustedMargin,2)+' pts'],
+  ['Head-to-head adjustment',t=>fmt(CFMI_PUBLIC_VIEW.buildTeam(t).merit.componentScore.headToHead,2)+' pts'],
+  ['FCS performance adjustment',t=>fmt(CFMI_PUBLIC_VIEW.buildTeam(t).merit.componentScore.fcsPerformance,2)+' pts'],
+  ['Wins above benchmark',t=>(t.wab>=0?'+':'')+fmt(t.wab,2)],
   ['Opponent quality / SOS',t=>fmt(t.sos,2)+' · #'+t.sosRank],
-  ['Schedule-adjusted margin',t=>fmt(t.mov,2)+' · #'+t.movRank],
-  ['Quality win/road achievement · 25%',t=>fmt(t.meritQualityScore,1)+' · #'+t.qualityComponentRank],
-  ['Adjusted margin achievement · 20%',t=>fmt(t.meritControlScore,1)],
-  ['Top-25 baseline-opponent wins',t=>t.top25Wins],
-  ['Top-25 baseline-opponent ROAD wins',t=>t.top25RoadWins],
+  ['Signature-win credit · raw total',t=>fmt(CFMI_PUBLIC_VIEW.buildTeam(t).merit.qualityRaw,3)],
+  ['FBS wins over baseline top-25 teams',t=>CFMI_PUBLIC_VIEW.wins(t,null,'strength').filter(g=>g.opponentSeasonBaselineRank<=25).length],
+  ['Quality road wins against baseline top-25 teams',t=>CFMI_PUBLIC_VIEW.wins(t,null,'strength').filter(g=>g.site==='A'&&g.opponentSeasonBaselineRank<=25).length],
   ['Total road wins',t=>t.roadWins],
-  ['Close losses to top-25 baseline-ranked teams',t=>t.closeQualityLosses],
-  ['Opponent-adjusted efficiency',t=>state.fullModel?fmt(t.effScore,1)+' · #'+t.effScoreRank:'Not available'],
-  ['Possession game control',t=>state.fullModel?fmt(t.control,2)+' · #'+t.controlRank:'Not available'],
-  ['Drive finishing (points per 40-yard trip)',t=>state.fullModel?fmt(t.redzoneNet,2)+' · #'+t.redzoneNetRank:'Not available'],
-  ['Red-zone drive TD conversion',t=>state.fullModel&&state.finishMode==='points_per_scoring_opportunity'?fmt(t.redzoneTdNet,2)+' · #'+t.redzoneTdNetRank:'Not available'],
-  ['PBP games (non-garbage EPA)',t=>(t.advPbpGames||0)+' / '+t.fbsGames],
-  ['Advanced games measured',t=>t.advCoreGames+'/'+t.fbsGames+' ('+fmt(100*t.advCoverage,0)+'%)'],
-  ['Opponent-strength baseline rank (internal)',t=>'#'+t.baselinePowerRank],
-  ['Season-only Elo signal',t=>fmt(t.elo,0)],
+  ['On-field EPA (supporting diagnostic)',t=>state.fullModel?fmt(t.ppaNet,3):'Not measured'],
+  ['PBP games with non-garbage EPA',t=>(t.advPbpGames||0)+' / '+t.fbsGames],
+  ['Advanced core game coverage',t=>t.advCoreGames+'/'+t.fbsGames+' ('+(t.fbsGames?fmt(100*t.advCoverage,0):'N/A')+'%)'],
  ];
- $('resumeHead').innerHTML='<tr><th>MERIT FACTOR</th>'+teams.map(t=>'<th class="team-open" data-open-team="'+esc(t.name)+'">'+esc(t.name)+' · #'+t.rank+'</th>').join('')+'</tr>';
+ $('resumeHead').innerHTML='<tr><th>CURRENT MODEL COMPONENT</th>'+teams.map(t=>'<th class="team-open" data-open-team="'+esc(t.name)+'">'+esc(t.name)+' · '+(CFMI_PUBLIC_VIEW.buildTeam(t).merit.publishedRank===null?'Provisional':'#'+t.meritPublishedRank)+'</th>').join('')+'</tr>';
  $('resumeBody').innerHTML=scores.map(([label,render],i)=>'<tr><td class="metric-label">'+label+'</td>'+teams.map(t=>'<td'+(i===0&&t===teams[0]?' class="top-value"':'')+'>'+render(t)+'</td>').join('')+'</tr>').join('');
  $('resumeGames').innerHTML=teams.map(t=>{
-  const wins=t.played.filter(g=>g.win&&g.opFbs).sort((a,b)=>b.q-a.q).slice(0,4);
-  return '<div class="resume-games-card"><h3>'+esc(t.name)+' — highest-quality wins</h3>'+(wins.length?wins.map(g=>'<p><strong>'+esc(g.op)+'</strong> · '+g.site+' · '+g.pf+'–'+g.pa+'<br>Opponent baseline #'+g.oppRank+' · quality credit '+fmt(g.q,2)+' · performance '+fmt(g.qualityScore,0)+'/100</p>').join(''):'<p>No FBS wins yet.</p>')+'</div>';
+  const earned=CFMI_PUBLIC_VIEW.wins(t,4,'signature');
+  const strongest=CFMI_PUBLIC_VIEW.wins(t,4,'performance');
+  const describe=g=>'<p><strong>'+esc(g.opponent)+'</strong> · '+g.site+' · '+g.scored+'–'+g.conceded+
+    '<br>Opponent season-baseline #'+(g.opponentSeasonBaselineRank??'N/A')+
+    ' · V5.5 signature credit '+fmt(g.meritSignatureWinUnits,3)+' units'+
+    ' · allocated quality uplift '+fmt(g.allocatedMeritQualityUpliftPoints,2)+' Merit pts'+
+    ' · adjusted margin '+fmt(g.adjustedMargin,1)+' pts</p>';
+  return '<div class="resume-games-card"><h3>'+esc(t.name)+' — strongest earned wins</h3>'+
+    (earned.length?earned.map(describe).join(''):'<p>No FBS wins yet.</p>')+
+    '<h4 style="margin:15px 0 9px;font-size:13px">Best on-field winning margins · separate diagnostic</h4>'+
+    (strongest.length?strongest.map(g=>'<p><strong>'+esc(g.opponent)+'</strong> · '+g.site+' · '+g.scored+'–'+g.conceded+
+      '<br>Opponent-adjusted margin '+fmt(g.adjustedMargin,1)+' pts</p>').join(''):'<p>No FBS wins yet.</p>')+'</div>';
  }).join('');
  if(teams.length>=2){
   const lead=teams[0];
   const common=teams.slice(1).map(other=>{
-   const otherNames=new Map(other.played.filter(g=>g.opFbs).map(g=>[g.op,g]));
-   const shared=lead.played.filter(g=>g.opFbs&&otherNames.has(g.op)).slice(0,5);
-   return shared.length?'<div class="resume-games-card"><h3>Common opponents: '+esc(lead.name)+' / '+esc(other.name)+'</h3>'+shared.map(g=>{const og=otherNames.get(g.op);return '<p>'+esc(g.op)+': '+esc(lead.name)+' '+g.pf+'–'+g.pa+' ('+g.site+') vs '+esc(other.name)+' '+og.pf+'–'+og.pa+' ('+og.site+')</p>'}).join('')+'</div>':'';
+   const otherNames=new Map(CFMI_PUBLIC_VIEW.allGames(other).filter(g=>g.isFbs).map(g=>[g.opponent,g]));
+   const shared=CFMI_PUBLIC_VIEW.allGames(lead).filter(g=>g.isFbs&&otherNames.has(g.opponent)).slice(0,5);
+   return shared.length?'<div class="resume-games-card"><h3>Common opponents: '+esc(lead.name)+' / '+esc(other.name)+'</h3>'+shared.map(g=>{const og=otherNames.get(g.op);return '<p>'+esc(g.opponent)+': '+esc(lead.name)+' '+g.scored+'–'+g.conceded+' ('+g.site+') vs '+esc(other.name)+' '+og.scored+'–'+og.conceded+' ('+og.site+')</p>'}).join('')+'</div>':'';
   }).filter(Boolean);
   $('resumeCommon').innerHTML=common.length?'<h3 style="margin-top:20px">Common opponents</h3><div class="resume-games">'+common.join('')+'</div>':'';
  } else $('resumeCommon').innerHTML='';
