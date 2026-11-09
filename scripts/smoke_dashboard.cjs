@@ -25,6 +25,18 @@ async function waitForServer(){
   const errors=[];page.on("pageerror",error=>errors.push(String(error)));
   await page.goto(url,{waitUntil:"domcontentloaded"});
   await page.locator("#body tr[data-team]").first().waitFor({timeout:30000});
+  try{
+    await page.waitForFunction(()=>state.fullModel===true &&
+      state.metricContractAudit?.allScoresReconciled===true &&
+      state.teams.length>=130,null,{timeout:30000});
+  }catch(err){
+    const detail=await page.evaluate(()=>({fullModel:state.fullModel,metricAudit:state.metricContractAudit||null,
+      status:document.querySelector('#stamp')?.textContent,
+      tableStatus:document.querySelector('#tableStatus')?.textContent,
+      scores:state.teams.slice(0,2).map(t=>({team:t.name,score:t.score,powerScore:t.powerScore})),
+      scripts:[...document.scripts].filter(s=>s.src).map(s=>s.src)}));
+    throw Error('Dashboard metric contract failed to reach ready state: '+JSON.stringify({detail,errors}));
+  }
   const names=await page.locator("#body tr[data-team]").allTextContents();
   assert(names.length>=25,"Expected populated Top 50");
   const model=await page.evaluate(()=>({version:MODEL_V5.version,parameters:MODEL_V5.params.source,teamCount:state.teams.length,active:state.fullModel,score:state.teams[0].score,powerScore:state.teams[0].powerScore,powerRank:state.teams[0].powerRank,coreCount:state.advCovered,expected:state.advExpected}));
