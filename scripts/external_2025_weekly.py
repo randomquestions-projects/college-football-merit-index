@@ -48,20 +48,26 @@ def fpi_snapshots(id_to_norm):
    if not yes(r.get('snapshot_is_contemporaneous')):continue
    cutoff=parse_key(r.get('run_date_time_key'))
    last=as_date(r.get('last_updated'))
-   if not cutoff or not last or last<cutoff:continue
+   if not cutoff or not last:continue
    tid=str(r['team_id'])
    name=id_to_norm.get(tid)
    value=float(r['fpi'])
    rank=int(float(r['rank']))
    if not name or not math.isfinite(value):continue
-   key=(cutoff,last)
-   groups.setdefault(key,{})[name]={'rating':value,'rank':rank}
+   group=groups.setdefault(cutoff,{'teams':{},'latestUpdated':last})
+   group['teams'][name]={'rating':value,'rank':rank}
+   if last>group['latestUpdated']:group['latestUpdated']=last
   except (TypeError,ValueError,KeyError):continue
  records=[]
- for (asof,updated),teams in groups.items():
+ for asof,group in groups.items():
+  updated=group['latestUpdated'];teams=group['teams']
   if len(teams)>=125 and len(set(t['rank'] for t in teams.values()))>=110:
    records.append({'metric':'fpi','snapshot':asof,'sourceDate':updated,
-    'teams':teams,'source':'SportsDataverse ESPN FPI weekly 2025; original run-date and last-updated checked'})
+    'teams':teams,'source':'SportsDataverse ESPN FPI weekly 2025; original run-date and max last-updated checked'})
+ print('CFMI 2025 FPI ORIGINAL-SOURCE AUDIT',{
+   'rawRecords':len(rows),'validGroupDates':len(groups),
+   'teamCounts':[(d.isoformat(),len(g['teams']),g['latestUpdated'].isoformat()) for d,g in sorted(groups.items())],
+   'approvedSnapshots':len(records)},flush=True)
  return records
 def fei_weekly(normalize):
  b=read(FEI,limit=7000000)
