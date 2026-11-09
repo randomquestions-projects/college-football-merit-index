@@ -165,7 +165,7 @@ async function waitForServer(){
     await page.locator("#matchupGrid [data-matchup]").first().click();
     await page.locator("#matchupDialog.open").waitFor();
     const matchupText=await page.locator("#matchupDetail").innerText();
-    assert(matchupText.includes("Three key takeaways")&&matchupText.includes("How "), "Missing matchup explanations");
+    assert(matchupText.includes("Three matchup-specific takeaways")&&matchupText.includes("How "), "Missing matchup explanations");
     await page.locator("#matchupClose").click();
   }
   await page.locator('#pageSwitch [data-page="rankings"]').click();
