@@ -157,6 +157,7 @@ body.cfmi-matchups #rankings,body.cfmi-matchups #comparison,body.cfmi-matchups #
 <section id="matchupsPage" class="cfmi-page" aria-labelledby="matchupsTitle">
  <div class="subhead"><div><h2 id="matchupsTitle">Upcoming Week · CFMI Matchups</h2><p>Merit measures earned résumé, Power measures neutral-field team strength, and Matchup Score predicts the winner of this particular game.</p></div></div>
  <p class="cfmi-section-note" id="matchupsSource">Matchup Score is a game-specific estimated win likelihood based on underlying neutral-field Power points, home-field advantage, and any historically validated rushing/passing offense-versus-defense interaction. Power and Merit rankings are not changed by a favorable matchup. Predictions are calibrated against earlier-season game outcomes when a validated parameter file is available; any probability is an estimate, not a guarantee. Betting spreads, injuries, live lineups and roster changes are not modeled.</p>
+ <p class="cfmi-section-note"><strong>M</strong> = earned Merit score · <strong>P</strong> = neutral-field Power index · <strong>X</strong> = opponent-specific Matchup Score (estimated win likelihood, 0–100%). The two teams' X scores total 100% for the game.</p>
  <div class="cfmi-ext-panel" style="margin-bottom:16px">
   <div class="cfmi-inline-controls"><label for="matchupSeason">Season</label><select id="matchupSeason"><option value="2026">2026</option><option value="2025">2025</option></select>
    <label for="matchupWeek">Prediction week</label><select id="matchupWeek"><option value="current">Upcoming · current</option></select></div>
@@ -1076,10 +1077,10 @@ function renderMatchups(){
    '<div class="cfmi-match-line"><span class="cfmi-match-name">'+esc(g.away)+' @ '+esc(g.home)+'</span></div>'+
    '<div class="cfmi-match-line"><span>'+esc(g.away)+' · Merit '+ranking(g.awayMetrics.rank)+
    ' · Power '+ranking(g.awayMetrics.powerRank)+'</span><span>M '+show(g.awayMetrics.score)+' / P '+
-   show(g.awayMetrics.powerScore)+' / X '+show(g.awayMatchupScore)+'</span></div>'+
+   show(g.awayMetrics.powerScore)+' / X '+show(g.awayMatchupScore)+'%'+'</span></div>'+
    '<div class="cfmi-match-line"><span>'+esc(g.home)+' · Merit '+ranking(g.homeMetrics.rank)+
    ' · Power '+ranking(g.homeMetrics.powerRank)+'</span><span>M '+show(g.homeMetrics.score)+' / P '+
-   show(g.homeMetrics.powerScore)+' / X '+show(g.homeMatchupScore)+'</span></div>'+
+   show(g.homeMetrics.powerScore)+' / X '+show(g.homeMatchupScore)+'%'+'</span></div>'+
    '<div class="cfmi-match-line"><span>CFMI Matchup pick</span><span class="cfmi-pick">'+esc(g.predictedWinner)+
    (Number.isFinite(p)?' · '+(100*p).toFixed(1)+'%':'')+'</span></div>'+status+
    '<small>View prediction drivers, key takeaways and pregame team metrics →</small></button>';
