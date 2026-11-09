@@ -58,6 +58,27 @@ async function waitForServer(){
   const detail=(await page.locator("#detailBody").innerText()).toLowerCase();
   assert(detail.includes("game performance")&&detail.includes("opponent baseline")&&detail.includes("estimated margin"),"V5 team detail audit not visible");
   await page.locator("#closeModal").click();
+  // Every team popup must reconcile to its exact Power Points (including
+  // pre-season adjustment), without inactive 0.00-point football statistic cards.
+  const auditedPopups=await page.evaluate(()=>{
+    const issues=[];
+    for(const team of state.teams){
+      showTeam(team.name);
+      const body=document.querySelector("#detailBody")?.textContent||"";
+      const heading=document.querySelector("#detailTitle")?.textContent||"";
+      const total=Object.values(team.powerContributionPoints||{}).filter(Number.isFinite).reduce((s,n)=>s+n,0);
+      if(!heading.includes(team.name))issues.push(team.name+": wrong heading");
+      if(!body.includes("Components reconcile to"))issues.push(team.name+": bad component display");
+      if(!body.includes("Measured offense and defense"))issues.push(team.name+": missing performance diagnostics");
+      if(/Finishing\\s+0\\.00 pts|Consistency\\s+0\\.00 pts|Game control\\s+0\\.00 pts/.test(body))
+        issues.push(team.name+": dormant coefficient shown as metric");
+      if(Math.abs(total-team.powerPoints)>.015)issues.push(team.name+": Power does not reconcile");
+    }
+    document.getElementById("closeModal").click();
+    return {count:state.teams.length,issues};
+  });
+  assert(auditedPopups.count>=130&&auditedPopups.issues.length===0,
+    "Invalid Merit / Power team popups: "+JSON.stringify(auditedPopups));
   await page.locator('#pageSwitch [data-page="comparison"]').click();
   await page.locator("#compareBody tr").first().waitFor();
   assert.equal(await page.locator("#compareBody tr").count(),25,"Merit Top 25 comparison missing");
