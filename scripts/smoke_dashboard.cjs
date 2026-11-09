@@ -55,8 +55,15 @@ async function waitForServer(){
   await page.locator('#rankingLens [data-lens="merit"]').click();
   assert.equal(await page.locator('#rankingLens [data-lens="merit"]').getAttribute('aria-pressed'),"true");
   await page.locator('#pageSwitch [data-page="methodology"]').click();
-  assert(await page.locator("#v5MethodSummary").isVisible(),"V5 methodology not visible");
-  assert((await page.locator("#v5MethodSummary").innerText()).includes("55%"),"V5 earned-results weighting is missing");
+  assert(await page.locator("#purposeMethodTitle").isVisible(),"Purpose & Methodology not visible");
+  const purpose=await page.locator('#methodologyPage').innerText();
+  assert(purpose.includes('Who has earned the strongest season?') &&
+    purpose.includes('Who is the strongest team right now?') &&
+    purpose.includes('Two questions. Two independent answers.') &&
+    purpose.includes('Matchup Predictor'),
+    "Public purpose does not clearly distinguish Merit, Power and secondary matchups");
+  assert(!/V4\\.1|V5\\.5|55% \/ 25%|how to recreate|Historical held-out check|SRS\\(team\\)/.test(purpose),
+    "Detailed model/version implementation leaked into public purpose page");
   assert(model.coreCount/model.expected>=.70,"Core EPA coverage below required threshold");
   await page.locator('#pageSwitch [data-page="resume"]').click();
   await page.locator("#resumeControls select").first().waitFor();
@@ -147,9 +154,17 @@ async function waitForServer(){
   await page.locator('#pageSwitch [data-page="methodology"]').click();
   assert(await page.locator('#methodologyPage').isVisible(),"Methodology tab is not visible");
   assert(!(await page.locator('#rankings').isVisible()),"Rankings must be hidden in methodology view");
-  assert(await page.locator("#v5MethodSummary").isVisible(),"Current methodology not visible");
-  await page.locator("#legacyMethod summary").click();
-  assert(await page.locator("#method").isVisible()&&await page.locator("#variables").isVisible()&&await page.locator("#sources").isVisible(),"Historical source lineage unavailable");
+  assert(await page.locator('#purposeMethodTitle').innerText()==='Purpose & Methodology',
+    "Public methodology heading mismatch");
+  assert.equal(await page.locator('#methodologyPage .purpose-index-card').count(),2,
+    "Expected separate Merit and Power explanation cards");
+  assert.equal(await page.locator('#legacyMethod').count(),0,
+    "Superseded archived methodology must not appear in public page");
+  assert.equal(await page.locator('#methodologyPage table').count(),0,
+    "Public purpose should not display reproducible model weighting tables");
+  await page.locator('#methodologyPage [data-focus-page="matchups"]').click();
+  assert(await page.locator('#matchupsPage').isVisible(),"Secondary matchup link does not work");
+  await page.locator('#pageSwitch [data-page="methodology"]').click();
   await page.locator('#pageSwitch [data-page="history"]').click();
   await page.locator("#historyMeritTrend tr").first().waitFor({timeout:15000});
   assert.equal(await page.locator("#historyMeritTrend tr").count(),25,"Merit weekly Top 25 incomplete");
