@@ -56,6 +56,8 @@ jobs:
           CFMI_SEASON=2024 python scripts/update_possessions.py
           CFMI_SEASON=2025 python scripts/update_data.py
           CFMI_SEASON=2025 python scripts/update_possessions.py
+      - name: Collect full-FBS talent returning production and transfer inputs by season
+        run: python scripts/collect_preseason_all_fbs.py
       - name: Fit and verify V5 predictive coefficients on earlier seasons
         run: node scripts/train_v5.cjs
       - name: Evaluate joint offense-defense opponent-network efficiency
