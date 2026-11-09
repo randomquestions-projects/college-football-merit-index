@@ -39,6 +39,8 @@ jobs:
         run: python scripts/probe_talent_sources.py
       - name: Collect and independently audit 2024-2026 historical roster talent
         run: python scripts/collect_talent_research.py
+      - name: Audit exact 2026 rushing and passing source fields
+        run: python scripts/probe_matchup_fields.py
       - name: Download 2026 scores and advanced statistics
         run: python scripts/update_data.py
       - name: Refresh published AP and CFP poll snapshots
