@@ -14,6 +14,36 @@ const history=JSON.parse(fs.readFileSync(path.join(data,'weekly_views_2026.json'
 const prior=JSON.parse(fs.readFileSync(path.join(data,'preseason_prior_2026.json'),'utf8'));
 const projection=JSON.parse(fs.readFileSync(path.join(data,'preseason_playoff_forecast_2026.json'),'utf8'));
 const priorEvaluation=JSON.parse(fs.readFileSync(path.join(data,'research_full_preseason_backtest.json'),'utf8'));
+const ledger=JSON.parse(fs.readFileSync(path.join(data,'prediction_ledger_2025_2026.json'),'utf8'));
+const industrial=JSON.parse(fs.readFileSync(path.join(data,'power_benchmark_2025_2026.json'),'utf8'));
+for(const year of ['2025','2026']){
+ const season=ledger.seasons[year],benchmark=industrial.seasons[year];
+ assert(season&&season.weeks.length>=9,'Historical matchup weeks missing '+year);
+ assert(benchmark&&benchmark.entireCFMI.games>300,'Industry comparison missing '+year);
+ const games=season.weeks.flatMap(w=>w.games);
+ assert(games.length>=350,'Too few 2025/26 FBS matchups '+year);
+ assert(games.every(g=>Date.parse(g.asOfUtc)<Date.parse(g.kickoffUtc)),
+  'Matchup prediction must be made before kickoff '+year);
+ assert(games.every(g=>g.homeWinProbability>=0&&g.homeWinProbability<=1&&
+  Number.isFinite(g.homePowerIndex)&&Number.isFinite(g.awayPowerIndex)),
+  'Invalid pregame probability or team Power score '+year);
+ assert(games.every(g=>!g.finished||(g.predictedWinner===g.actualWinner)===g.correct),
+  'Predicted winners must reconcile to final game result '+year);
+ const scored=games.filter(g=>g.finished);
+ const wins=scored.filter(g=>g.correct).length;
+ assert.equal(wins,season.overall.correct,'YTD correct picks mismatch '+year);
+ assert.equal(scored.length,season.overall.played,'YTD games mismatch '+year);
+ assert(benchmark.commonGames<=scored.length,'External common games exceeds CFMI sample '+year);
+ for(const metric of ['fpi','sp_plus','fei']){
+  const row=benchmark.commonScorecard[metric];
+  assert(row?.games===benchmark.commonGames,'Benchmark denominator differs across providers '+year+' '+metric);
+  assert(row?.correct>=0&&row?.correct<=row.games,'External winner score invalid '+year+' '+metric);
+ }
+ assert(benchmark.perWeek.every(w=>w.cfmi.games>=0),'Per-week benchmark missing '+year);
+}
+assert(ledger.seasons['2026'].weeks.some(w=>w.summary.unplayed>0),
+ 'Expected a current-week or future-week matchup slate in 2026');
+
 assert.equal(prior.season,2026);assert.equal(prior.version,'5.3-research-v1');
 assert.equal(projection.season,2026);assert(projection.trials>=1000);
 assert(Object.keys(prior.teams).length>=135);
