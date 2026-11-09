@@ -7,9 +7,9 @@
  */
 'use strict';
 const MODEL_V5={
- version:'5.2.0',name:'CFMI V5.2 — independently earned Merit and opponent-network adjusted predictive Power',
+ version:'5.5.0',name:'CFMI V5.5 — quality-weighted earned Merit and historical cross-schedule calibrated Power',
  meritWeights:{record:.55,qualityResidual:.25,control:.20},
- meritScale:{wabPoints:12,qualityPoints:20,controlAmplitude:32,controlMarginScale:16},
+ meritScale:{wabPoints:12,qualityPoints:28,controlAmplitude:32,controlMarginScale:16},
  powerScale:{indexPointsPerExpectedMarginPoint:1.6},
  calibrated:false,validation:null,
  params:{epa:0,success:0,explosive:0,finishing:0,consistency:0,control:0,offense:0,defense:0,homePoints:2.5,logisticScale:12,
@@ -26,6 +26,20 @@ const MODEL_V5={
    return true;
  }
 };
+// Out-of-season 2024 FBS interconference residual fit (ridge lambda=3).
+// 2025 selected a 25% shrinkage; 2026 used only for retrospective inspection.
+// NOT a hardcoded Power Four bonus: source is actual cross-league margins
+// after subtracting the pregame v5.4 predicted margin. Realigned/sparse
+// groupings Pac-12 and Independents are excluded from correction.
+const CFMI_POWER_CONTEXT=Object.freeze({
+ version:'2024-crossconference-residual-v1',factor:0.25,
+ residuals:Object.freeze({
+  'ACC':4.128,'American Athletic':-3.428,'Big 12':-0.666,
+  'Big Ten':0.549,'Conference USA':-2.686,'Mid-American':-5.302,
+  'Mountain West':-0.918,'SEC':9.347,'Sun Belt':1.456,
+  'Pac-12':0,'FBS Independents':0
+ })
+});
 const v5clamp=(x,lo,hi)=>Math.max(lo,Math.min(hi,x));
 const v5sigmoid=x=>1/(1+Math.exp(-v5clamp(x,-30,30)));
 function v5percentiles(rows,key,rankKey=key){
@@ -131,14 +145,60 @@ function attachEfficiencyV5(teams,advRows){
    t.sor=t.meritRecordScore;
    t.qualityComponent=t.meritQualityScore;
    const m=MODEL_V5.meritWeights;
+   // Poor FCS results are adverse evidence; blowouts over FCS do not earn bonus.
+   const fcs=t.played.filter(g=>!g.opFbs);
+   t.meritFcsPerformancePenalty=v5clamp(fcs.reduce((sum,g)=>
+     sum+(g.win?-Math.min(3.5,Math.max(0,17-g.margin)*.25):-4),0),-5,0);
    t.score=m.record*t.meritRecordScore+
-       m.qualityResidual*t.meritQualityScore+m.control*t.meritControlScore;
+       m.qualityResidual*t.meritQualityScore+m.control*t.meritControlScore+
+       t.meritFcsPerformancePenalty;
    t.meritScore=t.score;
+ }
+ // A direct FBS win resolves a closely rated pair only when the winner
+ // has at least as many total wins and no more losses. Each eligible direct
+ // result applies a symmetric bounded adjustment, avoiding cyclic sort rules.
+ const byTeam=new Map(teams.map(t=>[t.name,t]));
+ const seen=new Set();
+ for(const t of teams){
+   t.meritScoreBeforeH2H=t.score;
+   t.meritHeadToHeadAdjustment=0;
+   t.meritHeadToHeadReasons=[];
+ }
+ for(const winner of teams){
+   if(winner.fbsGames<3)continue;
+   for(const g of winner.fbsG){
+     if(!g.win||seen.has(String(g.id)))continue;
+     const loser=byTeam.get(g.op);
+     if(!loser||loser.fbsGames<3)continue;
+     if(Math.abs(winner.meritScoreBeforeH2H-loser.meritScoreBeforeH2H)>3)continue;
+     if(winner.won<loser.won||winner.lost>loser.lost)continue;
+     seen.add(String(g.id));
+     winner.meritHeadToHeadAdjustment+=1.5;
+     loser.meritHeadToHeadAdjustment-=1.5;
+     winner.meritHeadToHeadReasons.push({opponent:loser.name,won:true,gameId:String(g.id)});
+     loser.meritHeadToHeadReasons.push({opponent:winner.name,won:false,gameId:String(g.id)});
+   }
+ }
+ for(const t of teams){
+   t.meritHeadToHeadAdjustment=v5clamp(t.meritHeadToHeadAdjustment,-3,3);
+   t.score=t.meritScoreBeforeH2H+t.meritHeadToHeadAdjustment;
+   t.meritScore=t.score;
+ }
+ // A one-game or two-game résumé is not a credible national ranking.
+ // Keep internal ordering for research; show 'Provisional' publicly until
+ // the FBS median reaches four games, or this team has fewer than three.
+ const fbsCounts=teams.map(t=>t.fbsGames).sort((a,b)=>a-b);
+ const nationalMedian=fbsCounts[Math.floor(fbsCounts.length/2)]||0;
+ const provisionalSeason=nationalMedian<4;
+ for(const t of teams){
+   t.meritEvidenceGames=t.fbsGames;
+   t.meritProvisional=provisionalSeason||t.fbsGames<3;
+   t.meritEvidenceStatus=t.meritProvisional?'provisional':'sufficient';
  }
  v5percentiles(teams,'sor');v5percentiles(teams,'qualityComponent');
  v5percentiles(teams,'meritControlScore');v5percentiles(teams,'mov');
  teams.sort((a,b)=>b.score-a.score||b.wab-a.wab||a.name.localeCompare(b.name));
- teams.forEach((t,i)=>t.rank=i+1);
+ teams.forEach((t,i)=>{t.rank=i+1;t.meritPublishedRank=t.meritProvisional?null:t.rank;});
 
  // Power considers the complete sustainable performance profile, but every
  // effect is shrunken, adjusted against the opponents actually faced, and
@@ -223,9 +283,21 @@ function attachEfficiencyV5(teams,advRows){
      t.powerModelStatus='opponent_network_adjusted';
    }
  }
- // V5.3 early-season preseason evidence overlay, calibrated to decay using 2025 games.
+ // Preseason evidence fades based on the amount and quality of evidence.
  if(typeof MODEL_PRESEASON_V53!=='undefined'&&MODEL_PRESEASON_V53.enabled)
    MODEL_PRESEASON_V53.apply(teams);
+ // The current-season empirical conference context activates only after
+ // a team's first completed FBS game. Week 0 is purely roster/continuity.
+ // The fit season (2024) never receives its own fitted correction.
+ for(const t of teams){
+   const eligible=typeof MODEL_PRESEASON_V53!=='undefined'&&MODEL_PRESEASON_V53.enabled&&t.fbsGames>=1;
+   const correction=eligible?CFMI_POWER_CONTEXT.factor*(CFMI_POWER_CONTEXT.residuals[t.conference]||0):0;
+   t.powerConferenceCalibration=correction;
+   t.powerConferenceCalibrationVersion=CFMI_POWER_CONTEXT.version;
+   t.powerPoints+=correction;
+   t.powerScore=v5clamp(50+MODEL_V5.powerScale.indexPointsPerExpectedMarginPoint*t.powerPoints,0,100);
+   t.powerContributionPoints={...t.powerContributionPoints,conferenceContext:correction};
+ }
  v5percentiles(teams,'powerScore','powerScore');
  for(const t of teams)t.powerRank=t.powerScoreRank;
  // Original V4 raw "baselinePowerRank" still shown separately in diagnostics.
