@@ -126,9 +126,9 @@ const CFMI_MATCHUP={
    const ep=z(O,'passExplosive','Off'),pe=z(D,'passExplosive','Weak');
    const runWeight=1-O.passShare,passWeight=O.passShare;
    return {
-    runExploit:runO*rushD,
+    runExploit:rushO*rushD,
     passExploit:passO*passD,
-    runFit:runWeight*(runO+rushD), // style-specific matchup evidence
+    runFit:runWeight*(rushO+rushD), // style-specific matchup evidence
     passFit:passWeight*(passO+passD),
     runStyle:(.52-O.passShare)*(rushD-passD),
     firstDownFit:runWeight*sr*sd+passWeight*sp*pd,
