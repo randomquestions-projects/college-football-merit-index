@@ -1258,6 +1258,7 @@ async function loadPredictionLedger(){
   if(!led.seasons?.['2025']?.weeks?.length||!led.seasons?.['2026']?.weeks?.length)
     throw Error('2025/26 prediction records missing');
   weeklyView.predictionLedger=led;
+  renderCurrentValidation();
   updateMatchupWeekOptions();renderMatchups();
  }catch(e){
   $('matchupSummary').textContent='Historical scorecard unavailable: '+e.message;
@@ -1287,6 +1288,28 @@ loadPredictionLedger();loadPowerBenchmark();
 
 
 
+function renderCurrentValidation(){
+ const target=$('v5ValidationSummary');
+ if(!target)return;
+ const ledger=weeklyView.predictionLedger;
+ if(!ledger?.seasons?.['2025']?.overall||!ledger?.seasons?.['2026']?.overall){
+   target.innerHTML='<strong>Current v5.5 model evaluation</strong><p class="note">Waiting for the published pregame prediction ledger. Historical claims are hidden until the matched-game dataset is verified.</p>';
+   return;
+ }
+ const p=x=>Number.isFinite(x)?(100*x).toFixed(2)+'%':'Not available';
+ const n=x=>Number.isFinite(x)?Number(x).toFixed(3):'Not available';
+ const seasons=[2025,2026].map(year=>{
+  const data=ledger.seasons[String(year)].overall;
+  if(!Number.isFinite(data.played)||!Number.isFinite(data.correct)||data.played<100)
+    throw Error('Incomplete model-validation ledger '+year);
+  return '<tr><td>'+year+'</td><td>'+data.correct+'/'+data.played+'</td><td>'+p(data.accuracy)+'</td><td>'+n(data.logLoss)+'</td><td>'+n(data.marginMAE)+' pts</td></tr>';
+ });
+ target.innerHTML='<strong>CFMI v5.5 · reconstructed pregame validation</strong>'+
+  '<p>These are current v5.5 Power + venue forecasts for completed FBS-versus-FBS games, derived from the actual published prediction ledger. Historical source releases can contain retrospective revisions.</p>'+
+  '<div class="cfmi-scroll"><table class="cfmi-ext-table"><thead><tr><th>Season</th><th>Correct winners</th><th>Winner accuracy</th><th>Probability log loss ↓</th><th>Margin MAE ↓</th></tr></thead><tbody>'+
+  seasons.join('')+'</tbody></table></div>'+
+  '<p class="cfmi-section-note"><strong>Limitations:</strong> 2024 source data informed model training; 2025 was used in model selection, and 2026 outcomes were inspected during further refinement. These are <strong>retrospective development comparisons, not untouched prospective proof</strong>. Frozen v5.4 scored 556/762 in 2025 and 397/562 through Week 10 of 2026 on its own reconstructed ledger. Current-model game predictions and the matchup-specific adjustments are independent of the Merit rank ordering.</p>';
+}
 async function loadV5Parameters(){
  try{
    const response=await fetch('./data/model_v5_params.json',{cache:'no-store'});
@@ -1294,41 +1317,7 @@ async function loadV5Parameters(){
    const json=await response.json();
    if(!MODEL_V5.setParameters(json))throw Error('Model parameters failed numerical validation');
    state.v5ParamsLoaded=true;
-   const v=json.validation;
-   if(v&&$('v5ValidationSummary')){
-     const c=v.candidate2025,b=v.baseline2025,old=v.previousV5_2025,ci=v.pairedWeeklyBootstrap2025,c26=v.candidate2026,old26=v.previousV5_2026;
-     const show=x=>Number.isFinite(x)?x.toFixed(4):'—';
-     const pct=x=>Number.isFinite(x)?(100*x).toFixed(1)+'%':'—';
-     const cmp=old?'<tr><td>Previous V5</td><td>'+pct(old.accuracy)+'</td><td>'+show(old.logLoss)+'</td><td>'+old.marginMAE.toFixed(2)+'</td></tr>':'';
-     const ciInfo=ci&&ci.logLoss?('Weekly bootstrap 95% interval for full-spectrum log-loss improvement vs previous V5: ['+show(ci.logLoss.lower95)+', '+show(ci.logLoss.upper95)+'].'):'';
-     const coeffs=['epa','success','explosive','finishing','consistency','control','offense','defense'];
-     const active=coeffs.filter(k=>(json.parameters[k]||0)>0.000001),diagnostic=coeffs.filter(k=>(json.parameters[k]||0)<=0.000001);
-     $('v5ValidationSummary').innerHTML='<strong>V5.1 Power validation · 2025 game-ahead evaluation ('+json.validationGames+' FBS games)</strong>'+
-       '<p>All eight opponent-adjusted football statistics were considered and tested; only independently predictive features retain a direct coefficient.</p>'+
-       '<div class="cfmi-scroll"><table class="cfmi-ext-table"><thead><tr><th>Model</th><th>Winner accuracy</th><th>Log loss ↓</th><th>Margin MAE ↓</th></tr></thead><tbody>'+
-       '<tr><td>Full-spectrum candidate</td><td>'+pct(c.accuracy)+'</td><td>'+show(c.logLoss)+'</td><td>'+c.marginMAE.toFixed(2)+'</td></tr>'+cmp+
-       '<tr><td>Basic opponent-strength</td><td>'+pct(b.accuracy)+'</td><td>'+show(b.logLoss)+'</td><td>'+b.marginMAE.toFixed(2)+'</td></tr></tbody></table></div>'+
-       '<p><strong>Selected:</strong> '+esc(json.deployedCandidate)+'. '+esc(json.selectionReason||'')+'</p>'+
-       '<p><strong>Direct active Power factors:</strong> '+esc(active.join(', ')||'baseline only')+'. <strong>Measured but zero incremental coefficient:</strong> '+esc(diagnostic.join(', ')||'none')+'. A zero here does not mean the football skill is irrelevant; it means the current training data did not establish an additional improvement beyond overlapping factors.</p>'+
-       '<p>'+esc(ciInfo)+' 2025 was used for previous and current model selection, so it is not a pristine independent final holdout.</p>'+ 
-       (c26&&old26?'<p><strong>2026 forward-week check ('+json.prospective2026Games+' FBS games, not used to train or select):</strong> expanded candidate '+pct(c26.accuracy)+' winners vs previous V5 '+pct(old26.accuracy)+'; log loss '+show(c26.logLoss)+' vs '+show(old26.logLoss)+'. This is early-season evidence, not grounds for silently changing Power rankings.</p>':'')+ 
-       '<p>No 2026 outcomes entered coefficient training. New source revisions may affect reconstructed weekly evaluations.</p>';
-   }
-   const op=json.validation?.opponentStrengthComparison;
-   if(op&&$('v5ValidationSummary')){
-     const old=op.candidates.current2025,better=op.candidates.networkPlusOpponent2025;
-     const old26=op.candidates.current2026,better26=op.candidates.networkPlusOpponent2026;
-     const pct=x=>(100*x).toFixed(1)+'%',num=x=>Number(x).toFixed(4);
-     $('v5ValidationSummary').innerHTML=
-      '<strong>V5.2 opponent-adjustment validation · 2024 training / 2025 comparison</strong>'+
-      '<p>Production mode: <strong>'+esc(json.parameters.mode)+'</strong>. '+esc(json.selectionReason||'')+'</p>'+
-      '<div class="cfmi-scroll"><table class="cfmi-ext-table"><thead><tr><th>Season / Model</th><th>Correct winners</th><th>Log loss ↓</th><th>Avg margin error ↓</th></tr></thead><tbody>'+
-      '<tr><td>2025 · V5.1 reference</td><td>'+pct(old.accuracy)+'</td><td>'+num(old.logLoss)+'</td><td>'+old.marginMAE.toFixed(2)+' pts</td></tr>'+
-      '<tr><td>2025 · joint opponent network</td><td>'+pct(better.accuracy)+'</td><td>'+num(better.logLoss)+'</td><td>'+better.marginMAE.toFixed(2)+' pts</td></tr>'+
-      '<tr><td>2026 · V5.1 reference</td><td>'+pct(old26.accuracy)+'</td><td>'+num(old26.logLoss)+'</td><td>'+old26.marginMAE.toFixed(2)+' pts</td></tr>'+
-      '<tr><td>2026 · joint opponent network</td><td>'+pct(better26.accuracy)+'</td><td>'+num(better26.logLoss)+'</td><td>'+better26.marginMAE.toFixed(2)+' pts</td></tr>'+
-      '</tbody></table></div><p class="cfmi-section-note">2025 was previously used in model selection, so these small gains are exploratory. 2026 was excluded from coefficient fitting. Every as-of weekly model uses only games played by its cutoff; reconstructed source data may include later statistical corrections. FPI, SP+, FEI, AP, CFP and conference labels are not scoring inputs.</p>';
-   }
+   renderCurrentValidation();
    if(state.raw.length)recalc();
  }catch(err){
    console.warn('CFMI V5.2 historical calibration not available; using season-only neutral baseline without probabilities',err);
