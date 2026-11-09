@@ -87,6 +87,7 @@ const CFMI_PUBLIC_VIEW = Object.freeze({
        preseasonWeight:this.safeNumber(t.preseasonPriorWeight),
        effectiveGames:this.safeNumber(t.preseasonEffectiveGames),
        priorPoints:this.safeNumber(t.preseasonPriorPoints),
+       priorSources:{rosterTalentIndex:this.safeNumber(t.preseasonTalentIndex),returningProduction:this.safeNumber(t.preseasonReturningProduction),transferPercentile:this.safeNumber(t.preseasonTransferPercentile),coachContinuity:null},
        evidence:t.powerEvidence||'unverified',
        conferenceCalibration:this.safeNumber(t.powerConferenceCalibration)
      },
