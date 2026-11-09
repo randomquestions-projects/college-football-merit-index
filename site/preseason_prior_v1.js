@@ -8,7 +8,7 @@ const MODEL_PRESEASON_V53={
  enabled:false,
  data:null,
  load(doc){
-  if(!doc||doc.version!==this.version||doc.season!==2026||!doc.teams||
+  if(!doc||doc.version!==this.version||![2025,2026].includes(doc.season)||!doc.teams||
      !Array.isArray(doc.decayByCompletedFbsGames)||doc.decayByCompletedFbsGames.length<6)throw Error('Invalid prior document header '+JSON.stringify({version:doc?.version,expected:this.version,season:doc?.season,decay:doc?.decayByCompletedFbsGames}));
   if(Object.keys(doc.teams).length<125)throw Error('Too few preseason teams: '+Object.keys(doc.teams).length);
   for(const [name,t] of Object.entries(doc.teams)){

@@ -78,13 +78,23 @@ jobs:
         run: node scripts/build_preseason_playoff_forecast.cjs
       - name: Reconstruct weekly V5 history and upcoming matchup predictions
         run: node scripts/build_weekly_views.cjs
+      - name: Reconstruct game-ahead CFMI Power matchup ledgers for 2025 and 2026
+        run: node scripts/build_prediction_ledger.cjs
+      - name: Research original-dated 2025 weekly FPI and FEI rating archives
+        run: |
+          python -m pip install beautifulsoup4==4.14.2
+          python scripts/probe_2025_industry.py
+      - name: Benchmark same-game historic CFMI versus FPI SP+ and FEI, and diagnose misses
+        run: python scripts/benchmark_power_2025_2026.py
+      - name: Analyze prediction mistakes and 2025-selected home-field counterfactuals
+        run: node scripts/analyze_power_misses.cjs
       - name: Audit V5 model, weekly data quality and season cutoff invariants
         run: node scripts/audit_dashboard.cjs
       - name: Historical V4 versus V3 walk-forward benchmark (reference only)
         run: |
           node scripts/backtest_v4.cjs
           node scripts/evaluate_power_candidates.cjs
-      - name: Verify all six dashboard tabs in Chromium
+      - name: Verify all seven dashboard tabs in Chromium
         run: |
           npm install --no-save playwright@1.61.0
           npx playwright install --with-deps chromium
