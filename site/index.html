@@ -90,6 +90,20 @@ body.cfmi-matchups #rankings,body.cfmi-matchups #comparison,body.cfmi-matchups #
 .purpose-disclaimer{font-size:11.5px;color:#94acc3;line-height:1.7;margin:-5px 0 0;padding:0 3px}
 @media(max-width:800px){.purpose-index-grid,.purpose-principles{grid-template-columns:1fr}.purpose-hero{padding:24px 22px}.purpose-index-card{padding:23px 21px}.purpose-secondary{align-items:flex-start;flex-direction:column;gap:12px}.purpose-page{gap:24px}}
 @media(max-width:480px){.purpose-hero{padding:21px 17px}.purpose-index-card{padding:20px 17px}.purpose-principles>div{padding:16px}.purpose-secondary{padding:19px 17px}}
+
+/* Purpose copy mirrors the project's original mission and index definitions. */
+.purpose-index-card>p:not(.purpose-index-question):not(.purpose-index-note){margin-bottom:12px}
+.purpose-index-card .purpose-evidence-list{margin-top:2px;gap:10px}
+.purpose-index-card .purpose-index-note strong{color:#dbeaf7}
+.purpose-credibility{padding:27px 30px;border:1px solid #344c67;border-radius:16px;background:#142238}
+.purpose-credibility h3{color:#e9f3ff;font-size:21px;line-height:1.35;margin:0 0 15px}
+.purpose-credibility>p{font-size:13.5px;line-height:1.75;color:#b6cce0;margin:0 0 11px;max-width:900px}
+.purpose-credibility>p:last-child{margin:15px 0 0}
+.purpose-credibility-list{list-style:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:25px;row-gap:10px;margin:14px 0;padding:0}
+.purpose-credibility-list li{position:relative;padding-left:17px;line-height:1.55;color:#e0edf9;font-size:13px}
+.purpose-credibility-list li::before{position:absolute;content:"";left:0;top:.63em;width:6px;height:6px;border-radius:50%;background:#69c7ea}
+@media(max-width:800px){.purpose-credibility{padding:23px 21px}.purpose-credibility-list{grid-template-columns:1fr}}
+@media(max-width:480px){.purpose-credibility{padding:20px 17px}}
 </style>
 </head>
 <body>
@@ -218,60 +232,68 @@ body.cfmi-matchups #rankings,body.cfmi-matchups #comparison,body.cfmi-matchups #
 <div id="methodologyPage" class="cfmi-page">
   <div class="purpose-page">
     <section class="purpose-hero" aria-labelledby="purposeMethodTitle">
-      <div class="eyebrow">The thinking behind CFMI</div>
+      <div class="eyebrow">Why CFMI exists</div>
       <h2 id="purposeMethodTitle">Purpose &amp; Methodology</h2>
-      <p class="purpose-lead">College football rankings should tell us <strong>what a team has earned</strong> and <strong>how strong it really is</strong>—without confusing the two.</p>
-      <p>CFMI is an independent, data-driven way to evaluate every FBS team. The goal is to challenge assumptions, account for the competition each team has faced, and make rankings explainable rather than simply accepting a team's brand, reputation or place in the polls.</p>
-      <p>We publish two distinct indices because a team can deserve a higher ranking for its résumé while another team may be stronger on the field. Both perspectives matter.</p>
+      <p class="purpose-lead">The original purpose was to build a <strong>credible, independent, data-driven college football ranking system</strong> that evaluates teams based on what they've actually earned—not their reputation, conference, brand, or position in the preseason polls.</p>
+      <p>CFMI was born out of frustration with the perceived biases and inertia in traditional rankings like the AP and CFP polls. The goal is to see whether we can use <strong>comprehensive football data, rigorous statistics, and transparent methodology</strong> to produce something better.</p>
     </section>
 
     <section class="purpose-section" aria-labelledby="purposeTwoIndices">
       <div class="purpose-section-title">
-        <span class="purpose-step">OUR TWO CORE MEASURES</span>
+        <span class="purpose-step">TWO DISTINCT INDICES</span>
         <h3 id="purposeTwoIndices">Two questions. Two independent answers.</h3>
       </div>
       <div class="purpose-index-grid">
         <article class="purpose-index-card purpose-merit">
-          <div class="purpose-index-top"><span class="purpose-index-number">01</span><span>Earned achievement</span></div>
+          <div class="purpose-index-top"><span class="purpose-index-number">01</span><span>ACTUAL ACCOMPLISHMENT</span></div>
           <h4>Merit Index</h4>
-          <p class="purpose-index-question">Who has earned the strongest season?</p>
-          <p>Merit evaluates a team's actual body of work. It rewards meaningful victories and strong results against difficult competition—not simply the number of wins.</p>
-          <div class="purpose-evidence-title">What matters most</div>
+          <p class="purpose-index-question">Who deserves to be ranked highest?</p>
+          <p>A ranking based on actual accomplishment, including:</p>
           <ul class="purpose-evidence-list">
-            <li><strong>Results in context:</strong> wins and losses relative to how difficult the schedule was.</li>
-            <li><strong>Quality of victories:</strong> beating elite opponents, including on the road or at neutral sites.</li>
-            <li><strong>Head-to-head:</strong> direct results when comparing teams with similar résumés.</li>
-            <li><strong>How games were played:</strong> opponent- and venue-adjusted margins, with limited credit for running up the score against weak opponents.</li>
+            <li><strong>Wins and losses:</strong> Results matter, but not every win is equal.</li>
+            <li><strong>Strength of schedule:</strong> Beating Alabama should be worth significantly more than beating a weak opponent.</li>
+            <li><strong>Quality wins:</strong> Reward teams that beat elite competition.</li>
+            <li><strong>Head-to-head:</strong> Direct results should carry meaningful weight when comparing similarly accomplished teams.</li>
+            <li><strong>Margin of victory:</strong> Convincing wins matter, especially against strong opponents. Running up the score against an FCS team shouldn't.</li>
+            <li><strong>Venue:</strong> Winning on the road should be more impressive than winning at home.</li>
+            <li><strong>Quality of losses:</strong> A narrow road loss to an elite team shouldn't be evaluated like a blowout loss to a weak team.</li>
           </ul>
-          <p class="purpose-index-note">Merit is earned on the field. Preseason talent and recruiting do not determine it, and early-season rankings are provisional when evidence is limited.</p>
+          <p class="purpose-index-note"><strong>Merit is about what a team has accomplished, not what we think it might accomplish.</strong> It should provide a defensible answer to which teams have earned playoff consideration.</p>
         </article>
         <article class="purpose-index-card purpose-power">
-          <div class="purpose-index-top"><span class="purpose-index-number">02</span><span>Predictive strength</span></div>
+          <div class="purpose-index-top"><span class="purpose-index-number">02</span><span>PREDICTIVE STRENGTH</span></div>
           <h4>Power Index</h4>
-          <p class="purpose-index-question">Who is the strongest team right now?</p>
-          <p>Power estimates how teams would compare on a neutral field. It emphasizes sustainable football performance rather than rewarding marquee wins or an impressive-looking record on its own.</p>
-          <div class="purpose-evidence-title">What matters most</div>
+          <p class="purpose-index-question">Who is actually the strongest team?</p>
+          <p>The most deserving team isn't necessarily the strongest team.</p>
+          <p>For example, Utah might have a stronger résumé, while Alabama might be favored to beat Utah on a neutral field.</p>
+          <p>Power leverages more sophisticated statistics:</p>
           <ul class="purpose-evidence-list">
-            <li><strong>Quality of play:</strong> opponent-adjusted scoring strength, offensive and defensive efficiency, play success and explosiveness.</li>
-            <li><strong>Quality of opposition:</strong> how well performance holds up against the opponents—and the broader network of teams—they have faced.</li>
-            <li><strong>Early-season evidence:</strong> prior performance, roster talent, returning production and transfer activity help establish a starting point.</li>
-            <li><strong>What we learn each week:</strong> real results progressively replace preseason expectations, while weak-schedule evidence is treated cautiously.</li>
+            <li>Opponent-adjusted offensive and defensive efficiency</li>
+            <li>EPA, success rate, explosiveness, scoring performance</li>
+            <li>Actual competitive strength of opponents</li>
+            <li>Early-season talent, returning production, and other reliable preseason evidence that fades as games are played</li>
+            <li>Evidence of how strong a team truly is—not merely its record</li>
           </ul>
-          <p class="purpose-index-note">Power is not a second résumé ranking. It incorporates a modest historical cross-conference calibration based on game evidence, not an automatic bonus for a famous program.</p>
+          <p class="purpose-index-note"><strong>Power should estimate how good a team is today and how it would perform against other teams on a neutral field.</strong> The two indices should be genuinely distinct, not two differently weighted versions of the same metric.</p>
         </article>
       </div>
     </section>
 
-    <section class="purpose-section" aria-labelledby="purposeDifference">
-      <div class="purpose-section-title">
-        <span class="purpose-step">OUR APPROACH</span>
-        <h3 id="purposeDifference">What makes CFMI different?</h3>
-      </div>
-      <div class="purpose-principles">
-        <div><strong>Don't confuse deserving with dangerous.</strong><p>Merit and Power answer different questions, so their rankings can—and sometimes should—disagree.</p></div>
-        <div><strong>Put every result in context.</strong><p>An excellent performance against a great opponent should mean more than the same numbers against a weak one. Venue and schedule matter.</p></div>
-        <div><strong>Use evidence, not poll position.</strong><p>AP, CFP, FPI, SP+ and FEI rankings are comparison points, not inputs used to reproduce someone else's list.</p></div>
-        <div><strong>Be clear about uncertainty.</strong><p>Early-season schedules, uneven competition and incomplete advanced statistics limit what the data can establish. We disclose those limitations rather than imply false precision.</p></div>
+    <section class="purpose-section" aria-labelledby="purposeCredibility">
+      <div class="purpose-credibility">
+        <div class="purpose-step">THE STANDARD WE HOLD OURSELVES TO</div>
+        <h3 id="purposeCredibility">Credibility and independence were always essential</h3>
+        <p>The goal was never simply to create rankings that look reasonable or resemble ESPN, SP+, or the AP poll.</p>
+        <p>CFMI aims for independent credibility through:</p>
+        <ul class="purpose-credibility-list">
+          <li>Comprehensive, high-quality football data</li>
+          <li>Statistically defensible methodologies</li>
+          <li>Transparent calculations and weights</li>
+          <li>Consistent treatment of all teams</li>
+          <li>Historical analysis and validation</li>
+          <li>Clear explanations for why teams are ranked where they are</li>
+        </ul>
+        <p>The results are publicly available through an interactive website that people can explore, scrutinize, and compare against established rankings.</p>
       </div>
     </section>
 
@@ -283,7 +305,7 @@ body.cfmi-matchups #rankings,body.cfmi-matchups #comparison,body.cfmi-matchups #
       </div>
       <a href="#matchups" data-focus-page="matchups">Explore matchups <span aria-hidden="true">→</span></a>
     </aside>
-    <p class="purpose-disclaimer">CFMI is an independent research project, not an official NCAA or College Football Playoff ranking. Its ratings are estimates, not certainties; established systems may use some similar football statistics, but CFMI's distinction is the separate purpose and evaluation of Merit and Power.</p>
+    <p class="purpose-disclaimer">CFMI is an independent research project, not an official NCAA or College Football Playoff ranking. The indices are estimates, not certainties. AP, CFP, FPI, SP+ and FEI are comparison baselines, not scoring inputs. Power includes a small, historically estimated cross-conference correction based on game evidence—not an automatic conference-prestige bonus.</p>
   </div>
 </div>
 <div class="bottom">CFMI V5.5 · Separate Merit and predictive Power rankings · 2026 regular season through selected as-of snapshot · Scores recalculated from the latest published weekly data snapshot, with separate verification of advanced-stat coverage. <br>Independent data analysis. Not affiliated with NCAA, CFP, AP, or SportsDataverse.</div>
