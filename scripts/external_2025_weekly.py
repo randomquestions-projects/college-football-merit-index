@@ -29,9 +29,9 @@ def parse_key(v):
  try:return date(int(s[:4]),int(s[4:6]),int(s[6:8]))
  except (ValueError,TypeError):return None
 def yes(v):
- return str(v or '').lower() in ('true','1','t','yes')
+ return str(v).lower() in ('true','1','t','yes')
 def no(v):
- return str(v or '').lower() in ('false','0','f','no')
+ return str(v).lower() in ('false','0','f','no')
 def fpi_snapshots(id_to_norm):
  b=read(FPI)
  if not b.startswith(b'PAR1') or not b.endswith(b'PAR1'):raise RuntimeError('FPI archive is not valid parquet')
