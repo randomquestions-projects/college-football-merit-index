@@ -33,6 +33,14 @@ FIELDS = [
     "lead_share", "penalty_yards", "opp_penalty_yards", "turnovers_lost",
     "turnovers_gained", "redzone_td", "redzone_trips",
     "opp_redzone_td", "opp_redzone_trips", "expected_turnover_margin",
+    # Opponent-specific play-style signals, FBS-vs-FBS GAME-level only.
+    # Defensive fields reflect the opponent's *allowed* offense by phase.
+    "off_rush_ppa", "def_rush_ppa", "off_pass_ppa", "def_pass_ppa",
+    "off_rush_firstdown_rate", "def_rush_firstdown_rate",
+    "off_pass_firstdown_rate", "def_pass_firstdown_rate",
+    "off_rush_explosive_rate", "def_rush_explosive_rate",
+    "off_pass_explosive_rate", "def_pass_explosive_rate",
+    "off_pass_share", "off_rushes", "off_passes",
 ]
 
 def fetch_csv(url):
@@ -157,6 +165,22 @@ def main():
                 "opp_redzone_td": other_rz,
                 "opp_redzone_trips": 1 if other_rz is not None else None,
                 "expected_turnover_margin": number(own_t, "expected_turnover_margin"),
+                "off_rush_ppa": number(own_row, "EPA_rushing_per_play"),
+                "def_rush_ppa": number(other_row, "EPA_rushing_per_play"),
+                "off_pass_ppa": number(own_row, "EPA_passing_per_play"),
+                "def_pass_ppa": number(other_row, "EPA_passing_per_play"),
+                # First-down creation is NOT the same measure as EPA success rate.
+                "off_rush_firstdown_rate": unit(number(own_row, "rushing_first_downs_created_rate")),
+                "def_rush_firstdown_rate": unit(number(other_row, "rushing_first_downs_created_rate")),
+                "off_pass_firstdown_rate": unit(number(own_row, "passing_first_downs_created_rate")),
+                "def_pass_firstdown_rate": unit(number(other_row, "passing_first_downs_created_rate")),
+                "off_rush_explosive_rate": unit(number(own_row, "EPA_explosive_rushing_rate")),
+                "def_rush_explosive_rate": unit(number(other_row, "EPA_explosive_rushing_rate")),
+                "off_pass_explosive_rate": unit(number(own_row, "EPA_explosive_passing_rate")),
+                "def_pass_explosive_rate": unit(number(other_row, "EPA_explosive_passing_rate")),
+                "off_pass_share": unit(number(own_row, "passes_rate")),
+                "off_rushes": number(own_row, "rushes"),
+                "off_passes": number(own_row, "passes"),
             }
             for field in ("off_success_rate", "def_success_rate",
                           "off_explosive_rate", "def_explosive_rate", "redzone_td",
@@ -165,6 +189,19 @@ def main():
                     record[field] = None
             for field in ("off_ppa", "def_ppa"):
                 if record[field] is not None and abs(record[field]) > 10:
+                    record[field] = None
+            for field in ("off_rush_firstdown_rate", "def_rush_firstdown_rate",
+                          "off_pass_firstdown_rate", "def_pass_firstdown_rate",
+                          "off_rush_explosive_rate", "def_rush_explosive_rate",
+                          "off_pass_explosive_rate", "def_pass_explosive_rate",
+                          "off_pass_share"):
+                if record[field] is not None and not 0 <= record[field] <= 1:
+                    record[field] = None
+            for field in ("off_rush_ppa", "def_rush_ppa", "off_pass_ppa", "def_pass_ppa"):
+                if record[field] is not None and abs(record[field]) > 10:
+                    record[field] = None
+            for field in ("off_rushes", "off_passes"):
+                if record[field] is not None and not 0 <= record[field] <= 150:
                     record[field] = None
             if not any(record[key] is not None for key in
                        ("off_ppa", "off_success_rate", "off_explosive_rate",
