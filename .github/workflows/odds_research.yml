@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - 'scripts/calculate_moneyline_roi_2026.py'
+      - 'scripts/probe_espn_moneyline_2026.py'
       - '.github/workflows/odds_research.yml'
   workflow_dispatch:
 permissions:
@@ -17,5 +18,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Probe ESPN postgame published original opening/closing moneyline evidence
+        run: python scripts/probe_espn_moneyline_2026.py
       - name: Run actual pre-kickoff moneyline ROI on verifiable matched games
         run: python scripts/calculate_moneyline_roi_2026.py
