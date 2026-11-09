@@ -192,6 +192,7 @@ def main():
   print('CFMI INDUSTRY YEAR BENCHMARK',json.dumps({
    'year':y,'error':error,'games':len(completed),'matched':comparison['commonGames'],
    'scorecard':comparison['commonScorecard'],
+   'pairwise':{k:{'games':v['games'],'correct':v['correct'],'accuracy':v['accuracy'],'cfmiCorrect':v['cfmiCorrect'],'cfmiAccuracy':v['cfmiAccuracy']} for k,v in systems.items()},
    'perWeek':comparison['perWeek'],
    'firstExternalSource':coverage.get('5'),
    'warnings':sourceWarnings,
