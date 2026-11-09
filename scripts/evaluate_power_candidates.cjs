@@ -6,7 +6,7 @@ const root=path.join(__dirname,"..","site");
 const html=fs.readFileSync(path.join(root,"index.html"),"utf8");
 const body=html.match(/<script>([\s\S]*?)<\/script>/i)?.[1];
 const index=body?.indexOf("const submetric=");
-if(!body||index<10000)throw Error("Unexpected site JS layout");
+if(!body||index<1500)throw Error("Unexpected site JS layout");
 const model=fs.readFileSync(path.join(root,"model_v4.js"),"utf8");
 const prelude=body.slice(0,index);
 const evalModel=new Function("csv","adv","year","cutoff",model+"\n"+prelude+
