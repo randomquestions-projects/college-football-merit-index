@@ -51,12 +51,27 @@ async function waitForServer(){
   assert.equal(await page.locator("#resumeControls select").count(),5,"Expected five comparison selectors");
   assert.equal(await page.locator("#resumeHead [data-open-team]").count(),3,"Default three teams missing");
   assert(await page.locator("#resumeNarratives .resume-narrative").count()>=2,"Missing deterministic résumé narratives");
+  const ndAudit=await page.evaluate(()=>{
+    const nd=state.teams.find(x=>x.name==='Notre Dame');
+    const miami=CFMI_PUBLIC_VIEW.wins(nd,null,'signature').find(x=>x.opponent==='Miami');
+    const unc=CFMI_PUBLIC_VIEW.wins(nd,null,'signature').find(x=>x.opponent==='North Carolina');
+    const card=[...document.querySelectorAll('#resumeGames .resume-games-card')]
+      .find(e=>e.querySelector('h3')?.textContent.includes('Notre Dame'));
+    return {miami:miami?.meritSignatureWinUnits,unc:unc?.meritSignatureWinUnits,
+       firstWin:card?.querySelector('p strong')?.textContent,
+       hasLegacyMarkup:card?.textContent.includes('performance 81/100')||card?.textContent.includes('quality credit 1.52'),
+       contract:state.metricContractAudit};
+  });
+  assert(ndAudit.miami>ndAudit.unc&&ndAudit.firstWin==='Miami'&&!ndAudit.hasLegacyMarkup,
+    "Notre Dame best-win card must reflect active Merit over V4 road bonus");
+  assert(ndAudit.contract?.allScoresReconciled&&ndAudit.contract?.schools>=130,
+    "Full-FBS view contracts not verified before serving");
   await page.locator("#resumeTeam3").selectOption("Texas");
   assert.equal(await page.locator("#resumeHead [data-open-team]").count(),4,"Fourth team selection failed");
   await page.locator('#resumeHead [data-open-team="Georgia"]').click();
   await page.locator("#detailScrim.open").waitFor();
   const detail=(await page.locator("#detailBody").innerText()).toLowerCase();
-  assert(detail.includes("game performance")&&detail.includes("opponent baseline")&&detail.includes("estimated margin"),"V5 team detail audit not visible");
+  assert(detail.includes("signature-win")&&detail.includes("opponent")&&detail.includes("estimated margin"),"V6 team audit not aligned to active Merit");
   await page.locator("#closeModal").click();
   // Every team popup must reconcile to its exact Power Points (including
   // pre-season adjustment), without inactive 0.00-point football statistic cards.
@@ -68,7 +83,7 @@ async function waitForServer(){
       const heading=document.querySelector("#detailTitle")?.textContent||"";
       const total=Object.values(team.powerContributionPoints||{}).filter(Number.isFinite).reduce((s,n)=>s+n,0);
       if(!heading.includes(team.name))issues.push(team.name+": wrong heading");
-      if(!body.includes("Components reconcile to"))issues.push(team.name+": bad component display");
+      if(!body.includes("Reconciled:"))issues.push(team.name+": bad component display");
       if(!body.includes("Measured offense and defense"))issues.push(team.name+": missing performance diagnostics");
       if(/Finishing\\s+0\\.00 pts|Consistency\\s+0\\.00 pts|Game control\\s+0\\.00 pts/.test(body))
         issues.push(team.name+": dormant coefficient shown as metric");
