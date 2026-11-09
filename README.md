@@ -1,9 +1,17 @@
-# College Football Merit Index — CFMI V5.4 (Merit, neutral Power, matchup-specific win likelihood)
+# College Football Merit Index — CFMI V5.5 (earned Merit and neutral-field Power; Matchups secondary)
 
 **Live dashboard:** https://randomquestions-projects.github.io/college-football-merit-index/  
-**Methodology:** [V5.3 Preseason Talent & Continuity](docs/CFMI_V5_3_talent_prior_research.md) · [V5.2 opponent-adjusted game strength](docs/CFMI_V5_2_opponent_adjustment.md)
+**Methodology:** [V5.5 Merit and Power recalibration](docs/CFMI_V5_5_merit_power_recalibration.md) · [V5.3 preseason sources](docs/CFMI_V5_3_talent_prior_research.md) · [V5.2 on-field opponent adjustments](docs/CFMI_V5_2_opponent_adjustment.md)
 
-## Third metric: CFMI Matchup Score
+## V5.5 — why Merit and Power are the main product
+
+**Merit Index:** an independently earned-resume model, now with stronger quality-win separation, bounded head-to-head resolution for close teams with comparable overall records, and a meaningful penalty for narrow FCS escapes. From Week 0 until national FBS game evidence becomes sufficiently broad, *published Merit ranks are provisional*: one or two early games cannot establish a credible national #1.
+
+**Power Index:** a predictive neutral-field point-strength model built from the opponent network and preseason talent/returning-production inputs. The prior now fades according to opponent-adjusted **effective FBS games** rather than an abrupt calendar-game counter. A conservatively shrunken cross-conference calibration is fitted using **2024 game results** and applied after teams begin playing current-season FBS competition. It is an explicitly disclosed learned conference-based term, not an arbitrary Power Four label-based boost; sparse/reorganized league categories are excluded.
+
+V5.5 reconstructed pre-week predictions improved modestly relative to frozen V5.4 on the identical games: 2025 **556/762 → 558/762 (73.2%)**, 2026 through Week 10 **397/562 → 398/562 (70.8%)**; Brier, log loss, and point-margin error also improved slightly in both periods. **These years have informed development and are not untouched prospective validation samples.** The current challenge remains to test future outcomes on saved, source-frozen pregame ratings.
+
+## Secondary metric: CFMI Matchup Score
 
 CFMI now distinguishes three purposes: **Merit (earned résumé), Power (neutral-field team strength), and Matchup Score (specific-game win likelihood)**. The third metric does **not** re-rank schools or alter either Merit or Power.
 
@@ -17,7 +25,7 @@ The **Matchups** tab now has **Season (2025/2026)** and **Prediction week** sele
 
 The live builder also publishes a detailed game-by-game 2025 and 2026 prediction ledger, plus a **matched-game** rating-derived comparison to ESPN FPI, SP+ and FEI (where genuinely pregame weekly ratings can be verified), and error analysis. External metrics are **comparison benchmarks only**; they are not inputs to CFMI Power or Merit. Missing historical snapshots are shown as unavailable, never silently backfilled with end-of-season ratings.
 
-**Current reconstructed CFMI Power winner accuracy**: 2025 full regular season **556/762 = 73.0%**, 2026 through Week 10 **397/562 = 70.6%**. Those are current-model retrospective reconstructions, not saved historic publication-time picks; 2025 was part of model selection and must not be called an untouched blind test.
+**Current reconstructed CFMI Power winner accuracy**: 2025 full regular season **558/762 = 73.2%**, 2026 through Week 10 **398/562 = 70.8%**. Those are current-model retrospective reconstructions, not saved historic publication-time picks; 2025 was part of model selection and must not be called an untouched blind test.
 
 In the **2026 same 562 games** ESPN FPI and FEI each got 407 (72.4%) and SP+ got 409 (72.8%). CFMI remains slightly behind the top competitors in this sample. See [2025–2026 winner prediction research and model-error analysis](docs/CFMI_2025_2026_prediction_accuracy_and_model_errors.md).
 
@@ -27,7 +35,7 @@ The **Preseason** tab includes independent **Week 0 Power rankings for all 138 F
 
 The points-scale Power prior combines measured current-roster talent and blue-chip mix, previous-season opponent-adjusted on-field results, returning offense/defense production and net transfer talent. We deliberately do not assign hidden points for P4 membership, preseason polls or school reputation. A complete 2026 source covers **137/138** FBS talent composites and **138/138** returning-production/portal records; the single missing roster talent value uses explicitly flagged lower-quartile **FBS** imputation. All source files are retained with year-specific hashes and lineage.
 
-Preseason prior weight after **0/1/2/3/4/5+ completed FBS games** is **100%/55%/35%/20%/8%/0%**, respectively. Once five FBS games have been completed, the model is identical to the current-season V5.2 opponent-network Power rating. **Merit remains unchanged** (55% earned record, 25% quality/road wins, 20% adjusted margin).
+Preseason prior weight follows the **100%/55%/35%/20%/8%/0%** curve at **0/1/2/3/4/5 effective FBS games**. Effective evidence gives each completed FBS contest 0.85–1.00 games, scaled using the opponent’s current-season on-field strength. The prior is zero after sufficient evidence (all teams with six or more FBS games). Merit remains achievement-based, with 55% record, 25% quality/road wins, 20% adjusted margin, plus bounded head-to-head and FCS performance adjustments.
 
 In 2026 reconstructed same-week evaluation, the early-game (Weeks 1–4) winner accuracy improved **159/215 → 169/215**; all Weeks 1–10 **386/562 → 396/562**. Historical season-specific data sources can contain retrospective revisions; the source release timestamps are not verified original preseason snapshots, and 2026 observations motivated the design. These figures are **research evidence, not independently preregistered prospective proof**.
 
@@ -39,11 +47,11 @@ See [full results, data lineage, imputation and simulator caveats](docs/CFMI_V5_
 
 ## V5.2 opponent-strength correction
 
-**Power is now estimated relative to the quality of actual played opponents at every stage**, without giving a boost to the SEC, Big Ten or any other conference by name.
+**Power estimates strength from actually played opponents**, now including a small explicit cross-conference scoring residual learned from prior-season outcomes. The historically estimated correction can benefit or penalize a conference group; it is disclosed and never set by school reputation or a hand-picked target ranking.
 
-The new Power engine simultaneously estimates team offense and defense versus opponents across the completed-game graph for EPA/PPA, successful plays and explosive gains; high performance against weak defenses is no longer treated as equivalent to the same performance against strong defenses. Additional schedule-support corrections are only accepted when historical future-game validation supports them. Narrow FCS wins add cautious negative evidence; blowing out FCS opponents cannot generate extra Power points. Merit remains unchanged (55% record, 25% quality/road victories, 20% adjusted FBS margins).
+The new Power engine simultaneously estimates team offense and defense versus opponents across the completed-game graph for EPA/PPA, successful plays and explosive gains; high performance against weak defenses is no longer treated as equivalent to the same performance against strong defenses. Additional schedule-support corrections are only accepted when historical future-game validation supports them. Narrow FCS wins add cautious negative evidence; blowing out FCS opponents cannot generate extra Power points. Merit separately adds head-to-head and bounded FCS-performance adjustments to its 55/25/20 baseline.
 
-The team Power breakdown exposes individual point contributions for opponent baseline, jointly adjusted EPA/success/explosiveness, schedule strength, uncertainty from a weak schedule and underwhelming FCS results.
+The team Power breakdown exposes active point contributions from the baseline, jointly adjusted EPA/success/explosiveness, schedule strength, weak-schedule uncertainty, FCS evidence, the fading preseason prior and the small empirical cross-conference environment adjustment.
 
 **Benchmark limitations:** 2025 comparisons are from a reused model-selection season; 2026 is out of coefficient training. Differences in predictive accuracy are small. This upgrade is *not* a claim that CFMI now outpredicts FPI, SP+ or FEI, nor does it force Power Four schools above independently strong non-P4 teams.
 
@@ -59,7 +67,7 @@ The team Power breakdown exposes individual point contributions for opponent bas
 
 **Key philosophy:** a win against a strong opponent earns more than a weak win. Winning at a strong opponent's stadium is especially impressive. A convincing victory over a high-quality opponent matters. A close loss against an elite team is still a loss, but opponent-adjusted margins acknowledge that team's performance without granting quality-win credit.
 
-The quality/road component intentionally gives an *additional achievement bonus* beyond wins-above-benchmark. That is a transparent normative preference, not an assertion that schedule difficulty can be statistically disentangled perfectly into nonoverlapping components. The total Merit remains wins-first. For technical details, see `site/model_v5.js`.
+The quality/road component intentionally gives an *additional achievement bonus* beyond wins-above-benchmark. That is a transparent normative preference, not an assertion that schedule difficulty can be statistically disentangled perfectly into nonoverlapping components. The total Merit remains wins-first. Direct FBS wins resolve only closely rated, comparably accomplished résumés (not every upset); narrow FCS outcomes subtract bounded performance points. Technical details: `site/model_v5.js`.
 
 ## Power — the team most likely to win a future matchup
 

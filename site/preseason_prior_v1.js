@@ -24,16 +24,29 @@ const MODEL_PRESEASON_V53={
  apply(teams){
   if(!this.enabled)return;
   const scoreMult=typeof MODEL_V5!=='undefined'?MODEL_V5.powerScale.indexPointsPerExpectedMarginPoint:1.6;
+  const baseByTeam=new Map(teams.map(t=>[t.name,Number.isFinite(t.powerPoints)?t.powerPoints:0]));
   for(const t of teams){
     const r=this.data.teams[t.name];
     if(!r)continue;
-    const weight=this.weight(t.fbsGames);
-    const base=Number.isFinite(t.powerPoints)?t.powerPoints:0;
+    // Use opponent strength and observed FBS game count, never conference labels.
+    // Minimum 0.85 effective games keeps weak-opponent evidence informative.
+    const effectiveGames=(t.fbsG||[]).reduce((total,g)=>{
+      const strength=baseByTeam.get(g.op);
+      const x=Number.isFinite(strength)?strength:0;
+      const quality=1/(1+Math.exp(-Math.max(-30,Math.min(30,x/6))));
+      return total+0.85+0.15*quality;
+    },0);
+    const weights=this.data.decayByCompletedFbsGames;
+    const idx=Math.min(weights.length-1,Math.floor(effectiveGames));
+    const fraction=Math.max(0,Math.min(1,effectiveGames-idx));
+    const weight=weights[idx]*(1-fraction)+weights[Math.min(weights.length-1,idx+1)]*fraction;
+    const base=baseByTeam.get(t.name);
     const change=weight*(r.priorPoints-base);
     t.powerPoints=base+change;
     t.powerScore=Math.max(0,Math.min(100,50+scoreMult*t.powerPoints));
     t.preseasonPriorPoints=r.priorPoints;
     t.preseasonPriorWeight=weight;
+    t.preseasonEffectiveGames=effectiveGames;
     t.preseasonTalentIndex=r.talentIndex;
     t.preseasonTalentRank=r.talentRank;
     t.preseasonRosterCoverage=r.sourceCoverage;

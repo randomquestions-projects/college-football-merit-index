@@ -108,14 +108,14 @@ const body=prelude+[
 "return {gameCount:games.length,coverage:{measured:state.advCovered,eligible:state.advExpected,full:state.fullModel},",
 "teams:teams.map(t=>({name:t.name,rank:t.rank,merit:t.score,power:t.powerScore,",
 "powerPoints:t.powerPoints,powerRank:t.powerRank,won:t.won,lost:t.lost,wab:t.wab,",
-"residual:t.meritQualityResidual,meritRecord:t.meritRecordScore,meritQuality:t.meritQualityScore,meritControl:t.meritControlScore,powerComponentTotal:Object.values(t.powerContributionPoints).reduce((z,v)=>z+v,0),",
+"residual:t.meritQualityResidual,meritRecord:t.meritRecordScore,meritQuality:t.meritQualityScore,meritControl:t.meritControlScore,h2h:t.meritHeadToHeadAdjustment,fcs:t.meritFcsPerformancePenalty,meritProvisional:t.meritProvisional,meritPublishedRank:t.meritPublishedRank,effectiveGames:t.preseasonEffectiveGames,conferenceContext:t.powerConferenceCalibration,powerComponentTotal:Object.values(t.powerContributionPoints).reduce((z,v)=>z+v,0),",
 "advanced:t.advCoreGames,fbsGames:t.fbsGames,priorWeight:t.preseasonPriorWeight||0,mode:t.powerMode||'reference'})),version:MODEL_V5.version};"
 ].join('\n');
 const compute=new Function('scores','advCsv','parameters','cutoff','prior',model+'\n'+body);
 const csv=fs.readFileSync(path.join(data,'cfb_schedules_2026.csv'),'utf8');
 const adv=fs.readFileSync(path.join(data,'cfmi_advanced_2026.csv'),'utf8');
 const latest=compute(csv,adv,doc,Date.now(),prior);
-assert.equal(latest.version,'5.2.0');
+assert.equal(latest.version,'5.5.0');
 assert(latest.gameCount>=300,'Expected substantial 2026 games');
 assert(latest.teams.length>=130,'Expected complete FBS coverage');
 assert(latest.coverage.eligible>=300,'Missing advanced data eligibility');
@@ -125,7 +125,7 @@ assert(latest.teams.every(t=>Number.isFinite(t.merit)&&t.merit>=0&&t.merit<=100
  'Invalid Merit, Power, coverage or ranks');
 // Merit exactly follows the published earned-resume contribution weights.
 for(const t of latest.teams){
- const scored=.55*t.meritRecord+.25*t.meritQuality+.20*t.meritControl;
+ const scored=.55*t.meritRecord+.25*t.meritQuality+.20*t.meritControl+(t.h2h||0)+(t.fcs||0);
  assert(Math.abs(scored-t.merit)<1e-8,'Merit formula mismatch '+t.name);
  assert(Math.abs(t.powerComponentTotal-t.powerPoints)<1e-8,'Power component total mismatch '+t.name);
 }
@@ -157,6 +157,16 @@ if(example){
  }
 }
 
+
+// Reconstructed score algebra and rank publication invariants.
+for(const t of latest.teams){
+ if(t.meritProvisional)assert(t.meritPublishedRank===null,'Insufficient résumé cannot receive a published national rank');
+ else assert.equal(t.meritPublishedRank,t.rank);
+ assert(Number.isFinite(t.conferenceContext)&&Math.abs(t.conferenceContext)<=3,
+   'Historical conference-context correction must be bounded');
+ if(t.fbsGames===0)assert.equal(t.conferenceContext,0,'No preseason conference context');
+}
+
 for(const key of ['rank','powerRank']){
  const ranks=latest.teams.map(t=>t[key]).sort((a,b)=>a-b);
  assert.deepEqual(ranks,Array.from({length:latest.teams.length},(_,i)=>i+1),'Invalid ranking sequence: '+key);
@@ -170,9 +180,13 @@ assert.equal(history.season,2026);
 assert.equal(history.history[0].week,0,'Week 0 preseason snapshot missing');
 const zero=history.history[0];
 assert.equal(zero.gameCount,0);
+assert(zero.teams.every(t=>t.meritPublishedRank===null),'Week 0 must not imply earned Merit ranking');
+const first=history.history.find(w=>w.week===1);
+assert(first&&first.teams.every(t=>t.meritPublishedRank===null&&t.meritProvisional),
+ 'Week 1 national Merit ranks are necessarily provisional');
 const zeroRecomputed=compute(csv,adv,doc,Date.parse(zero.cutoffUtc),prior);
 assert(zeroRecomputed.teams.every(t=>t.priorWeight===1),'Week 0 ratings must be all preseason prior');
-assert(latest.teams.every(t=>t.priorWeight===0),'Week 10 must be entirely current-season evidence');
+assert(latest.teams.filter(t=>t.fbsGames>=6).every(t=>t.priorWeight===0),'Teams with at least six FBS games must be fully on-field');
 let previous=-1;
 for(const snapshot of history.history){
  assert(snapshot.gameCount>=previous,'Game counts must not decrease');
@@ -198,7 +212,7 @@ for(const game of history.upcoming.games||[]){
  }else assert.equal(game.homeWinProbability,null);
 }
 const output={
- modelVersion:'5.2.0',generatedAtUtc:new Date().toISOString(),
+ modelVersion:'5.5.0',generatedAtUtc:new Date().toISOString(),
  provenance:{trainSeason:doc.trainSeason,validationSeason:doc.validationSeason,
   selected:doc.deployedCandidate,validation:doc.validation},
  coverage:latest.coverage,totalGames:latest.gameCount,teamCount:latest.teams.length,

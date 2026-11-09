@@ -108,8 +108,8 @@ const gameRecord=(g,home,away,priorWeekCutoff,matchup)=>{
   home:home.name,away:away.name,neutral,venue:g.venue||null,
   homePowerIndex:home.powerScore,awayPowerIndex:away.powerScore,
   homePowerRank:home.powerRank,awayPowerRank:away.powerRank,
-  homeMeritRank:Number(g.week)===1?null:home.rank,
-  awayMeritRank:Number(g.week)===1?null:away.rank,
+  homeMeritRank:home.meritPublishedRank??null,
+  awayMeritRank:away.meritPublishedRank??null,
   homeMerit:Number(g.week)===1?null:home.score,
   awayMerit:Number(g.week)===1?null:away.score,
   homeRecord:home.won+'–'+home.lost,awayRecord:away.won+'–'+away.lost,
@@ -146,7 +146,7 @@ function aggregate(games){
  return {played:n,correct:wins,incorrect:n-wins,accuracy:n?wins/n:null,
   unplayed:games.length-n,scheduled:games.length,brier,logLoss,marginMAE:mae};
 }
-const output={version:'CFMI V5.4 game-specific matchup ledger v1',
+const output={version:'CFMI V5.5 Merit-Power calibrated matchup ledger v1',
  matchupModel:matchupParameters?.deployCandidate?'historically_selected_matchup_interactions':'power_plus_venue_only',
  generatedAtUtc:new Date().toISOString(),
  trainingSeasons:[2024],selectionSeasons:[2025],

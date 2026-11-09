@@ -5,6 +5,7 @@
 const CFMI_POWER_UI = Object.freeze({
   names: Object.freeze({
     baseline:'Opponent-adjusted scoring baseline',
+    conferenceContext:'Historically fitted cross-schedule calibration',
     preseasonPriorAdjustment:'Early-season talent / continuity prior',
     epa:'Joint opponent-adjusted EPA',
     success:'Joint opponent-adjusted success',
@@ -38,8 +39,8 @@ const CFMI_POWER_UI = Object.freeze({
   prior(team,fmt){
     const weight=team.preseasonPriorWeight;
     if(!Number.isFinite(weight))return '<p class="note">Preseason-prior contribution unavailable for this snapshot. Coaching continuity is not included in the scoring model.</p>';
-    if(weight===0)return '<p class="note"><strong>Preseason prior:</strong> 0% after at least five completed FBS games. Current Power is based entirely on the on-field model. <strong>Coaching changes:</strong> not yet a verified input.</p>';
-    return '<p class="note"><strong>Preseason prior:</strong> '+fmt(weight*100,0)+'% of Power after '+(team.fbsGames||0)+' completed FBS games. '+
+    if(weight===0)return '<p class="note"><strong>Preseason prior:</strong> 0% after sufficient opponent-adjusted FBS evidence. Current Power is based on the on-field model and historical interconference calibration. <strong>Coaching changes:</strong> not yet a verified input.</p>';
+    return '<p class="note"><strong>Preseason prior:</strong> '+fmt(weight*100,0)+'% of Power after '+(team.fbsGames||0)+' FBS games (effective evidence: '+(Number.isFinite(team.preseasonEffectiveGames)?fmt(team.preseasonEffectiveGames,2):'not measured')+'). '+
       'Prior strength: '+(Number.isFinite(team.preseasonPriorPoints)?fmt(team.preseasonPriorPoints,2)+' neutral points':'unavailable')+
       '; returning production: '+(Number.isFinite(team.preseasonReturningProduction)?fmt(team.preseasonReturningProduction*100,0)+'%':'unverified')+
       '; transfer percentile: '+(Number.isFinite(team.preseasonTransferPercentile)?fmt(team.preseasonTransferPercentile*100,0)+'th':'unverified')+

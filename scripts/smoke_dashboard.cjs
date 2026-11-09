@@ -28,7 +28,7 @@ async function waitForServer(){
   const names=await page.locator("#body tr[data-team]").allTextContents();
   assert(names.length>=25,"Expected populated Top 50");
   const model=await page.evaluate(()=>({version:MODEL_V5.version,parameters:MODEL_V5.params.source,teamCount:state.teams.length,active:state.fullModel,score:state.teams[0].score,powerScore:state.teams[0].powerScore,powerRank:state.teams[0].powerRank,coreCount:state.advCovered,expected:state.advExpected}));
-  assert(model.version==="5.2.0"&&model.teamCount>=130,"Dual Merit/Power model did not run");
+  assert(model.version==="5.5.0"&&model.teamCount>=130,"Dual Merit/Power model did not run");
   assert(Number.isFinite(model.score)&&Number.isFinite(model.powerScore)&&model.active,"Merit/Power scores not populated");
   await page.locator('#rankingLens [data-lens="power"]').click();
   const powerView=await page.evaluate(()=>({
@@ -115,6 +115,14 @@ async function waitForServer(){
   assert(dates>=6,"Not enough historical weekly snapshots");
   const firstOption=await page.locator("#historyWeek option").first().getAttribute("value");
   assert.equal(firstOption,"0","Preseason Week 0 missing from historical snapshot picker");
+  await page.locator("#historyWeek").selectOption('1');
+  const earlyHistory=await page.evaluate(()=>({
+    html:document.querySelector('#historyMeritTrend')?.textContent||'',
+    note:document.querySelector('#historyMeritTitle')?.textContent||'',
+    falseArrows:document.querySelectorAll('#historyMeritTrend .positive, #historyMeritTrend .negative').length
+  }));
+  assert(earlyHistory.note.includes('Provisional')&&earlyHistory.html.includes('Provisional')&&earlyHistory.falseArrows===0,
+    "Early season Merit must not publish unsupported ranks or Week 0 deltas");
   await page.locator("#historyWeek").selectOption(firstOption);
   assert.equal(await page.locator("#historyPowerTrend tr").count(),25,"Week0 preseason Power Top25 unavailable");
   assert.equal(await page.locator("#historyMeritTrend tr").count(),0,"Week0 must not pretend teams earned Merit without any games");
@@ -128,7 +136,7 @@ async function waitForServer(){
   const priorStatus=await page.evaluate(()=>({enabled:MODEL_PRESEASON_V53.enabled,
      teams:Object.keys(MODEL_PRESEASON_V53.data?.teams||{}).length,
      champ:preseasonView.forecast?.contenders?.[0]?.team,
-     latestZero:state.teams.every(t=>t.preseasonPriorWeight===0)}));
+     latestZero:state.teams.filter(t=>t.fbsGames>=6).every(t=>t.preseasonPriorWeight===0)}));
   assert(priorStatus.enabled&&priorStatus.teams>=135&&priorStatus.champ&&priorStatus.latestZero,
      "Preseason prior must be loaded and decay completely by the current week");
   await page.locator('#pageSwitch [data-page="matchups"]').click();
@@ -178,7 +186,7 @@ async function waitForServer(){
   assert((await page.locator("#matchupSummary").innerText()).includes("year-to-date"),"Current week YTD did not restore");
   await page.waitForFunction(()=>Boolean(weeklyView.industryBenchmark),{timeout:35000});
   const external=await page.locator("#matchupIndustryBenchmark").innerText();
-  assert(external.includes("CFMI V5.3")&&external.includes("SP+")&&external.includes("FEI"),
+  assert(external.includes("CFMI")&&external.includes("SP+")&&external.includes("FEI"),
     "Matched industry scorecard missing");
 
   const schedules=await page.evaluate(()=>weeklyView.data?.upcoming?.games?.length||0);
