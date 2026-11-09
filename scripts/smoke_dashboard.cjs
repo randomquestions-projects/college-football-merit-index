@@ -62,7 +62,7 @@ async function waitForServer(){
     purpose.includes('Two questions. Two independent answers.') &&
     purpose.includes('Matchup Predictor'),
     "Public purpose does not clearly distinguish Merit, Power and secondary matchups");
-  assert(!/V4\\.1|V5\\.5|55% \/ 25%|how to recreate|Historical held-out check|SRS\\(team\\)/.test(purpose),
+  assert(!/V4\.1|V5\.5|55% \/ 25%|how to recreate|Historical held-out check|SRS\(team\)/.test(purpose),
     "Detailed model/version implementation leaked into public purpose page");
   assert(model.coreCount/model.expected>=.70,"Core EPA coverage below required threshold");
   await page.locator('#pageSwitch [data-page="resume"]').click();
