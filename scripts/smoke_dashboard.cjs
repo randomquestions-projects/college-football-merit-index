@@ -111,6 +111,43 @@ async function waitForServer(){
   assert(priorStatus.enabled&&priorStatus.teams>=135&&priorStatus.champ&&priorStatus.latestZero,
      "Preseason prior must be loaded and decay completely by the current week");
   await page.locator('#pageSwitch [data-page="matchups"]').click();
+  await page.waitForFunction(()=>Boolean(weeklyView.predictionLedger?.seasons?.["2025"]?.weeks?.length &&
+    weeklyView.predictionLedger?.seasons?.["2026"]?.weeks?.length),{timeout:45000});
+  const yearEnd=await page.evaluate(()=>({
+    y2025:weeklyView.predictionLedger.seasons["2025"].overall,
+    y2026:weeklyView.predictionLedger.seasons["2026"].overall,
+    currentYtd:document.querySelector("#matchupSummary")?.textContent
+  }));
+  assert(yearEnd.y2025.played>400&&yearEnd.y2026.played>300,"Both seasons must have a complete pregame matchup scorecard");
+  assert(yearEnd.currentYtd.includes("year-to-date"),"Current matchups must display a YTD performance record");
+  await page.locator("#matchupSeason").selectOption("2025");
+  const week=await page.locator("#matchupWeek option").first().getAttribute("value");
+  await page.locator("#matchupWeek").selectOption(week);
+  await page.locator("#matchupGrid [data-matchup]").first().waitFor();
+  const historic=await page.evaluate(()=>({
+    title:document.querySelector("#matchupsTitle")?.textContent,
+    summary:document.querySelector("#matchupSummary")?.textContent,
+    games:weeklyView.visibleMatchups,
+    stats:weeklyView.predictionLedger.seasons["2025"].weeks.find(w=>String(w.week)===String(weeklyView.matchWeek)).summary
+  }));
+  assert(historic.title.includes("2025")&&historic.summary.includes("YTD"),"Historical Matchups week picker/YTD failed");
+  assert(historic.games.every(g=>g.asOfUtc&&new Date(g.asOfUtc)<new Date(g.kickoffUtc)),
+    "Historical matchup uses future game info");
+  assert(historic.games.filter(g=>g.finished).every(g=>typeof g.correct==="boolean"),
+    "Actual winner comparisons missing");
+  await page.locator("#matchupGrid [data-matchup]").first().click();
+  await page.locator("#matchupDialog.open").waitFor();
+  assert((await page.locator("#matchupDetail").innerText()).includes("Final result"),
+    "Historical matchup drilldown must include the prediction outcome");
+  await page.locator("#matchupClose").click();
+  await page.locator("#matchupSeason").selectOption("2026");
+  await page.locator("#matchupWeek").selectOption("current");
+  assert((await page.locator("#matchupSummary").innerText()).includes("year-to-date"),"Current week YTD did not restore");
+  await page.waitForFunction(()=>Boolean(weeklyView.industryBenchmark),{timeout:35000});
+  const external=await page.locator("#matchupIndustryBenchmark").innerText();
+  assert(external.includes("CFMI V5.3")&&external.includes("SP+")&&external.includes("FEI"),
+    "Matched industry scorecard missing");
+
   const schedules=await page.evaluate(()=>weeklyView.data?.upcoming?.games?.length||0);
   if(schedules){
     await page.locator("#matchupGrid [data-matchup]").first().click();
