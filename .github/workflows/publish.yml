@@ -72,6 +72,10 @@ jobs:
         run: node scripts/test_talent_prior.cjs
       - name: Validate full FBS talent returning and portal preseason Power candidates
         run: node scripts/test_full_preseason_prior.cjs
+      - name: Create Week0 all-FBS talent and continuity Power ratings
+        run: node scripts/build_preseason_week0.cjs
+      - name: Simulate exploratory 2026 preseason playoff and championship outlook
+        run: node scripts/build_preseason_playoff_forecast.cjs
       - name: Reconstruct weekly V5 history and upcoming matchup predictions
         run: node scripts/build_weekly_views.cjs
       - name: Audit V5 model, weekly data quality and season cutoff invariants
