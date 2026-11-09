@@ -1,0 +1,21 @@
+name: Research 2026 historical moneyline coverage
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'scripts/calculate_moneyline_roi_2026.py'
+      - '.github/workflows/odds_research.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run actual pre-kickoff moneyline ROI on verifiable matched games
+        run: python scripts/calculate_moneyline_roi_2026.py
