@@ -85,7 +85,7 @@ function fitRidge(games,lambda){
     numerator+=xx[i][j]*partial;
     denominator+=xx[i][j]**2;
    }
-   const value=clamp(numerator/Math.max(denominator,1),-2,2);
+   const value=clamp(numerator/Math.max(denominator,0.0001),-4,4);
    difference=Math.max(difference,Math.abs(coef[j]-value));coef[j]=value;
   }
   if(difference<1e-8)break;
@@ -117,9 +117,9 @@ function calc(games,coef){
 }
 const zero=Array(keys.length).fill(0);
 const candidates=[];
-for(const lambda of [80,250,600,1200]){
+for(const lambda of [.2,1,5,20,80,250,600]){
  const fitted=fitRidge(rows[2024],lambda);
- for(const multiplier of [.25,.5,.75,1]){
+ for(const multiplier of [.25,.5,1]){
   const coefficients=fitted.map(x=>x*multiplier);
   candidates.push({lambda,multiplier,coefficients,
    fit2024:calc(rows[2024],coefficients),
