@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* CFMI V5 six-tab browser smoke test and fully populated public snapshot. */
+/* CFMI V5.3 seven-tab browser smoke test with preseason + live rankings. */
 "use strict";
 const {spawn}=require("child_process");
 const http=require("http");
@@ -93,8 +93,23 @@ async function waitForServer(){
   const dates=await page.locator("#historyWeek option").count();
   assert(dates>=6,"Not enough historical weekly snapshots");
   const firstOption=await page.locator("#historyWeek option").first().getAttribute("value");
+  assert.equal(firstOption,"0","Preseason Week 0 missing from historical snapshot picker");
   await page.locator("#historyWeek").selectOption(firstOption);
+  assert.equal(await page.locator("#historyPowerTrend tr").count(),25,"Week0 preseason Power Top25 unavailable");
+  assert.equal(await page.locator("#historyMeritTrend tr").count(),0,"Week0 must not pretend teams earned Merit without any games");
   assert((await page.locator("#historyDetailed tr").count())>=130,"Historical all-FBS drilldown incomplete");
+  await page.locator('#pageSwitch [data-page="preseason"]').click();
+  await page.locator("#preseasonTable tr").first().waitFor({timeout:15000});
+  assert.equal(await page.locator("#preseasonTable tr").count(),25,"Preseason Power Top 25 missing");
+  await page.locator("#preseasonCount").selectOption("138");
+  assert((await page.locator("#preseasonTable tr").count())>=135,"All-FBS preseason power missing");
+  assert((await page.locator("#preseasonPlayoffTable tr").count())>=10,"Preseason playoff and title simulation missing");
+  const priorStatus=await page.evaluate(()=>({enabled:MODEL_PRESEASON_V53.enabled,
+     teams:Object.keys(MODEL_PRESEASON_V53.data?.teams||{}).length,
+     champ:preseasonView.forecast?.contenders?.[0]?.team,
+     latestZero:state.teams.every(t=>t.preseasonPriorWeight===0)}));
+  assert(priorStatus.enabled&&priorStatus.teams>=135&&priorStatus.champ&&priorStatus.latestZero,
+     "Preseason prior must be loaded and decay completely by the current week");
   await page.locator('#pageSwitch [data-page="matchups"]').click();
   const schedules=await page.evaluate(()=>weeklyView.data?.upcoming?.games?.length||0);
   if(schedules){

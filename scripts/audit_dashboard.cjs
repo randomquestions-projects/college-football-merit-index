@@ -8,9 +8,18 @@ if(!m)throw Error('Missing inline calculation engine');
 const boundary=m[1].indexOf('const submetric=');
 if(boundary<10000)throw Error('Invalid engine boundary');
 const prelude=m[1].slice(0,boundary);
-const model=fs.readFileSync(path.join(base,'model_v4.js'),'utf8')+'\n'+fs.readFileSync(path.join(base,'opponent_network_research.js'),'utf8')+'\n'+fs.readFileSync(path.join(base,'model_v5.js'),'utf8');
+const model=fs.readFileSync(path.join(base,'model_v4.js'),'utf8')+'\n'+fs.readFileSync(path.join(base,'opponent_network_research.js'),'utf8')+'\n'+fs.readFileSync(path.join(base,'model_v5.js'),'utf8')+'\n'+fs.readFileSync(path.join(base,'preseason_prior_v1.js'),'utf8');
 const doc=JSON.parse(fs.readFileSync(path.join(data,'model_v5_params.json'),'utf8'));
 const history=JSON.parse(fs.readFileSync(path.join(data,'weekly_views_2026.json'),'utf8'));
+const prior=JSON.parse(fs.readFileSync(path.join(data,'preseason_prior_2026.json'),'utf8'));
+const projection=JSON.parse(fs.readFileSync(path.join(data,'preseason_playoff_forecast_2026.json'),'utf8'));
+const priorEvaluation=JSON.parse(fs.readFileSync(path.join(data,'research_full_preseason_backtest.json'),'utf8'));
+assert.equal(prior.season,2026);assert.equal(prior.version,'5.3-research-v1');
+assert.equal(projection.season,2026);assert(projection.trials>=1000);
+assert(Object.keys(prior.teams).length>=135);
+assert(Math.abs(projection.teams.reduce((z,t)=>z+t.championPct,0)-100)<0.0001,'Title probabilities must add to 100%');
+assert(projection.teams.every(t=>Number.isFinite(t.playoffPct)&&t.playoffPct>=0&&t.playoffPct<=100));
+assert(priorEvaluation.coverage[2026].talent>=135);
 assert.equal(doc.version,'5.2.0');
 assert.deepEqual(doc.parameters.trainedOn,[2024]);
 assert.deepEqual(doc.parameters.validatedOn,[2025]);
@@ -24,6 +33,7 @@ if(doc.parameters.mode==='joint_opponent_network'){
 assert(doc.parameters.finishing>=0&&doc.parameters.consistency>=0&&doc.parameters.offense>=0&&doc.parameters.defense>=0);
 const body=prelude+[
 "if(!MODEL_V5.setParameters(parameters))throw Error('Model parameters invalid');",
+"if(!MODEL_PRESEASON_V53.load(prior))throw Error('Preseason prior invalid');",
 "const records=csvParse(scores),advanced=csvParse(advCsv);",
 "const {teams,games}=computeV5(records,cutoff,2026);",
 "state.raw=records;attachEfficiencyV5(teams,advanced);",
@@ -31,12 +41,12 @@ const body=prelude+[
 "teams:teams.map(t=>({name:t.name,rank:t.rank,merit:t.score,power:t.powerScore,",
 "powerPoints:t.powerPoints,powerRank:t.powerRank,won:t.won,lost:t.lost,wab:t.wab,",
 "residual:t.meritQualityResidual,meritRecord:t.meritRecordScore,meritQuality:t.meritQualityScore,meritControl:t.meritControlScore,powerComponentTotal:Object.values(t.powerContributionPoints).reduce((z,v)=>z+v,0),",
-"advanced:t.advCoreGames,fbsGames:t.fbsGames,mode:t.powerMode||'reference'})),version:MODEL_V5.version};"
+"advanced:t.advCoreGames,fbsGames:t.fbsGames,priorWeight:t.preseasonPriorWeight||0,mode:t.powerMode||'reference'})),version:MODEL_V5.version};"
 ].join('\n');
-const compute=new Function('scores','advCsv','parameters','cutoff',model+'\n'+body);
+const compute=new Function('scores','advCsv','parameters','cutoff','prior',model+'\n'+body);
 const csv=fs.readFileSync(path.join(data,'cfb_schedules_2026.csv'),'utf8');
 const adv=fs.readFileSync(path.join(data,'cfmi_advanced_2026.csv'),'utf8');
-const latest=compute(csv,adv,doc,Date.now());
+const latest=compute(csv,adv,doc,Date.now(),prior);
 assert.equal(latest.version,'5.2.0');
 assert(latest.gameCount>=300,'Expected substantial 2026 games');
 assert(latest.teams.length>=130,'Expected complete FBS coverage');
@@ -71,7 +81,7 @@ if(example){
  game[field]=String(Number(game[field])+60);
  const headings=Object.keys(adjusted[0]),quote=x=>'"'+String(x??'').replaceAll('"','""')+'"';
  const modified=headings.map(quote).join(',')+'\n'+adjusted.map(r=>headings.map(h=>quote(r[h])).join(',')).join('\n')+'\n';
- const distorted=compute(modified,adv,doc,Date.now());
+ const distorted=compute(modified,adv,doc,Date.now(),prior);
  for(const t of latest.teams){
   const other=distorted.teams.find(x=>x.name===t.name);
   assert(other&&Math.abs(other.merit-t.merit)<1e-8&&Math.abs(other.powerPoints-t.powerPoints)<1e-8,
@@ -89,6 +99,12 @@ for(const [key,rank] of [['merit','rank'],['power','powerRank']]){
 }
 assert(Array.isArray(history.history)&&history.history.length>=6,'Weekly snapshots missing');
 assert.equal(history.season,2026);
+assert.equal(history.history[0].week,0,'Week 0 preseason snapshot missing');
+const zero=history.history[0];
+assert.equal(zero.gameCount,0);
+const zeroRecomputed=compute(csv,adv,doc,Date.parse(zero.cutoffUtc),prior);
+assert(zeroRecomputed.teams.every(t=>t.priorWeight===1),'Week 0 ratings must be all preseason prior');
+assert(latest.teams.every(t=>t.priorWeight===0),'Week 10 must be entirely current-season evidence');
 let previous=-1;
 for(const snapshot of history.history){
  assert(snapshot.gameCount>=previous,'Game counts must not decrease');
@@ -97,7 +113,7 @@ for(const snapshot of history.history){
  assert(snapshot.teams.every(t=>Number.isFinite(t.score)&&Number.isFinite(t.powerScore)
   &&t.rank>=1&&t.powerRank>=1&&t.rank<=snapshot.teams.length
   &&t.powerRank<=snapshot.teams.length),'History has invalid rank/score');
- const recomputed=compute(csv,adv,doc,Date.parse(snapshot.cutoffUtc));
+ const recomputed=compute(csv,adv,doc,Date.parse(snapshot.cutoffUtc),prior);
  for(const name of ['Georgia','Alabama','Utah']){
   const t=snapshot.teams.find(x=>x.name===name),a=recomputed.teams.find(x=>x.name===name);
   if(t)assert(a&&a.won===t.won&&a.lost===t.lost&&a.rank===t.rank&&a.powerRank===t.powerRank,

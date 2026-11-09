@@ -16,17 +16,18 @@ if(!inline)throw Error('Missing CFMI inline model prelude');
 const boundary=inline[1].indexOf('const submetric=');
 if(boundary<10000)throw Error('CFMI engine prelude moved: update build_weekly_views.cjs');
 const prelude=inline[1].slice(0,boundary);
-const model=fs.readFileSync(path.join(root,'model_v4.js'),'utf8')+'\n'+fs.readFileSync(path.join(root,'opponent_network_research.js'),'utf8')+'\n'+fs.readFileSync(path.join(root,'model_v5.js'),'utf8');
+const model=fs.readFileSync(path.join(root,'model_v4.js'),'utf8')+'\n'+fs.readFileSync(path.join(root,'opponent_network_research.js'),'utf8')+'\n'+fs.readFileSync(path.join(root,'model_v5.js'),'utf8')+'\n'+fs.readFileSync(path.join(root,'preseason_prior_v1.js'),'utf8');
 const parameters=JSON.parse(fs.readFileSync(path.join(root,'data','model_v5_params.json'),'utf8'));
+const prior=JSON.parse(fs.readFileSync(path.join(root,'data','preseason_prior_2026.json'),'utf8'));
 
 const schedule=fs.readFileSync(path.join(root,'data','cfb_schedules_2026.csv'),'utf8');
 const advanced=fs.readFileSync(path.join(root,'data','cfmi_advanced_2026.csv'),'utf8');
 const csvParse=new Function('csv',prelude+'return csvParse(csv)');
 const rows=csvParse(schedule),advRows=csvParse(advanced);
 if(rows.length<300||advRows.length<200)throw Error('Unacceptably incomplete 2026 data');
-const compute=new Function('raw','advanced','cutoff','parameters',
+const compute=new Function('raw','advanced','cutoff','parameters','prior',
  model+'\n'+prelude+'\n'+
- 'state.raw=raw;MODEL_V5.setParameters(parameters);const result=computeV5(raw,cutoff,2026);'+
+ 'state.raw=raw;MODEL_V5.setParameters(parameters);if(!MODEL_PRESEASON_V53.load(prior))throw Error("Invalid preseason prior");const result=computeV5(raw,cutoff,2026);'+
  'attachEfficiencyV5(result.teams,advanced);'+
  'return {teams:result.teams,gameCount:result.games.length,modelVersion:result.modelVersion,coverage:{measured:state.advCovered,expected:state.advExpected,full:state.fullModel}};'
 );
@@ -47,6 +48,7 @@ const summarize=t=>{
   score:t.score,powerScore:t.powerScore,won:t.won,lost:t.lost,
   wab:t.wab,sor:t.sor,sos:t.sos,mov:t.mov,
   quality:t.qualityComponent,eff:t.effScore,meritRecordScore:t.meritRecordScore,meritQualityResidual:t.meritQualityResidual,meritQualityScore:t.meritQualityScore,meritControlScore:t.meritControlScore,powerPoints:t.powerPoints,powerEvidence:t.powerEvidence,powerMode:t.powerMode||'reference',opponentSupportRisk:t.powerOpponentSupportRisk||0,fcsUnderperformance:t.powerFcsUnderperformance||0,powerBreakdown:t.powerContributionPoints,
+  preseasonPriorWeight:t.preseasonPriorWeight||0,preseasonPriorPoints:t.preseasonPriorPoints??null,preseasonTalentIndex:t.preseasonTalentIndex??null,preseasonTalentRank:t.preseasonTalentRank??null,
   opponentStrength:t.power,baselineRank:t.baselinePowerRank,
   ppaNet:t.ppaNet,successNet:t.successNet,explosiveNet:t.explosiveNet,
   off:t.off,def:t.def,top25Wins:t.top25Wins,
@@ -63,19 +65,29 @@ const sundayBefore=ms=>{
  return d.toISOString().slice(0,10);
 };
 const weeks=[];
+const firstKick=Math.min(...rows.filter(r=>r.season===year&&r.season_type==='regular')
+  .map(r=>Date.parse(r.start_date)).filter(Number.isFinite));
+if(!Number.isFinite(firstKick))throw Error('Missing opening game');
+const weekZeroCutoff=firstKick-1;
+const weekZero=compute(rows.map(r=>({...r,completed:'FALSE'})),advRows,weekZeroCutoff,parameters,prior);
+weeks.push({week:0,asOfDate:new Date(weekZeroCutoff).toISOString().slice(0,10),
+ cutoffUtc:new Date(weekZeroCutoff).toISOString(),gameCount:0,
+ advancedCoverage:weekZero.coverage,modelVersion:'CFMI V5.3 preseason research',
+ teams:weekZero.teams.map(summarize)});
+
 for(let week=1;week<=lastWeek;week++){
- const prior=rows.filter(r=>r.season===year&&r.season_type==='regular'&&Number(r.week)>week)
+ const futureKickoffs=rows.filter(r=>r.season===year&&r.season_type==='regular'&&Number(r.week)>week)
   .map(r=>Date.parse(r.start_date)).filter(Number.isFinite);
  const thisWeek=completed.filter(r=>Number(r.week)===week);
  if(!thisWeek.length)continue;
  const lastKick=Math.max(...thisWeek.map(r=>Date.parse(r.start_date)));
  // For the current week, do not wait for a future game to update the dashboard;
  // compute the model only from already-final games as of build time.
- const cutoff=prior.length?Math.min(...prior)-1:Date.now();
+ const cutoff=futureKickoffs.length?Math.min(...futureKickoffs)-1:Date.now();
  const safeCutoff=week===lastWeek?Math.min(cutoff,Date.now()):cutoff;
  const scopedRaw=rows.map(r=>Number(r.week)>week?{...r,completed:'FALSE'}:r);
- const result=compute(scopedRaw,advRows,safeCutoff,parameters);
- const asOf=sundayBefore(prior.length?Math.min(...prior):lastKick+86400000);
+ const result=compute(scopedRaw,advRows,safeCutoff,parameters,prior);
+ const asOf=sundayBefore(futureKickoffs.length?Math.min(...futureKickoffs):lastKick+86400000);
  const teams=result.teams.map(summarize);
  const matches=completed.filter(r=>Date.parse(r.start_date)<=safeCutoff&&Number(r.week)<=week);
  weeks.push({
@@ -115,10 +127,10 @@ const matchups=nextWeek===null?[]:future.filter(x=>Number(x.week)===nextWeek)
   };
  }).filter(Boolean);
 const document={
- season:2026,version:'CFMI V5.2 historical/matchups extension',
+ season:2026,version:'CFMI V5.3 preseason + season-only historical/matchups extension',
  generatedAtUtc:new Date().toISOString(),
  historicalMode:'RECONSTRUCTED_AS_OF_CUTOFF',
- warning:'Historical rankings use only completed games preceding each weekly cutoff, but are V5 as-of reconstructions from the current sources. They are not immutable original-publication archives; retrospective source revisions can affect historical values.',
+ warning:'Week 0 Power uses preseason roster talent, 2025 strength, returning production and portal metrics. Merit is unavailable before actual games. All weeks are reconstructed from current source releases, not immutable preseason/weekly archives. The prior disappears after five completed FBS games.',
  history:weeks,upcoming:{week:nextWeek,games:matchups}
 };
 const filename=path.join(root,'data','weekly_views_2026.json');

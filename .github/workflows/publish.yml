@@ -31,6 +31,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Audit all-FBS historical roster talent and returning-production releases
+        run: |
+          python -m pip install duckdb==1.4.2 pandas==2.3.3
+          python scripts/probe_sdv_historical.py
+      - name: Research historical preseason roster talent source coverage
+        run: python scripts/probe_talent_sources.py
+      - name: Collect and independently audit 2024-2026 historical roster talent
+        run: python scripts/collect_talent_research.py
       - name: Download 2026 scores and advanced statistics
         run: python scripts/update_data.py
       - name: Refresh published AP and CFP poll snapshots
@@ -48,6 +56,8 @@ jobs:
           CFMI_SEASON=2024 python scripts/update_possessions.py
           CFMI_SEASON=2025 python scripts/update_data.py
           CFMI_SEASON=2025 python scripts/update_possessions.py
+      - name: Collect full-FBS talent returning production and transfer inputs by season
+        run: python scripts/collect_preseason_all_fbs.py
       - name: Fit and verify V5 predictive coefficients on earlier seasons
         run: node scripts/train_v5.cjs
       - name: Evaluate joint offense-defense opponent-network efficiency
@@ -58,6 +68,14 @@ jobs:
         run: node scripts/promote_opponent_network.cjs
       - name: Diagnose current opponent strength and rating contributions
         run: node scripts/diagnose_opponent_strength.cjs
+      - name: Research rapidly fading talent and last-season Power prior on matched games
+        run: node scripts/test_talent_prior.cjs
+      - name: Validate full FBS talent returning and portal preseason Power candidates
+        run: node scripts/test_full_preseason_prior.cjs
+      - name: Create Week0 all-FBS talent and continuity Power ratings
+        run: node scripts/build_preseason_week0.cjs
+      - name: Simulate exploratory 2026 preseason playoff and championship outlook
+        run: node scripts/build_preseason_playoff_forecast.cjs
       - name: Reconstruct weekly V5 history and upcoming matchup predictions
         run: node scripts/build_weekly_views.cjs
       - name: Audit V5 model, weekly data quality and season cutoff invariants
