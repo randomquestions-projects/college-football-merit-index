@@ -5,6 +5,7 @@ on:
     paths:
       - 'scripts/calculate_moneyline_roi_2026.py'
       - 'scripts/probe_espn_moneyline_2026.py'
+      - 'scripts/espn_dk_moneyline_roi_2026.py'
       - '.github/workflows/odds_research.yml'
   workflow_dispatch:
 permissions:
@@ -20,5 +21,7 @@ jobs:
           python-version: '3.12'
       - name: Probe ESPN postgame published original opening/closing moneyline evidence
         run: python scripts/probe_espn_moneyline_2026.py
+      - name: Reconstruct all-week DraftKings $10 moneyline ROI from ESPN game-linked historical close
+        run: python scripts/espn_dk_moneyline_roi_2026.py
       - name: Run actual pre-kickoff moneyline ROI on verifiable matched games
         run: python scripts/calculate_moneyline_roi_2026.py
