@@ -41,6 +41,19 @@ for(const year of ['2025','2026']){
  }
  assert(benchmark.perWeek.every(w=>w.cfmi.games>=0),'Per-week benchmark missing '+year);
 }
+// Treat missing historical provider data as unavailable, not zero success.
+const priorFPI=industrial.seasons['2025'].systems.fpi;
+const priorFEI=industrial.seasons['2025'].systems.fei;
+assert(priorFPI.games>=600,'2025 ESPN FPI weekly snapshots must cover substantial matched games');
+assert(priorFEI.games>=700,'2025 retrospective FEI weekly ratings must cover season games');
+assert.equal(industrial.seasons['2025'].systems.sp_plus.games,0,
+ 'Do not impute unavailable 2025 SP+ game-ahead team strength');
+assert.equal(industrial.seasons['2025'].commonGames,0,
+ 'Never claim a four-way 2025 rating comparison when SP+ has no dated archive');
+assert(industrial.seasons['2025'].alternateSourceCoverage.fpiSnapshots>=12,
+ '2025 FPI must use non-overwritten historical snapshots');
+assert(industrial.seasons['2025'].sourceWarnings.some(x=>x.includes('retrospective')),
+ '2025 FEI source timestamp caveat must be published');
 assert(ledger.seasons['2026'].weeks.some(w=>w.summary.unplayed>0),
  'Expected a current-week or future-week matchup slate in 2026');
 
