@@ -14,23 +14,27 @@ const html=fs.readFileSync(path.join(SITE,'index.html'),'utf8');
 const inline=html.match(/<script>([\s\S]*?)<\/script>/i)?.[1];
 if(!inline)throw Error('Dashboard calculation prelude unavailable');
 const prelude=inline.slice(0,inline.indexOf('const submetric='));
-const library=['model_v4.js','opponent_network_research.js','model_v5.js','preseason_prior_v1.js']
+const library=['model_v4.js','opponent_network_research.js','model_v5.js','preseason_prior_v1.js','model_matchup_v1.js']
   .map(f=>fs.readFileSync(path.join(SITE,f),'utf8')).join('\n');
 const csvParse=new Function('raw',prelude+'return csvParse(raw)');
-const score=new Function('rows','advanced','season','cutoff','parameters','prior',
+const score=new Function('rows','advanced','season','cutoff','parameters','prior','matchupParameters',
  library+'\n'+prelude+'\n'+[
   "state.raw=rows;",
   "if(!MODEL_V5.setParameters(parameters))throw Error('invalid current model');",
   "if(!MODEL_PRESEASON_V53.load(prior))throw Error('invalid preseason prior '+season);",
   "const r=computeV5(rows,cutoff,season);",
   "attachEfficiencyV5(r.teams,advanced);",
-  "return r.teams;"
+  "if(matchupParameters)CFMI_MATCHUP.setParameters(matchupParameters);",
+  "const profiles=CFMI_MATCHUP.profiles(r.teams,advanced);",
+  "return {teams:r.teams,predict:(home,away,neutral)=>CFMI_MATCHUP.predict(home,away,neutral,profiles,parameters.parameters)};"
  ].join('\n'));
 const previousYear=new Function('rows','season',library+'\n'+prelude+
  'state.raw=rows;return computeV4(rows,Infinity,season).teams;');
 const parameters=JSON.parse(fs.readFileSync(path.join(DATA,'model_v5_params.json'),'utf8'));
 const preseasonData=JSON.parse(fs.readFileSync(path.join(DATA,'preseason_full_sources_2024_2026.json'),'utf8'));
 const prior2026=JSON.parse(fs.readFileSync(path.join(DATA,'preseason_prior_2026.json'),'utf8'));
+const matchupFile=path.join(DATA,'model_matchup_params.json');
+const matchupParameters=process.env.CFMI_MATCHUP_DISABLED==='1'||!fs.existsSync(matchupFile)?null:JSON.parse(fs.readFileSync(matchupFile,'utf8'));
 const clamp=(x,l,h)=>Math.max(l,Math.min(h,x));
 const sigmoid=x=>1/(1+Math.exp(-clamp(x,-30,30)));
 const N=Number.isFinite(parameters.parameters.logisticScale)?parameters.parameters.logisticScale:8.75;
@@ -89,10 +93,11 @@ const priors={2025:prior2025(),2026:prior2026};
 const actual=(g)=>g.completed==='TRUE'&&g.home_points!==''&&g.away_points!==''&&
  g.home_points!=='NA'&&g.away_points!=='NA'&&Number.isFinite(+g.home_points)&&
  Number.isFinite(+g.away_points)&&+g.home_points!==+g.away_points;
-const gameRecord=(g,home,away,priorWeekCutoff)=>{
+const gameRecord=(g,home,away,priorWeekCutoff,matchup)=>{
  const neutral=g.neutral_site==='TRUE';
- const homeEdge=home.powerPoints-away.powerPoints+(neutral?0:homeAdvantage);
- const p=sigmoid(homeEdge/N),finished=actual(g);
+ const homeEdge=matchup.marginHome;
+ const baselineEdge=(home.powerPoints-away.powerPoints)+(neutral?0:homeAdvantage);
+ const p=matchup.homeWinProbability,finished=actual(g);
  const homeScore=finished?Number(g.home_points):null;
  const awayScore=finished?Number(g.away_points):null;
  const predictedWinner=homeEdge>=0?home.name:away.name;
@@ -118,6 +123,12 @@ const gameRecord=(g,home,away,priorWeekCutoff)=>{
   homePriorWeight:home.preseasonPriorWeight??0,
   awayPriorWeight:away.preseasonPriorWeight??0,
   homeWinProbability:p,awayWinProbability:1-p,
+  homeMatchupScore:matchup.homeMatchupScore,awayMatchupScore:matchup.awayMatchupScore,
+  neutralPowerDifference:matchup.basePoints,venueAdjustment:matchup.homePoints,
+  matchupAdjustment:matchup.matchupAdjustment,
+  matchupComponents:matchup.components,matchupStyles:matchup.opponentStyles,
+  matchupEvidence:matchup.evidence,
+  baselinePowerMargin:baselineEdge,baselinePowerPick:baselineEdge>=0?home.name:away.name,
   predictedMargin:homeEdge,predictedWinner,finished,
   homeScore,awayScore,actualMargin:finished?homeScore-awayScore:null,
   actualWinner,correct:finished?actualWinner===predictedWinner:null
@@ -135,7 +146,8 @@ function aggregate(games){
  return {played:n,correct:wins,incorrect:n-wins,accuracy:n?wins/n:null,
   unplayed:games.length-n,scheduled:games.length,brier,logLoss,marginMAE:mae};
 }
-const output={version:'CFMI V5.3 reconstructed pre-week matchup ledger v1',
+const output={version:'CFMI V5.4 game-specific matchup ledger v1',
+ matchupModel:matchupParameters?.deployCandidate?'historically_selected_matchup_interactions':'power_plus_venue_only',
  generatedAtUtc:new Date().toISOString(),
  trainingSeasons:[2024],selectionSeasons:[2025],
  methodology:'CFMI V5.2 opponent-adjusted Power + 2025-selected V5.3 rapidly fading preseason prior; input game cutoffs at least one millisecond before the earliest scheduled kickoff in each week.',
@@ -152,13 +164,13 @@ for(const [year,src] of [[2025,s25],[2026,s26]]){
   if(year===2026&&week>maxWeek+1)continue;
   const firstKick=Math.min(...matched.map(g=>Date.parse(g.start_date)));
   const cutoff=firstKick-1;
-  const teams=score(src.rows,src.advanced,year,cutoff,parameters,prior);
-  const lookup=new Map(teams.map(t=>[t.name,t]));
+  const scoring=score(src.rows,src.advanced,year,cutoff,parameters,prior,matchupParameters);
+  const lookup=new Map(scoring.teams.map(t=>[t.name,t]));
   const games=[];
   for(const g of matched){
    const h=lookup.get(g.home_team),a=lookup.get(g.away_team);
    if(!h||!a)continue;
-   games.push(gameRecord(g,h,a,cutoff));
+   games.push(gameRecord(g,h,a,cutoff,scoring.predict(h,a,g.neutral_site==='TRUE')));
   }
   if(games.length===0)continue;
   games.sort((a,b)=>Date.parse(a.kickoffUtc)-Date.parse(b.kickoffUtc));
