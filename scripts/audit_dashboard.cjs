@@ -16,11 +16,36 @@ const projection=JSON.parse(fs.readFileSync(path.join(data,'preseason_playoff_fo
 const priorEvaluation=JSON.parse(fs.readFileSync(path.join(data,'research_full_preseason_backtest.json'),'utf8'));
 const ledger=JSON.parse(fs.readFileSync(path.join(data,'prediction_ledger_2025_2026.json'),'utf8'));
 const industrial=JSON.parse(fs.readFileSync(path.join(data,'power_benchmark_2025_2026.json'),'utf8'));
+const matchupParameters=JSON.parse(fs.readFileSync(path.join(data,'model_matchup_params.json'),'utf8'));
+assert.equal(matchupParameters.version,'matchup-1.0-research');
+assert.equal(matchupParameters.parameters.coefficients.length,7);
+assert.equal(matchupParameters.parameters.keys.length,7);
+const selected=matchupParameters.selected;
+if(matchupParameters.deployCandidate){
+ assert(selected&&selected.selection2025.logLoss<matchupParameters.baseline['2025'].logLoss,
+  'Never activate matchup adjustments that fail the 2025 selection gate');
+}else{
+ assert(matchupParameters.parameters.coefficients.every(x=>x===0),
+  'Unvalidated matchup effects must stay zero');
+}
+
 for(const year of ['2025','2026']){
  const season=ledger.seasons[year],benchmark=industrial.seasons[year];
  assert(season&&season.weeks.length>=9,'Historical matchup weeks missing '+year);
  assert(benchmark&&benchmark.entireCFMI.games>300,'Industry comparison missing '+year);
  const games=season.weeks.flatMap(w=>w.games);
+ assert(games.every(g=>Number.isFinite(g.homeMatchupScore)&&Number.isFinite(g.awayMatchupScore) &&
+  Math.abs(g.homeMatchupScore+g.awayMatchupScore-100)<1e-6),
+  'Both game-specific Matchup Scores must total 100%');
+ assert(games.every(g=>Number.isFinite(g.baselinePowerMargin)&&
+  Number.isFinite(g.matchupAdjustment)&&
+  Math.abs(g.predictedMargin-g.baselinePowerMargin-g.matchupAdjustment)<1e-7),
+  'Matchup Score must explain exact Power + venue + opponent-matchup point margin');
+ assert(games.every(g=>Math.abs(g.matchupAdjustment)<=4.00000001),
+  'Opponent-specific matchup residual must remain within validated cap');
+ assert(games.every(g=>g.homePowerIndex>=0&&g.awayPowerIndex>=0),
+  'Neutral Power scores cannot be overwritten by matchup-specific ratings');
+
  assert(games.length>=350,'Too few 2025/26 FBS matchups '+year);
  assert(games.every(g=>Date.parse(g.asOfUtc)<Date.parse(g.kickoffUtc)),
   'Matchup prediction must be made before kickoff '+year);

@@ -39,6 +39,8 @@ jobs:
         run: python scripts/probe_talent_sources.py
       - name: Collect and independently audit 2024-2026 historical roster talent
         run: python scripts/collect_talent_research.py
+      - name: Audit exact 2026 rushing and passing source fields
+        run: python scripts/probe_matchup_fields.py
       - name: Download 2026 scores and advanced statistics
         run: python scripts/update_data.py
       - name: Refresh published AP and CFP poll snapshots
@@ -76,9 +78,13 @@ jobs:
         run: node scripts/build_preseason_week0.cjs
       - name: Simulate exploratory 2026 preseason playoff and championship outlook
         run: node scripts/build_preseason_playoff_forecast.cjs
-      - name: Reconstruct weekly V5 history and upcoming matchup predictions
+      - name: Reconstruct baseline Power-only pregame ledger for matchup training
+        run: CFMI_MATCHUP_DISABLED=1 node scripts/build_prediction_ledger.cjs
+      - name: Fit historical matchup residual and select only if 2025 validation improves
+        run: node scripts/train_matchup_v1.cjs
+      - name: Generate final matchup-aware weekly predictions
         run: node scripts/build_weekly_views.cjs
-      - name: Reconstruct game-ahead CFMI Power matchup ledgers for 2025 and 2026
+      - name: Reconstruct game-ahead CFMI Matchup Score predictions for 2025 and 2026
         run: node scripts/build_prediction_ledger.cjs
       - name: Research original-dated 2025 weekly FPI and FEI rating archives
         run: |

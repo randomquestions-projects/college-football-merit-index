@@ -16,20 +16,22 @@ if(!inline)throw Error('Missing CFMI inline model prelude');
 const boundary=inline[1].indexOf('const submetric=');
 if(boundary<10000)throw Error('CFMI engine prelude moved: update build_weekly_views.cjs');
 const prelude=inline[1].slice(0,boundary);
-const model=fs.readFileSync(path.join(root,'model_v4.js'),'utf8')+'\n'+fs.readFileSync(path.join(root,'opponent_network_research.js'),'utf8')+'\n'+fs.readFileSync(path.join(root,'model_v5.js'),'utf8')+'\n'+fs.readFileSync(path.join(root,'preseason_prior_v1.js'),'utf8');
+const model=fs.readFileSync(path.join(root,'model_v4.js'),'utf8')+'\n'+fs.readFileSync(path.join(root,'opponent_network_research.js'),'utf8')+'\n'+fs.readFileSync(path.join(root,'model_v5.js'),'utf8')+'\n'+fs.readFileSync(path.join(root,'preseason_prior_v1.js'),'utf8')+'\n'+fs.readFileSync(path.join(root,'model_matchup_v1.js'),'utf8');
 const parameters=JSON.parse(fs.readFileSync(path.join(root,'data','model_v5_params.json'),'utf8'));
 const prior=JSON.parse(fs.readFileSync(path.join(root,'data','preseason_prior_2026.json'),'utf8'));
+const matchupParams=JSON.parse(fs.readFileSync(path.join(root,'data','model_matchup_params.json'),'utf8'));
 
 const schedule=fs.readFileSync(path.join(root,'data','cfb_schedules_2026.csv'),'utf8');
 const advanced=fs.readFileSync(path.join(root,'data','cfmi_advanced_2026.csv'),'utf8');
 const csvParse=new Function('csv',prelude+'return csvParse(csv)');
 const rows=csvParse(schedule),advRows=csvParse(advanced);
 if(rows.length<300||advRows.length<200)throw Error('Unacceptably incomplete 2026 data');
-const compute=new Function('raw','advanced','cutoff','parameters','prior',
+const compute=new Function('raw','advanced','cutoff','parameters','prior','matchupParams',
  model+'\n'+prelude+'\n'+
  'state.raw=raw;MODEL_V5.setParameters(parameters);if(!MODEL_PRESEASON_V53.load(prior))throw Error("Invalid preseason prior");const result=computeV5(raw,cutoff,2026);'+
  'attachEfficiencyV5(result.teams,advanced);'+
- 'return {teams:result.teams,gameCount:result.games.length,modelVersion:result.modelVersion,coverage:{measured:state.advCovered,expected:state.advExpected,full:state.fullModel}};'
+ 'CFMI_MATCHUP.setParameters(matchupParams);const profiles=CFMI_MATCHUP.profiles(result.teams,advanced);'+
+ 'return {teams:result.teams,predict:(home,away,neutral)=>CFMI_MATCHUP.predict(home,away,neutral,profiles,parameters.parameters),gameCount:result.games.length,modelVersion:result.modelVersion,coverage:{measured:state.advCovered,expected:state.advExpected,full:state.fullModel}};'
 );
 const validScore=r=>r.season===year&&r.season_type==='regular'&&r.completed==='TRUE'&&
  r.home_points!==''&&r.away_points!==''&&r.home_points!=='NA'&&r.away_points!=='NA'&&
@@ -69,7 +71,7 @@ const firstKick=Math.min(...rows.filter(r=>r.season===year&&r.season_type==='reg
   .map(r=>Date.parse(r.start_date)).filter(Number.isFinite));
 if(!Number.isFinite(firstKick))throw Error('Missing opening game');
 const weekZeroCutoff=firstKick-1;
-const weekZero=compute(rows.map(r=>({...r,completed:'FALSE'})),advRows,weekZeroCutoff,parameters,prior);
+const weekZero=compute(rows.map(r=>({...r,completed:'FALSE'})),advRows,weekZeroCutoff,parameters,prior,matchupParams);
 weeks.push({week:0,asOfDate:new Date(weekZeroCutoff).toISOString().slice(0,10),
  cutoffUtc:new Date(weekZeroCutoff).toISOString(),gameCount:0,
  advancedCoverage:weekZero.coverage,modelVersion:'CFMI V5.3 preseason research',
@@ -86,7 +88,7 @@ for(let week=1;week<=lastWeek;week++){
  const cutoff=futureKickoffs.length?Math.min(...futureKickoffs)-1:Date.now();
  const safeCutoff=week===lastWeek?Math.min(cutoff,Date.now()):cutoff;
  const scopedRaw=rows.map(r=>Number(r.week)>week?{...r,completed:'FALSE'}:r);
- const result=compute(scopedRaw,advRows,safeCutoff,parameters,prior);
+ const result=compute(scopedRaw,advRows,safeCutoff,parameters,prior,matchupParams);
  const asOf=sundayBefore(futureKickoffs.length?Math.min(...futureKickoffs):lastKick+86400000);
  const teams=result.teams.map(summarize);
  const matches=completed.filter(r=>Date.parse(r.start_date)<=safeCutoff&&Number(r.week)<=week);
@@ -97,7 +99,9 @@ for(let week=1;week<=lastWeek;week++){
  });
 }
 if(!weeks.length||weeks[weeks.length-1].teams.length<120)throw Error('Insufficient historical FBS coverage');
-const latest=weeks[weeks.length-1],byName=new Map(latest.teams.map(t=>[t.name,t]));
+const latest=weeks[weeks.length-1];
+const live=compute(rows,advRows,Date.now(),parameters,prior,matchupParams);
+const byName=new Map(live.teams.map(t=>[t.name,t]));
 // FBS-versus-FBS fixtures in the earliest upcoming schedule week.
 const future=rows.filter(r=>r.season===year&&r.season_type==='regular'&&
  r.home_division==='fbs'&&r.away_division==='fbs'&&!validScore(r)&&
@@ -108,22 +112,24 @@ const matchups=nextWeek===null?[]:future.filter(x=>Number(x.week)===nextWeek)
  .map(g=>{
   const home=byName.get(g.home_team),away=byName.get(g.away_team);
   if(!home||!away)return null;
-  const eligible=latest.teams.filter(t=>Number.isFinite(t.powerPoints));
   const neutral=g.neutral_site==='TRUE';
-  // V5 predictive strength is in estimated point margins, not percentile index units.
-  const homeEdge=(home.powerPoints-away.powerPoints)+(neutral?0:parameters.parameters.homePoints);
-  const probability=parameters.probabilitiesCalibrated===true?
-    1/(1+Math.exp(-Math.max(-30,Math.min(30,homeEdge/parameters.parameters.logisticScale)))):null;
+  const predicted=live.predict(home,away,neutral);
+  const homeEdge=predicted.marginHome;
+  const probability=predicted.homeWinProbability;
   return {
     gameId:String(g.game_id),week:nextWeek,date:g.start_date,
     venue:g.venue||null,neutral,home:home.name,away:away.name,
-    predictedWinner:homeEdge>=0?home.name:away.name,
-    predictionBasis:'V5 opponent-adjusted predictive point ratings + trained home advantage',
+    predictedWinner:predicted.winner,
+    predictionBasis:'Neutral-field Power + venue + historically selected opponent-specific matchup interactions',
+    homeMatchupScore:predicted.homeMatchupScore,awayMatchupScore:predicted.awayMatchupScore,
+    neutralPowerDifference:predicted.basePoints,venueAdjustment:predicted.homePoints,
+    matchupAdjustment:predicted.matchupAdjustment,matchupComponents:predicted.components,
+    matchupStyles:predicted.opponentStyles,matchupEvidence:predicted.evidence,
     edgePointsDiagnostic:homeEdge,
     homeWinProbability:probability,
     awayWinProbability:probability===null?null:1-probability,
     calibrated:probability!==null,
-    homeMetrics:home,awayMetrics:away
+    homeMetrics:summarize(home),awayMetrics:summarize(away)
   };
  }).filter(Boolean);
 const document={
