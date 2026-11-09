@@ -137,8 +137,20 @@ async function waitForServer(){
     "Actual winner comparisons missing");
   await page.locator("#matchupGrid [data-matchup]").first().click();
   await page.locator("#matchupDialog.open").waitFor();
-  assert((await page.locator("#matchupDetail").innerText()).includes("Final result"),
-    "Historical matchup drilldown must include the prediction outcome");
+  const matchupDetails=await page.locator("#matchupDetail").innerText();
+  assert(matchupDetails.includes("Final result"),"Historical prediction outcome missing");
+  assert(matchupDetails.includes("Matchup Score")&&matchupDetails.includes("rushing")&&
+    matchupDetails.includes("passing")&&matchupDetails.includes("How the prediction is calculated"),
+    "Matchup Score and opponent-specific offense/defense preview missing");
+  const scores=await page.evaluate(()=>weeklyView.visibleMatchups.slice(0,10).map(g=>({
+   total:g.homeMatchupScore+g.awayMatchupScore,
+   p:g.homeWinProbability*100,
+   match:g.homeMatchupScore,
+   powerHome:g.homeMetrics.powerScore,
+   powerAway:g.awayMetrics.powerScore
+  })));
+  assert(scores.every(x=>Math.abs(x.total-100)<.001&&Math.abs(x.p-x.match)<.001),
+    "Matchup Score must represent calibrated game-specific win likelihood");
   await page.locator("#matchupClose").click();
   await page.locator("#matchupSeason").selectOption("2026");
   await page.locator("#matchupWeek").selectOption("current");
