@@ -85,6 +85,15 @@ async function waitForServer(){
   const detail=(await page.locator("#detailBody").innerText()).toLowerCase();
   assert(detail.includes("signature-win")&&detail.includes("opponent")&&detail.includes("estimated margin"),"V6 team audit not aligned to active Merit");
   await page.locator("#closeModal").click();
+  await page.locator('#resumeHead [data-open-team="Georgia"]').focus();
+  await page.keyboard.press('Enter');
+  await page.locator('#detailScrim.open').waitFor();
+  assert((await page.locator('#detailTitle').textContent()).includes('Georgia'),'Keyboard team header did not open popup');
+  await page.keyboard.press('Escape');
+  assert.equal(await page.locator('#detailScrim.open').count(),0,'Escape must close team details');
+  assert.equal(await page.locator('#resumeHead [data-open-team="Georgia"]').evaluate(e=>document.activeElement===e),true,
+    'Team dialog should restore keyboard focus to invoking header');
+
   // Every team popup must reconcile to its exact Power Points (including
   // pre-season adjustment), without inactive 0.00-point football statistic cards.
   const auditedPopups=await page.evaluate(()=>{
@@ -106,6 +115,13 @@ async function waitForServer(){
   });
   assert(auditedPopups.count>=130&&auditedPopups.issues.length===0,
     "Invalid Merit / Power team popups: "+JSON.stringify(auditedPopups));
+  await page.locator('#pageSwitch [data-page="rankings"]').click();
+  const firstRow=page.locator('#body tr[data-team]').first();
+  await firstRow.focus();
+  await page.keyboard.press('Enter');
+  await page.locator('#detailScrim.open').waitFor();
+  await page.keyboard.press('Escape');
+  assert.equal(await page.locator('#detailScrim.open').count(),0,'Ranking row must be operable via keyboard');
   await page.locator('#pageSwitch [data-page="comparison"]').click();
   await page.locator("#compareBody tr").first().waitFor();
   assert.equal(await page.locator("#compareBody tr").count(),25,"Merit Top 25 comparison missing");
