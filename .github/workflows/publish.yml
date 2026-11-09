@@ -88,8 +88,6 @@ jobs:
         run: python scripts/benchmark_power_2025_2026.py
       - name: Analyze prediction mistakes and 2025-selected home-field counterfactuals
         run: node scripts/analyze_power_misses.cjs
-      - name: Research venue-based prediction outcomes and verified 2026 archived moneylines
-        run: python scripts/research_home_road_odds_2026.py
       - name: Audit V5 model, weekly data quality and season cutoff invariants
         run: node scripts/audit_dashboard.cjs
       - name: Historical V4 versus V3 walk-forward benchmark (reference only)
