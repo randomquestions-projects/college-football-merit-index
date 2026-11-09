@@ -90,6 +90,16 @@ const CFMI_PUBLIC_VIEW = Object.freeze({
        evidence:t.powerEvidence||'unverified',
        conferenceCalibration:this.safeNumber(t.powerConferenceCalibration)
      },
+     diagnostics:{
+       opponentBaselinePoints:this.safeNumber(t.power),baselineRank:this.safeNumber(t.baselinePowerRank),
+       srsPoints:this.safeNumber(t.rating),elo:this.safeNumber(t.elo),
+       offScoring:this.safeNumber(t.off),defScoring:this.safeNumber(t.def),
+       netEPA:this.safeNumber(t.ppaNet),netSuccess:this.safeNumber(t.successNet),
+       netExplosive:this.safeNumber(t.explosiveNet),possessionControl:this.safeNumber(t.control),
+       finishing:this.safeNumber(t.redzoneNet),turnoverNet:this.safeNumber(t.turnoverNet),
+       penaltyNet:this.safeNumber(t.penaltyNet),
+       opponentAdjustedNetwork:t.opponentAdjustedNetwork||null
+     },
      coverage:{
        coreGames:t.advCoreGames||0,eligibleGames:t.fbsGames,
        pbpGames:t.advPbpGames||0,validShare:this.safeNumber(t.advCoverage)
@@ -100,6 +110,7 @@ const CFMI_PUBLIC_VIEW = Object.freeze({
  buildGame(t,g){
    if(!g)return this.fail('missing game');
    const signatureUnits=g.meritQualityContribution;
+   const extra=(t.advGames||[]).find(x=>String(x.id)===String(g.id));
    const signatureUplift=t.meritRawQuality>0?
      (.25*(t.meritQualityScore-50))*signatureUnits/t.meritRawQuality:0;
    return {
@@ -114,7 +125,12 @@ const CFMI_PUBLIC_VIEW = Object.freeze({
      meritSignatureWinUnits:this.safeNumber(signatureUnits),
      allocatedMeritQualityUpliftPoints:this.safeNumber(signatureUplift),
      allocatedPointsMethod:'Proportional allocation of the current team quality-subscore uplift over neutral 50; allocations sum, not independent causal marginal values',
-     adjustedMargin:this.safeNumber(g.adjustedMOV)
+     adjustedMargin:this.safeNumber(g.adjustedMOV),
+     diagnostics:{
+       neutralStatePossessionWP:this.safeNumber(extra?.possession_control_wp),
+       pointsPerScoringOpportunity:this.safeNumber(extra?.off_finish_pp40),
+       coreEPAMeasured:this.n(extra?.off_ppa)&&this.n(extra?.def_ppa)
+     }
    };
  },
  wins(t,limit=4,order='strength'){
