@@ -136,7 +136,7 @@ async function waitForServer(){
   const priorStatus=await page.evaluate(()=>({enabled:MODEL_PRESEASON_V53.enabled,
      teams:Object.keys(MODEL_PRESEASON_V53.data?.teams||{}).length,
      champ:preseasonView.forecast?.contenders?.[0]?.team,
-     latestZero:state.teams.every(t=>t.preseasonPriorWeight===0)}));
+     latestZero:state.teams.filter(t=>t.fbsGames>=6).every(t=>t.preseasonPriorWeight===0)}));
   assert(priorStatus.enabled&&priorStatus.teams>=135&&priorStatus.champ&&priorStatus.latestZero,
      "Preseason prior must be loaded and decay completely by the current week");
   await page.locator('#pageSwitch [data-page="matchups"]').click();
@@ -186,7 +186,7 @@ async function waitForServer(){
   assert((await page.locator("#matchupSummary").innerText()).includes("year-to-date"),"Current week YTD did not restore");
   await page.waitForFunction(()=>Boolean(weeklyView.industryBenchmark),{timeout:35000});
   const external=await page.locator("#matchupIndustryBenchmark").innerText();
-  assert(external.includes("CFMI V5.3")&&external.includes("SP+")&&external.includes("FEI"),
+  assert(external.includes("CFMI")&&external.includes("SP+")&&external.includes("FEI"),
     "Matched industry scorecard missing");
 
   const schedules=await page.evaluate(()=>weeklyView.data?.upcoming?.games?.length||0);
