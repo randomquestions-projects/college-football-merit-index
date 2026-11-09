@@ -52,16 +52,54 @@ body.cfmi-matchups #rankings,body.cfmi-matchups #comparison,body.cfmi-matchups #
 @media(max-width:960px){.cfmi-trend-grid,.cfmi-match-grid,.cfmi-explain{grid-template-columns:1fr}}
 
 .secondary-focus{font-size:12px;color:#aac7df;margin:3px 0 17px;background:#102034;border-left:3px solid #447693;padding:10px 13px;border-radius:4px}.secondary-focus strong{color:#d8eaf8}.power-support-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}.power-support-grid>div{padding:10px 12px;border:1px solid #334863;border-radius:9px;background:#13233a}.power-support-grid small{display:block;font-size:11px;color:#a7c0d8;line-height:1.4}.power-support-grid strong{display:block;font-size:18px;padding:4px 0}.power-pop .note strong{color:#dbeafa}.power-breakdown strong.good{color:#7ae1c0}.power-breakdown strong.weak{color:#eda7b2}@media(max-width:760px){.power-support-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}.team-score-sections{display:flex;flex-direction:column}.team-score-sections.power-first .power-summary{order:-1}.team-score-sections.power-first .power-pop{margin-top:0}.team-score-sections .merit-summary{margin-bottom:10px}
+
+/* Purpose & Methodology — public high-level explanation; scoring details stay separate. */
+.purpose-page{display:flex;flex-direction:column;gap:28px;margin:14px 0 30px}
+.purpose-hero,.purpose-index-card,.purpose-secondary{border:1px solid #344c67;border-radius:16px;background:#142238}
+.purpose-hero{padding:30px 34px}
+.purpose-hero .eyebrow{margin-bottom:9px}
+.purpose-hero h2{font-size:clamp(25px,3vw,35px);line-height:1.14;color:#eaf4ff;letter-spacing:-.025em;margin:0 0 17px}
+.purpose-hero p{font-size:14px;line-height:1.76;color:#b6cce0;max-width:880px;margin:0 0 12px}
+.purpose-hero p:last-child{margin-bottom:0}
+.purpose-hero .purpose-lead{font-size:clamp(17px,2vw,21px);line-height:1.52;color:#e5f0fd;font-weight:500;max-width:950px;margin-bottom:18px}
+.purpose-section-title{margin-bottom:16px}
+.purpose-step{display:block;font-size:10px;letter-spacing:.13em;font-weight:800;color:#89b7db;margin-bottom:9px}
+.purpose-section-title h3{font-size:21px;font-weight:800;color:#e9f3ff;line-height:1.3;margin:0}
+.purpose-index-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.purpose-index-card{padding:26px 27px;display:flex;flex-direction:column;min-width:0}
+.purpose-index-top{display:flex;align-items:center;gap:10px;color:#acc7df;font-size:12px;font-weight:650}
+.purpose-index-number{display:grid;place-items:center;height:29px;width:29px;border:1px solid #4c6681;border-radius:8px;color:#d7eaf9;font-size:12px;font-weight:800}
+.purpose-index-card h4{font-size:25px;line-height:1.2;letter-spacing:-.02em;color:#f2f7ff;margin:19px 0 6px}
+.purpose-index-question{font-size:16px!important;color:#8fd2f2!important;font-weight:700!important;margin:0 0 14px!important}
+.purpose-index-card>p{font-size:13.5px;color:#b7cde0;line-height:1.7;margin:0 0 15px}
+.purpose-evidence-title{font-size:12px;font-weight:800;color:#e1edf9;margin-top:4px;margin-bottom:9px}
+.purpose-evidence-list{list-style:none;margin:0 0 20px;padding:0;display:flex;flex-direction:column;gap:11px}
+.purpose-evidence-list li{position:relative;padding-left:16px;font-size:13px;line-height:1.6;color:#b8cbdc}
+.purpose-evidence-list li::before{content:"";position:absolute;left:0;top:.62em;width:5px;height:5px;border-radius:50%;background:#6ebadf}
+.purpose-evidence-list strong{color:#e3edf8}
+.purpose-index-card .purpose-index-note{font-size:12px;color:#9fb8d0;border-top:1px solid #334961;padding-top:15px;margin:auto 0 0;line-height:1.6}
+.purpose-principles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.purpose-principles>div{border:1px solid #31465f;border-radius:12px;padding:18px 20px;background:#101f34}
+.purpose-principles strong{color:#e2effe;font-size:13.5px}
+.purpose-principles p{color:#aec5d9;font-size:12.5px;line-height:1.65;margin:8px 0 0}
+.purpose-secondary{padding:21px 24px;display:flex;align-items:center;justify-content:space-between;gap:18px}
+.purpose-secondary h3{font-size:18px;color:#e7f2fc;margin:0 0 6px}
+.purpose-secondary p{font-size:13px;color:#afc5da;line-height:1.6;margin:0;max-width:800px}
+.purpose-secondary a{color:#8bdbff;font-size:13px;font-weight:750;text-decoration:none;white-space:nowrap}
+.purpose-secondary a:hover{text-decoration:underline}
+.purpose-disclaimer{font-size:11.5px;color:#94acc3;line-height:1.7;margin:-5px 0 0;padding:0 3px}
+@media(max-width:800px){.purpose-index-grid,.purpose-principles{grid-template-columns:1fr}.purpose-hero{padding:24px 22px}.purpose-index-card{padding:23px 21px}.purpose-secondary{align-items:flex-start;flex-direction:column;gap:12px}.purpose-page{gap:24px}}
+@media(max-width:480px){.purpose-hero{padding:21px 17px}.purpose-index-card{padding:20px 17px}.purpose-principles>div{padding:16px}.purpose-secondary{padding:19px 17px}}
 </style>
 </head>
 <body>
-<header class="top"><div class="wrap top-inner"><div class="brand"><span class="logo">C</span> CFMI <span class="muted" style="font-weight:400;font-size:11px">/ 2026</span></div><nav class="nav"><a href="#rankings" id="navRanks">Rankings</a><a href="#comparison" id="navComparison">Compare rankings</a><a href="#resume" id="navResume">Compare teams</a><a href="#history" id="navHistory">History</a><a href="#preseason" id="navPreseason">Preseason</a><a href="#matchups" id="navMatchups">Matchups</a><a href="#methodology" id="navMethodology">Methodology</a><button id="refreshTop" type="button">↻ Reload snapshot</button></nav></div></header>
+<header class="top"><div class="wrap top-inner"><div class="brand"><span class="logo">C</span> CFMI <span class="muted" style="font-weight:400;font-size:11px">/ 2026</span></div><nav class="nav"><a href="#rankings" id="navRanks">Rankings</a><a href="#comparison" id="navComparison">Compare rankings</a><a href="#resume" id="navResume">Compare teams</a><a href="#history" id="navHistory">History</a><a href="#preseason" id="navPreseason">Preseason</a><a href="#matchups" id="navMatchups">Matchups</a><a href="#methodology" id="navMethodology">Purpose &amp; Methodology</a><button id="refreshTop" type="button">↻ Reload snapshot</button></nav></div></header>
 <main class="wrap">
 <section class="hero home-intro"><div class="eyebrow">Independent college football analysis · 2026</div><h1>Earned merit. Measured strength<span style="color:#6ac5e6">.</span></h1>
 <p class="lead">Two core rankings, built for different questions. <strong>Merit Index</strong> evaluates who has earned the strongest résumé. <strong>Power Index</strong> estimates neutral-field team strength using early-season roster and continuity evidence that fades with real on-field results. The <strong>Matchup Predictor</strong> is a secondary game-specific view; it never changes either ranking.</p>
 <div class="home-purpose"><div><strong>Merit / résumé</strong><span>Who earned the strongest season? Quality wins, road results and achievement.</span></div><div><strong>Power / neutral-field</strong><span>Who is strongest overall, independent of venue and opponent style?</span></div></div><p class="secondary-focus"><strong>Secondary:</strong> <a href="#matchups" data-focus-page="matchups">Matchup Predictor</a> uses Power + venue and only validated opponent-specific adjustments. It does not determine team rankings.</p>
 <div class="stamp"><span id="healthDot" class="dot"></span><span id="stamp">Loading 2026 completed-game feed…</span></div></section>
-<div class="page-switch" id="pageSwitch" role="tablist" aria-label="Dashboard pages"><button type="button" class="selected" data-page="rankings" aria-selected="true">Merit &amp; Power</button><button type="button" data-page="comparison" aria-selected="false">Compare Rankings</button><button type="button" data-page="resume" aria-selected="false">Compare Teams</button><button type="button" data-page="history" aria-selected="false">Historical Results</button><button type="button" data-page="preseason" aria-selected="false">Preseason</button><button type="button" data-page="methodology" aria-selected="false">Methodology</button><button type="button" data-page="matchups" aria-selected="false">Matchups · Secondary</button></div>
+<div class="page-switch" id="pageSwitch" role="tablist" aria-label="Dashboard pages"><button type="button" class="selected" data-page="rankings" aria-selected="true">Merit &amp; Power</button><button type="button" data-page="comparison" aria-selected="false">Compare Rankings</button><button type="button" data-page="resume" aria-selected="false">Compare Teams</button><button type="button" data-page="history" aria-selected="false">Historical Results</button><button type="button" data-page="preseason" aria-selected="false">Preseason</button><button type="button" data-page="methodology" aria-selected="false">Purpose &amp; Methodology</button><button type="button" data-page="matchups" aria-selected="false">Matchups · Secondary</button></div>
 <section id="rankings"><div class="subhead"><div><h2 id="rankTitle">2026 FBS Merit Rankings</h2><p id="rankingSub">Calculated from completed games on or before the selected as-of cutoff.</p></div><span class="pill" id="dataBadge">Awaiting source</span></div>
 <div class="rank-lens"><div><h3 id="lensTitle">MERIT · Who has earned the strongest season?</h3><p id="lensSummary">Earned results: 55% schedule-adjusted record, 25% opponent-quality and road wins, 20% adjusted margins against FBS competition.</p></div><div class="rank-lens-controls" id="rankingLens" role="group" aria-label="Select ranking purpose"><button type="button" class="selected" data-lens="merit" aria-pressed="true">Merit Ranking</button><button type="button" data-lens="power" aria-pressed="false">Power Ranking</button></div></div>
 <div class="panel"><div class="toolbar"><div class="tabs" id="viewTabs"><button class="tab" data-view="25">Top 25</button><button class="tab active" data-view="50">Top 50</button><button class="tab" data-view="all">All FBS</button></div><div class="search"><input id="q" type="search" aria-label="Search teams" placeholder="Search teams…"></div><select id="conference"><option value="">All conferences</option></select><select id="cutoff" aria-label="Game cutoff"><option value="live">Latest completed games</option></select><div class="actions"><button id="reset" class="action" title="Reset search and filters">Reset</button><button id="export" class="action" disabled>Export ranking CSV</button><button id="refresh" class="action">↻ Reload snapshot</button></div></div>
@@ -137,7 +175,7 @@ body.cfmi-matchups #rankings,body.cfmi-matchups #comparison,body.cfmi-matchups #
   <div class="cfmi-ext-title"><h3>Preseason Playoff & Title Predictions</h3><small>Illustrative 12-team bracket simulation</small></div>
   <p class="cfmi-section-note">This forecast uses only Week 0 Power and season schedule, plus modeled game outcomes. It approximates conference qualification and selection decisions; it is not an official CFP committee prediction or a substitute for actual conference tiebreakers. Historical talent source files were retrieved retrospectively and may include corrections.</p>
   <div class="cfmi-scroll"><table class="cfmi-ext-table"><thead><tr><th>Title #</th><th>Team</th><th>CFMI Week 0 #</th><th>Playoff odds*</th><th>Title odds*</th><th>Projected W</th></tr></thead><tbody id="preseasonPlayoffTable"></tbody></table></div>
-  <p class="cfmi-section-note">*Simulation frequencies, not historically calibrated probabilities. Sources, format assumptions and caveats are documented in the Methodology tab.</p>
+  <p class="cfmi-section-note">*Exploratory simulation estimates, not official CFP odds or historically calibrated probabilities. Research assumptions are retained in the repository.</p>
  </div>
 </section>
 
@@ -177,80 +215,77 @@ body.cfmi-matchups #rankings,body.cfmi-matchups #comparison,body.cfmi-matchups #
 <div class="cfmi-dialog" id="matchupDialog" role="dialog" aria-modal="true" aria-label="Matchup analysis"><div class="cfmi-dialog-inner">
   <div class="cfmi-dialog-head"><div><span class="eyebrow">CFMI Matchup breakdown</span><h2 id="matchupDetailTitle"></h2><div id="matchupDetailDate" class="cfmi-date"></div></div><button type="button" id="matchupClose" aria-label="Close matchup details">Close ×</button></div><div id="matchupDetail" style="margin-top:18px"></div>
 </div></div>
-<div id="methodologyPage" class="cfmi-page"><div class="panel section-text" style="margin:14px 0 22px" id="v5MethodSummary">
-<h2>CFMI V5.5 · Merit Index and Power Index methodology</h2>
-<p><strong>Week 0 Power:</strong> every FBS team begins with a prior estimate of expected neutral-field point strength based on last year's opponent-adjusted on-field performance (55% before continuity adjustment), the current season's measured roster-talent composite (45%, with modest blue-chip corroboration), actual returning offense/defense production, and a bounded net transfer-talent adjustment. Strong transfer classes are not independently rewarded twice. One missing 2026 roster talent value uses the 25th percentile among measured <em>all-FBS</em> talent, flagged as imputed. The preseason prior does not award Power Four, SEC, Big Ten or brand bonuses. In-season Power separately uses a small historically fitted conference-environment correction derived from cross-conference scoring errors.</p>
-<p><strong>How Power changes during the season:</strong> at 0/1/2/3/4/5 effective FBS games the preseason prior carries <strong>100% / 55% / 35% / 20% / 8% / 0%</strong> of Power, blended on neutral-field point ratings rather than ranks or percentage indexes. The scheduled 100/55/35/20/8/0 curve is now interpolated by opponent-strength-adjusted effective FBS games; the prior gradually reaches zero when evidence is sufficient. The Merit model remains purely earned results and is not ranked in Week 0.</p>
-<p><strong>Not yet measured:</strong> player-level top-30 active-starter ratings, next-50 depth scores and head-coach/offensive-coordinator/defensive-coordinator continuity. Without a fully verified historical FBS source these are recorded as unverified, not as neutral-looking invented data. The team-wide roster composite is not a claim to know each player's projected playing time. The new Preseason page also presents a schedule-informed <em>experimental</em> 12-team playoff simulation. Simulated selection and title shares are not calibrated or official CFP probabilities; real conference tie procedures, committee judgement, injuries and coaching changes are incompletely modeled.</p>
-<p><strong>Historical evidence:</strong> a 2025-selected fast decay improves next-game prediction accuracy in retrospective 2026 comparisons, particularly Weeks 1–4. These are <em>reconstructed</em> old seasons from current releases, not guaranteed immutable as-of-date datasets. 2026 standings inspired this investigation; it is not a clean independently preregistered test. <a href="https://github.com/randomquestions-projects/college-football-merit-index/blob/main/docs/CFMI_V5_3_talent_prior_research.md" target="_blank" rel="noopener">Full source lineage, imputation, tests and caveats</a>.</p>
-<p><strong>Merit asks who has earned the strongest season:</strong> 55% achieved results versus a top-25-strength schedule benchmark, 25% quality/road-win achievement with stronger differentiation of wins against excellent opponents, and 20% opponent-and-venue-adjusted margins. Additional bounded adjustments reflect direct head-to-head wins for comparably accomplished teams (±1.5 per eligible result, capped at ±3) and unexpectedly close FCS performances (0 to −5). No Merit bonus is awarded for an FCS blowout. Before the median FBS school has played four FBS games, national Merit ranks are provisional; no Week 0 national Merit ranks or fictional Week 1 ranking jumps are published. Merit never uses recruiting or preseason roster strength.</p>
-<p><strong>Power asks who is strongest tomorrow:</strong> V5.2 treats every performance as evidence against the quality of the opponent. We jointly estimate each team's offensive and defensive EPA, play success and explosiveness against all the opponents in its completed-game network, rather than treating excellent raw statistics against weak defenses as equivalent to excellent statistics against strong defenses. The opponent-adjusted SRS/Elo baseline remains independent of polls, school names, conference labels and recruiting. The on-field model also considers weak-schedule reliability and poor FCS results. V5.5 adds a <strong>small empirically fitted conference-environment correction</strong> from 2024 cross-conference scoring residuals (25% shrinkage chosen after examining 2025), excluding sparsely represented or substantially reorganized league groups. This is an explicit learned conference-based correction, not an arbitrary blanket P4 bonus. Both 2025 and 2026 comparisons are development-stage, not pristine untouched tests. Matching and calibration are trained on 2024, compared against V5.1 on 2025, and checked on reconstructed 2026 weeks without training on 2026. This is incremental retrospective evidence: 2025 has already been used to select older versions and is not a pristine blind holdout.</p>
-<p><strong>Secondary · Matchup Score answers who is favored in a particular game:</strong> First convert the two underlying neutral-field Power strengths into their expected points difference. Add the historically calibrated home-field adjustment. Then estimate the *incremental* opponent-specific effect of running versus passing: for instance, whether a strong running offense meets a defense that has allowed unusually efficient rushing performance, with every component adjusted for the quality of opponents already played. The Matchup model tests those interactions using earlier seasons and only adds nonzero adjustments when future-game validation supports them. The final margin converts to two opponent-specific 0–100 Matchup Scores (estimated win likelihoods) summing to 100. This is never a third national team ranking and never changes Power or Merit. These are modeled probabilities, not guaranteed outcomes.</p>
-<p><strong>Independent and auditable:</strong> Merit uses no preseason or recruiting information. Power uses measured roster talent and returning production only as an explicit fading preseason prior; neither model uses AP/CFP ranking, FPI, SP+, FEI or betting odds. Merit ignores conference membership directly; Power includes the explicitly disclosed, historically fitted conference-environment correction once current-season games begin. External rankings are strictly comparison baselines. Statistical uncertainty is especially high early in the season, and feature coverage and historical cutoff dates matter. See <a href="https://github.com/randomquestions-projects/college-football-merit-index/blob/main/docs/CFMI_V5_statistical_design_review.md">the statistical audit</a> and the repository's \`model_v5.js\`, \`train_v5.cjs\` and \`backtest_v5.json\` for formulas and tests.</p>
-<div id="v5ValidationSummary" class="cfmi-ext-panel" style="margin-top:18px"><strong>Research validation (reconstructed history):</strong> Loading independently measured accuracy, Brier, log loss, point-margin error and uncertainty.</div>
-<p><strong>V5.5 methodology:</strong> <a href="https://github.com/randomquestions-projects/college-football-merit-index/blob/main/docs/CFMI_V5_5_merit_power_recalibration.md" target="_blank" rel="noopener">Read the head-to-head, quality wins, FCS, provisional Merit, historical conference-context and evidence-based prior research</a>. Historical comparisons are reconstructed model-development samples, not prospective blind tests.</p>
-<p><strong>Power model-selection rule:</strong> All eight advanced factors are measured and examined. Their final weights are determined by 2024 walk-forward training and validated against the simpler baseline and prior V5 in 2025. Some will have zero independent weight if overlapping metrics already account for their predictive contribution. This is more reliable than requiring every variable to receive a positive coefficient. Quality-win and road credits are deliberately explicit in Merit, and FCS score margins receive no bonus.</p>
-<p class="muted">The older V4.1 documentation below is retained for reproducibility and comparison; its original 30/20/15/35 Merit and 65/20/10/5 Power percentages are not V5 production weights.</p>
-</div><details id="legacyMethod" class="panel section-text" style="margin-top:18px"><summary style="cursor:pointer;font-size:15px;font-weight:750">Archived V4.1 model methodology, source lineage and historical assumptions</summary><p class="muted">The formulas in this expandable section describe the superseded V4.1 model for comparison only. V5 rankings use the methodology above.</p><div class="method-index"><strong>Methodology library</strong><div><a href="#method">Merit &amp; Power models</a><a href="#variables">All variables</a><a href="#sources">Data lineage &amp; caveats</a></div></div><section id="method"><div class="subhead"><div><h2>Two rankings. Two distinct purposes.</h2><p>Both use current-season results and opponent adjustments, but independent formulas. Neither has preseason, AP/CFP, recruiting or conference-brand priors.</p></div><span class="pill">Version 4.1 — dual model</span></div>
-<div class="method-split">
-<div class="method-lens-card"><div class="tagline">BACKWARD-LOOKING · RÉSUMÉ + PLAY</div><h3>CFMI Merit</h3><p><strong>Who has earned the strongest season?</strong> Rewards wins, the difficulty of opponents, quality wins away from home, competitive losses against elite teams and demonstrated play quality.</p>
-<table class="method-weights"><tbody><tr><td>Record vs schedule expectation</td><td>30%</td></tr><tr><td>Opponent- and venue-adjusted margin</td><td>20%</td></tr><tr><td>Quality wins and quality road wins</td><td>15%</td></tr><tr><td>Opponent-adjusted on-field play</td><td>35%</td></tr></tbody></table>
-<p>Signature road wins matter here because winning difficult games is something the team <em>earned</em>. Bad losses damage Merit; close losses to great teams receive appropriate opponent and margin context.</p></div>
-<div class="method-lens-card"><div class="tagline">FORWARD-LOOKING · MATCHUP ABILITY</div><h3>CFMI Power</h3><p><strong>Who appears strongest in a future neutral-field matchup?</strong> Measures repeatable on-field strength. Signature-win points, special road-win bonuses and wins above a benchmark are <em>not</em> independent rewards here.</p>
-<table class="method-weights"><tbody><tr><td>Independent season-only SRS/Elo baseline</td><td>65%</td></tr><tr><td>Opponent-adjusted net EPA per play</td><td>20%</td></tr><tr><td>Opponent-adjusted play success rate</td><td>10%</td></tr><tr><td>Opponent-adjusted explosiveness</td><td>5%</td></tr></tbody></table>
-<p>The 65% baseline is 78% regularized opponent-adjusted margin + 22% neutral-start Elo. Thus, Power's effective weights are <strong>50.7% SRS, 14.3% Elo, 20% EPA, 10% success and 5% explosiveness</strong>.</p><p>All components use national percentiles; missing advanced metrics are adjusted toward neutral. This is a relative 0–100 Power index, <strong>not</strong> a calibrated win probability or point spread.</p></div></div>
-<div class="panel section-text" style="margin-bottom:20px"><h3>Why they can disagree</h3><p>Utah could have earned a better Merit ranking through a stronger résumé, yet Alabama could rate higher in Power through more consistent opponent-adjusted offense and defense. Both findings can be valid.</p><p>The public Power formula is calculated <strong>after</strong> Merit, without feeding back into its final score. Both use the same season-only internal opponent-strength baseline for schedule context; that baseline is not a third public ranking. Neither uses team reputation, conference branding, the AP poll or CFP poll.</p><p>We compared prespecified Power blends using held-out 2024–25 game outcomes. Modest use of EPA and success improved some uncalibrated probability-score diagnostics, but adding too much efficiency generally weakened next-game winner accuracy. The 65/20/10/5 formula is a transparent research compromise, not a statistically proven optimum.</p></div>
-<div class="subhead"><div><h2>Merit methodology: what teams have earned</h2><p>These four components determine Merit, not the predictive Power Rank.</p></div></div>
-<div class="explainer-grid">
-<div class="excard"><div class="pct">30%</div><strong>Strength of record</strong><div class="line"><span style="width:30%"></span></div><p>85% wins above expectation versus a top-25 opponent-baseline benchmark; 15% win percentage. Harder schedules create fewer expected wins. Losses to strong opponents hurt less than losses to weak teams.</p></div>
-<div class="excard"><div class="pct">20%</div><strong>Opponent-adjusted margin</strong><div class="line"><span style="width:20%;background:#69dfc9"></span></div><p>Margin with diminishing returns, corrected for venue and the independently inferred power of each opponent. A strong road loss can be more impressive than a weak home win on this metric.</p></div>
-<div class="excard"><div class="pct">15%</div><strong>Quality wins and road merit</strong><div class="line"><span style="width:15%;background:#ebc781"></span></div><p>Actual wins over better opponents earn more credit. Road victories receive a 1.52× multiplier, neutral-site wins 1.16×. FCS wins earn zero signature-win credit.</p></div>
-<div class="excard"><div class="pct">35%</div><strong>Opponent-adjusted play quality</strong><div class="line"><span style="width:35%;background:#a8b5f2"></span></div><p>Eight measured categories including offensive/defensive EPA, success, explosiveness, consistency, drive-related proxy, finishing, turnovers and penalties. Every available metric is adjusted for opposition and sparse-data confidence.</p></div></div>
-<div class="subhead"><div><h2>Inside the 35% play-quality component</h2><p>Overall CFMI weight, not just the share of the component. Missing measurements are never assumed to be high or low.</p></div></div>
-<div class="panel scrollx"><table class="variables"><thead><tr><th>Measure</th><th>Weight</th><th>Calculation</th></tr></thead><tbody>
-<tr><td>Offensive and defensive EPA/PPA</td><td>10%</td><td>Offensive EPA per play minus defensive EPA allowed, adjusted using each opponent's other games and a league-average prior.</td></tr>
-<tr><td>Offensive and defensive success</td><td>7%</td><td>Positive-EPA-play rate on offense minus rate allowed on defense, opponent-adjusted.</td></tr>
-<tr><td>Explosiveness</td><td>5%</td><td>Offensive explosive EPA-play rate minus opponent rate allowed, both opponent-adjusted.</td></tr>
-<tr><td>Consistency</td><td>4%</td><td>60% frequency of positive opponent-adjusted net-EPA games, 40% week-to-week offensive/defensive EPA stability.</td></tr>
-<tr><td>Possession-level game control</td><td>3%</td><td>Mean win probability across meaningful possessions using each snap's score, clock, possession and field position. Our independent state-only model trained on 2023 and validated on 2024–25 has no team names, spreads, preseason priors or poll inputs. Plays outside the 3–97% win-probability window are excluded; results are opponent- and venue-adjusted.</td></tr>
-<tr><td>Finishing drives</td><td>3%</td><td>Two complementary opponent-adjusted drive-level measurements: <strong>2% overall</strong> for actual points scored per meaningful drive reaching the opponent's 40-yard line versus allowed, and <strong>1% overall</strong> for actual touchdown conversion per drive entering the red zone (opponent's 20). Neither measures positive-EPA play success.</td></tr>
-<tr><td>Turnovers / expected turnovers</td><td>2%</td><td>Use source expected turnover margin when available; otherwise shrink raw turnovers to 45% to reduce recovery luck.</td></tr>
-<tr><td>Penalties</td><td>1%</td><td>Penalty-yards differential, partially corrected for the opponent's penalty tendency. Small weight because officiating and game context add noise.</td></tr>
-</tbody></table></div>
-<div class="details" style="margin-top:15px">
-<div class="panel section-text"><h3>Step 1 — Derive opponent quality, not conference prestige</h3><p>All teams start without a preseason advantage. For an FBS game, estimate a regularized margin rating by iterating over all opponents and opponents' opponents. Home advantage is 2.5 points; capped/diminishing margins prevent excessive blowout credit.</p><div class="formula">SRS(team) ≈ sum[adjusted margin - venue + opponent SRS] / (FBS games + 3.5)</div><p>We also run a season-only Elo sequence: all FBS teams begin at 1500; wins and upsets against strong opponents change ratings more than predictable victories over weak teams. A declining K-factor reduces volatility as evidence accumulates. The internal opponent-strength baseline combines 78% margin/SRS and 22% neutral-start Elo; public Power includes additional opponent-adjusted play metrics.</p><div class="formula">Elo expected = 1 / (1 + 10^((opponent Elo − team Elo − venue) / 400))<br>Change = adaptive K × (actual result − expected result) × capped margin factor</div><p>Elo is a secondary opponent-strength signal, not a separate fifth category or a preseason seeding mechanism. Opponent “top 25” in this model means top 25 by <strong>CFMI's internal SRS/Elo opponent-strength baseline</strong>, never AP/CFP.</p></div>
-<div class="panel section-text"><h3>Step 2 — Evaluate every game in context</h3><p>Harder wins raise wins-above-expectation, adjusted margin and signature-win credit. In a tough road loss, a close score can demonstrate strong play in adjusted margin, while the win/loss category still records a loss. A 30-point road win over an independently strong opponent is much more informative than the same margin against a weak FBS opponent. Published play-by-play efficiency inputs are now also filtered for garbage time.</p><p>Within signature-win quality, every FBS win has some positive credit, but the value grows smoothly with opponent strength and is multiplied by venue. FCS victories count in the W–L column but earn no quality-win points and are treated as weak evidence in adjusted margin.</p><p>Team résumé details expose the opponent's power rank, score, venue, a 0–100 performance-quality score, win quality and whether core advanced EPA data were available for the game.</p></div>
-<div class="panel section-text"><h3>Step 3 — Opponent-adjust each play metric</h3><p>Use the same game's team statistics, but assess them relative to the opponent's performances in its other games. This leave-one-matchup-out baseline shrinks toward a league average with two pseudo-games, reducing circularity and noise. Adjust offense for opponent defense; adjust defense for opponent offense.</p><div class="formula">Adjusted offense = observed offense + 0.80 × (league-average opponent defense − opponent defense excluding this game)<br>Adjusted defense = observed defense + 0.80 × (league-average opponent offense − opponent offense excluding this game)</div><p>A strong EPA performance against an elite defense therefore earns more credit than the same raw number against a weak defense. A poor showing against a great offense is penalized less than the same showing against a bottom-tier offense.</p></div>
-<div class="panel section-text"><h3>Step 4 — Handle incomplete data honestly</h3><p>Each of the eight on-field measures independently uses all valid observations; one missing finishing-drive or turnover field no longer discards the entire game. Every team/metric is shrunk toward neutral 50 based on the fraction of FBS games with that particular measurement.</p><div class="formula">Adjusted metric = 50 + (measured percentile − 50) × measured game fraction</div><p>Core EPA coverage must reach 70% nationally before CFMI activates its full opponent-adjusted model. Below that level, it clearly displays an emergency résumé-only fallback. Coverage indicators refer to <strong>both offensive and defensive EPA</strong>, not just quarter-score data.</p></div></div>
-<div class="panel section-text" style="margin-top:18px"><h3>Historical held-out check — 2024 and 2025</h3><p>To test whether V4 generalizes, we recalculated weekly rankings using only previously completed games and evaluated the next week's FBS-versus-FBS winners. <span id="historicalAccuracy">Historical accuracy loads from the latest validated results snapshot.</span> The independent opponent-power signal alone reached 70.5% and 71.8%, respectively.</p><p>That distinction is intentional: CFMI evaluates earned results and quality of play, not solely who is most likely to win the next game. This is preliminary two-season validation, not proof of optimal weights or calibrated win probabilities. <a href="./data/backtest_v4.json" target="_blank" rel="noopener">Review the full historical backtest, coverage and rank stability</a>.</p></div>
-<p class="note" style="margin:17px 0">External inspirations: <a href="https://masseyratings.com/faq.php" target="_blank" rel="noopener">Massey's schedule-adjusted ratings</a>, <a href="https://www.ncaa.com/_flysystem/public-s3/images/2024/10/30/massey.pdf" target="_blank" rel="noopener">NCAA's Massey methodology explanation</a>, <a href="https://www.fide.com/docs/regulations/ARB%20Manual%202020.pdf" target="_blank" rel="noopener">FIDE's Elo rating updates</a>, SP+ efficiency ratings and the FEI possession-efficiency framework. CFMI's formula and chosen parameters are its own and have not yet been historically calibrated. No AP/CFP rank enters the model.</p></section>
-<section class="stat-grid" aria-label="Core model weights"><div class="stat"><div class="tiny">01 / Strength of record</div><div class="num" style="color:#77d7fb">30<span style="font-size:19px">%</span></div><p>Wins versus expected schedule outcomes (Elo-enhanced).</p></div><div class="stat"><div class="tiny">02 / Adjusted margins</div><div class="num" style="color:#74ddcb">20<span style="font-size:19px">%</span></div><p>Opponent-adjusted margins; tough road losses treated fairly.</p></div><div class="stat"><div class="tiny">03 / Quality + road wins</div><div class="num" style="color:#eed092">15<span style="font-size:19px">%</span></div><p>Opponent-strength-weighted wins; top-25 road wins matter most.</p></div><div class="stat"><div class="tiny">04 / On-field efficiency</div><div class="num" style="color:#a8b5f2">35<span style="font-size:19px">%</span></div><p>Opponent-adjusted PPA, success, explosiveness, stability and more.</p></div></section>
-<section id="variables"><div class="subhead"><div><h2>All variables and model limitations</h2><p>Which variables affect CFMI and which ones are intentionally excluded.</p></div></div><div class="panel scrollx"><table class="variables"><thead><tr><th>Variable</th><th>Role</th><th>CFMI V4 treatment</th></tr></thead><tbody>
-<tr><td>Game wins / losses / ties</td><td><span class="tag">Included</span></td><td>Actual W–L and expected-win benchmarking; no committee interpretation.</td></tr>
-<tr><td>Opponent strength / strength of schedule</td><td><span class="tag">Included throughout</span></td><td>Season-only SRS/Elo network; powers expected wins, adjusted margin, quality credit and efficiency adjustments; not an independent extra weight.</td></tr>
-<tr><td>Home / away / neutral venue</td><td><span class="tag">Included</span></td><td>2.5-point home estimate and explicit 1.52× road, 1.16× neutral quality-win credit.</td></tr>
-<tr><td>Margin of victory or defeat</td><td><span class="tag">Included</span></td><td>Smooth diminishing returns after 17 points; venue and opponent strength correction.</td></tr>
-<tr><td>Quality road and neutral wins</td><td><span class="tag">Included</span></td><td>Signature wins increase with independent opponent power, venue difficulty and surprise relative to expected result.</td></tr>
-<tr><td>Close loss to a strong opponent</td><td><span class="tag">Embedded</span></td><td>Loss counts as a loss; low expected-win probability and adjusted margin prevent excessive punishment. No reward for merely losing.</td></tr>
-<tr><td>FCS opponents</td><td><span class="tag">Down-weighted</span></td><td>Wins count in record but have no signature quality credit; weak adjusted-margin evidence. FCS defeats are severely penalized.</td></tr>
-<tr><td>On-field EPA / success / explosive / red-zone</td><td><span class="tag">Included when measured</span></td><td>Offense and defense separately adjusted against each opponent's other games; missing values shrink to neutral.</td></tr>
-<tr><td>Game control and drive state</td><td><span class="tag">Measured on possessions</span></td><td>Every non-garbage scrimmage play contributes to a possession-level neutral-state win-probability estimate, then opponents and venues are adjusted. Original ESPN win probability, potentially informed by pregame spreads, is deliberately excluded.</td></tr>
-<tr><td>Finishing drives / red-zone TD rate</td><td><span class="tag">Measured</span></td><td>Actual points on each meaningful drive reaching the opposing 40; red-zone TD conversion is measured separately for drives reaching the opposing 20. One drive counts as one opportunity, not one play.</td></tr>
-<tr><td>Garbage time</td><td><span class="tag">Excluded</span></td><td>Scrimmage plays outside an independently estimated 3%–97% neutral-state win-probability window are excluded from main EPA, success and explosiveness measures.</td></tr>
-<tr><td>Expected turnover differential</td><td><span class="tag">Preferred</span></td><td>Use source expected turnover margin when available; raw turnover margin is strongly shrunk otherwise.</td></tr>
-<tr><td>Penalty differential</td><td><span class="tag">Low weight</span></td><td>One-point overall weight, partial adjustment for opponent discipline.</td></tr>
-<tr><td>Head-to-head / common opponents</td><td><span class="tag off">V4 diagnostic</span></td><td>Archived V4 did not activate a separate head-to-head rule; active v5.5 does.</td></tr>
-<tr><td>Conference affiliation</td><td><span class="tag off">V4 display-only</span></td><td>Archived V4 excluded conference membership; active v5.5 introduces a disclosed empirical correction based on historical interconference scoring.</td></tr>
-<tr><td>AP / CFP polls, recruiting, previous season</td><td><span class="tag off">Excluded</span></td><td>Never ingested into opponent power, model weights, Elo initial ratings or team CFMI results.</td></tr>
-<tr><td>Weather, injuries, travel and rest</td><td><span class="tag off">Not yet used</span></td><td>Excluded; would require reliable, retrospective measured data and independent testing.</td></tr>
-</tbody></table></div></section>
-<section id="sources"><div class="subhead"><div><h2>Data lineage &amp; caveats</h2><p>Published source files, model-derived data, and the limits of comparisons.</p></div></div>
-<div class="panel section-text" style="margin-bottom:17px"><h3>External rankings: data lineage, freshness and independence</h3>
-<p><strong>AP / CFP:</strong> top 25 teams retrieved from the public ESPN college-football rankings feed; poll dates are displayed separately. If the official publication date is not verified, the dashboard reports the detection date instead.</p>
-<p><strong>FPI, SP+ and FEI:</strong> 2026 nationwide source ranks and ratings are downloaded from <a href="https://cfbtxt.com/data/ratings_snapshots/2026/historical_ratings.csv" target="_blank" rel="noopener">CFB TXT's historical external ratings snapshots</a>, which preserve a <code>snapshot_date</code> and the original <code>source_date</code> for each rating. Original publishers: <a href="https://www.espn.com/college-football/fpi" target="_blank" rel="noopener">ESPN FPI</a>, <a href="https://pay.cfbupdate.com/sp-ratings" target="_blank" rel="noopener">SP+ by Bill Connelly</a> and <a href="https://bcftoys.com/2026-fei/" target="_blank" rel="noopener">FEI by Brian Fremeau</a>. All sources are identified by date in the comparison tab.</p>
-<p><strong>Important distinction:</strong> an external rank older than this week's CFMI rankings is still shown with its original date, not silently treated as current. A source that cannot be verified is displayed as unavailable rather than guessed. The external data is <strong>never used to compute Merit, Power or opponent strength</strong>. Rank agreement is not evidence of predictive accuracy; the separate held-out game test evaluates that.</p>
-<p>The weekly GitHub Actions job validates complete numeric 2026 source snapshots, retains per-source publication dates, and attempts to preserve a previously verified snapshot if a provider is temporarily unavailable. This does not change the CFMI ranking calculations.</p></div>
-<div class="two"><div class="panel section-text"><h3>Public game-results data</h3><p><a href="https://github.com/sportsdataverse/cfbfastR-data/blob/main/schedules/csv/cfb_schedules_2026.csv" target="_blank" rel="noopener">SportsDataverse / cfbfastR 2026 game schedules CSV</a>. Fields used: <code>completed</code>, <code>start_date</code>, home/away teams and divisions, neutral-site flag, conferences and final scores.</p><p>Each Sunday the publishing workflow downloads and validates 2026 game results, then publishes a cached snapshot. No account or paid API key is required. The data is served alongside this site to avoid browser restrictions. Weekly data coverage and the publishing timestamp are shown in the dashboard.</p><p><a href="https://api.collegefootballdata.com/data-availability" target="_blank" rel="noopener">CollegeFootballData coverage documentation</a> for drives, plays, PPA/success and other advanced endpoints. For public, analysis-ready ESPN enriched datasets, see <a href="https://github.com/sportsdataverse/cfbfastR-cfb-data" target="_blank" rel="noopener">SportsDataverse cfbfastR-cfb-data</a> (its per-game advanced tables include EPA, penalty, turnover and situational measures). The weekly publishing workflow loads the published 2026 play-by-play Parquet, builds neutral-state WP and actual scoring-opportunity summaries, and stores a small validated per-team-game file. It also retains the published advanced box-score data as fallback. The play-by-play feed can lag completed scores. Each week the site shows which team-games have measured play-by-play; if insufficient nationwide, it falls back to labeled box-score proxies while results still refresh.</p></div><div class="panel section-text"><h3>Important model limitations</h3><p>The calculated rankings are original to CFMI, not an official poll and not calibrated against end-of-season outcomes. An FBS-only game network has uncertain relative strength between conferences early in the season. Rating shrinkage helps but does not eliminate uncertainty.</p><p>Opponent-adjusted offensive/defensive scoring diagnostics are displayed but receive no ranking weight. The neutral-state win-probability model does not incorporate teams, conferences, Vegas spreads or AP/CFP; its out-of-sample 2024–25 Brier losses were 0.1365 and 0.1345. EPA/PPA, positive-EPA success, and yardage-based explosiveness are derived from observed non-garbage scrimmage plays. Control is calculated from win probabilities at each play within a possession, using a brand-neutral game-state model trained on 2023 only and validated on 2024 and 2025. The current résumé measures overlap somewhat; V4 reduces direct quality-credit weight to limit double-counting. Historical calibration is planned. FCS evidence policy, venue edge (2.5 points), Elo weights, expected-win logistic scale and SRS regularization are model assumptions, not empirically calibrated constants.</p></div></div></section></details></div>
+<div id="methodologyPage" class="cfmi-page">
+  <div class="purpose-page">
+    <section class="purpose-hero" aria-labelledby="purposeMethodTitle">
+      <div class="eyebrow">The thinking behind CFMI</div>
+      <h2 id="purposeMethodTitle">Purpose &amp; Methodology</h2>
+      <p class="purpose-lead">College football rankings should tell us <strong>what a team has earned</strong> and <strong>how strong it really is</strong>—without confusing the two.</p>
+      <p>CFMI is an independent, data-driven way to evaluate every FBS team. The goal is to challenge assumptions, account for the competition each team has faced, and make rankings explainable rather than simply accepting a team's brand, reputation or place in the polls.</p>
+      <p>We publish two distinct indices because a team can deserve a higher ranking for its résumé while another team may be stronger on the field. Both perspectives matter.</p>
+    </section>
+
+    <section class="purpose-section" aria-labelledby="purposeTwoIndices">
+      <div class="purpose-section-title">
+        <span class="purpose-step">OUR TWO CORE MEASURES</span>
+        <h3 id="purposeTwoIndices">Two questions. Two independent answers.</h3>
+      </div>
+      <div class="purpose-index-grid">
+        <article class="purpose-index-card purpose-merit">
+          <div class="purpose-index-top"><span class="purpose-index-number">01</span><span>Earned achievement</span></div>
+          <h4>Merit Index</h4>
+          <p class="purpose-index-question">Who has earned the strongest season?</p>
+          <p>Merit evaluates a team's actual body of work. It rewards meaningful victories and strong results against difficult competition—not simply the number of wins.</p>
+          <div class="purpose-evidence-title">What matters most</div>
+          <ul class="purpose-evidence-list">
+            <li><strong>Results in context:</strong> wins and losses relative to how difficult the schedule was.</li>
+            <li><strong>Quality of victories:</strong> beating elite opponents, including on the road or at neutral sites.</li>
+            <li><strong>Head-to-head:</strong> direct results when comparing teams with similar résumés.</li>
+            <li><strong>How games were played:</strong> opponent- and venue-adjusted margins, with limited credit for running up the score against weak opponents.</li>
+          </ul>
+          <p class="purpose-index-note">Merit is earned on the field. Preseason talent and recruiting do not determine it, and early-season rankings are provisional when evidence is limited.</p>
+        </article>
+        <article class="purpose-index-card purpose-power">
+          <div class="purpose-index-top"><span class="purpose-index-number">02</span><span>Predictive strength</span></div>
+          <h4>Power Index</h4>
+          <p class="purpose-index-question">Who is the strongest team right now?</p>
+          <p>Power estimates how teams would compare on a neutral field. It emphasizes sustainable football performance rather than rewarding marquee wins or an impressive-looking record on its own.</p>
+          <div class="purpose-evidence-title">What matters most</div>
+          <ul class="purpose-evidence-list">
+            <li><strong>Quality of play:</strong> opponent-adjusted scoring strength, offensive and defensive efficiency, play success and explosiveness.</li>
+            <li><strong>Quality of opposition:</strong> how well performance holds up against the opponents—and the broader network of teams—they have faced.</li>
+            <li><strong>Early-season evidence:</strong> prior performance, roster talent, returning production and transfer activity help establish a starting point.</li>
+            <li><strong>What we learn each week:</strong> real results progressively replace preseason expectations, while weak-schedule evidence is treated cautiously.</li>
+          </ul>
+          <p class="purpose-index-note">Power is not a second résumé ranking. It incorporates a modest historical cross-conference calibration based on game evidence, not an automatic bonus for a famous program.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="purpose-section" aria-labelledby="purposeDifference">
+      <div class="purpose-section-title">
+        <span class="purpose-step">OUR APPROACH</span>
+        <h3 id="purposeDifference">What makes CFMI different?</h3>
+      </div>
+      <div class="purpose-principles">
+        <div><strong>Don't confuse deserving with dangerous.</strong><p>Merit and Power answer different questions, so their rankings can—and sometimes should—disagree.</p></div>
+        <div><strong>Put every result in context.</strong><p>An excellent performance against a great opponent should mean more than the same numbers against a weak one. Venue and schedule matter.</p></div>
+        <div><strong>Use evidence, not poll position.</strong><p>AP, CFP, FPI, SP+ and FEI rankings are comparison points, not inputs used to reproduce someone else's list.</p></div>
+        <div><strong>Be clear about uncertainty.</strong><p>Early-season schedules, uneven competition and incomplete advanced statistics limit what the data can establish. We disclose those limitations rather than imply false precision.</p></div>
+      </div>
+    </section>
+
+    <aside class="purpose-secondary" aria-label="Secondary matchup predictor">
+      <div>
+        <span class="purpose-step">SECONDARY APPLICATION</span>
+        <h3>Matchup Predictor</h3>
+        <p>Uses Power, game location and validated opponent-specific tendencies to estimate how a particular game might unfold. It does not change either national ranking.</p>
+      </div>
+      <a href="#matchups" data-focus-page="matchups">Explore matchups <span aria-hidden="true">→</span></a>
+    </aside>
+    <p class="purpose-disclaimer">CFMI is an independent research project, not an official NCAA or College Football Playoff ranking. Its ratings are estimates, not certainties; established systems may use some similar football statistics, but CFMI's distinction is the separate purpose and evaluation of Merit and Power.</p>
+  </div>
+</div>
 <div class="bottom">CFMI V5.5 · Separate Merit and predictive Power rankings · 2026 regular season through selected as-of snapshot · Scores recalculated from the latest published weekly data snapshot, with separate verification of advanced-stat coverage. <br>Independent data analysis. Not affiliated with NCAA, CFP, AP, or SportsDataverse.</div>
 </main>
 <input style="display:none" type="file" id="fileInput" accept=".csv,text/csv"><input style="display:none" type="file" id="advancedInput" accept=".csv,text/csv">
@@ -760,9 +795,6 @@ $('navMethodology').addEventListener('click',e=>{e.preventDefault();switchDashbo
 $('navHistory').addEventListener('click',e=>{e.preventDefault();switchDashboardPage('history')});
 $('navPreseason').addEventListener('click',e=>{e.preventDefault();switchDashboardPage('preseason')});
 $('navMatchups').addEventListener('click',e=>{e.preventDefault();switchDashboardPage('matchups')});
-document.querySelectorAll('.method-index a[href^="#"]').forEach(a=>a.addEventListener('click',e=>{
- e.preventDefault();const target=a.getAttribute('href').slice(1);switchDashboardPage('methodology');document.getElementById('legacyMethod').open=true;$(target)?.scrollIntoView({behavior:'smooth',block:'start'});
-}));
 
 
 const resumeState={names:['Georgia','Notre Dame','Miami','','']};
@@ -1156,7 +1188,6 @@ async function loadPredictionLedger(){
   if(!led.seasons?.['2025']?.weeks?.length||!led.seasons?.['2026']?.weeks?.length)
     throw Error('2025/26 prediction records missing');
   weeklyView.predictionLedger=led;
-  renderCurrentValidation();
   updateMatchupWeekOptions();renderMatchups();
  }catch(e){
   $('matchupSummary').textContent='Historical scorecard unavailable: '+e.message;
@@ -1186,28 +1217,6 @@ loadPredictionLedger();loadPowerBenchmark();
 
 
 
-function renderCurrentValidation(){
- const target=$('v5ValidationSummary');
- if(!target)return;
- const ledger=weeklyView.predictionLedger;
- if(!ledger?.seasons?.['2025']?.overall||!ledger?.seasons?.['2026']?.overall){
-   target.innerHTML='<strong>Current v5.5 model evaluation</strong><p class="note">Waiting for the published pregame prediction ledger. Historical claims are hidden until the matched-game dataset is verified.</p>';
-   return;
- }
- const p=x=>Number.isFinite(x)?(100*x).toFixed(2)+'%':'Not available';
- const n=x=>Number.isFinite(x)?Number(x).toFixed(3):'Not available';
- const seasons=[2025,2026].map(year=>{
-  const data=ledger.seasons[String(year)].overall;
-  if(!Number.isFinite(data.played)||!Number.isFinite(data.correct)||data.played<100)
-    throw Error('Incomplete model-validation ledger '+year);
-  return '<tr><td>'+year+'</td><td>'+data.correct+'/'+data.played+'</td><td>'+p(data.accuracy)+'</td><td>'+n(data.logLoss)+'</td><td>'+n(data.marginMAE)+' pts</td></tr>';
- });
- target.innerHTML='<strong>CFMI v5.5 · reconstructed pregame validation</strong>'+
-  '<p>These are current v5.5 Power + venue forecasts for completed FBS-versus-FBS games, derived from the actual published prediction ledger. Historical source releases can contain retrospective revisions.</p>'+
-  '<div class="cfmi-scroll"><table class="cfmi-ext-table"><thead><tr><th>Season</th><th>Correct winners</th><th>Winner accuracy</th><th>Probability log loss ↓</th><th>Margin MAE ↓</th></tr></thead><tbody>'+
-  seasons.join('')+'</tbody></table></div>'+
-  '<p class="cfmi-section-note"><strong>Limitations:</strong> 2024 source data informed model training; 2025 was used in model selection, and 2026 outcomes were inspected during further refinement. These are <strong>retrospective development comparisons, not untouched prospective proof</strong>. Frozen v5.4 scored 556/762 in 2025 and 397/562 through Week 10 of 2026 on its own reconstructed ledger. Current-model game predictions and the matchup-specific adjustments are independent of the Merit rank ordering.</p>';
-}
 async function loadV5Parameters(){
  try{
    const response=await fetch('./data/model_v5_params.json',{cache:'no-store'});
@@ -1215,8 +1224,7 @@ async function loadV5Parameters(){
    const json=await response.json();
    if(!MODEL_V5.setParameters(json))throw Error('Model parameters failed numerical validation');
    state.v5ParamsLoaded=true;
-   renderCurrentValidation();
-   if(state.raw.length)recalc();
+    if(state.raw.length)recalc();
  }catch(err){
    console.warn('CFMI V5.2 historical calibration not available; using season-only neutral baseline without probabilities',err);
    state.v5ParamsLoaded=false;
@@ -1229,16 +1237,6 @@ loadPreseasonView();
 load();
 loadPollComparison();
 loadExternalComparison();
-(async()=>{
- try{
-  const response=await fetch('./data/backtest_v4.json',{cache:'no-store'});
-  if(!response.ok)throw Error('Backtest JSON HTTP '+response.status);
-  const doc=await response.json();
-  const entries=(doc.results||[]).filter(x=>x.season===2024||x.season===2025).sort((a,b)=>a.season-b.season);
-  if(entries.length!==2)throw Error('Historical seasons missing');
-  $('historicalAccuracy').textContent=entries.map(x=>'V4 selected '+(100*x.accuracy.v4).toFixed(1)+'% of '+x.heldoutGames+' held-out games in '+x.season+' (V3: '+(100*x.accuracy.v3).toFixed(1)+'%).').join(' ');
- }catch(error){$('historicalAccuracy').textContent='Current historical results are available via the linked backtest report.';}
-})();
 const initialPage=location.hash==='#comparison'?'comparison':location.hash==='#resume'?'resume':location.hash==='#history'?'history':location.hash==='#preseason'?'preseason':location.hash==='#matchups'?'matchups':
  ['#method','#variables','#sources','#methodology'].includes(location.hash)?'methodology':'rankings';
 switchDashboardPage(initialPage);
