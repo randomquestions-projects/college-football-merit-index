@@ -1,15 +1,14 @@
-/* CFMI V5.2 season-only Power engine + optional V5.3 Week0 prior overlay.
- * Merit never includes recruiting, preseason, AP/CFP, external indices or conference labels.
- * Power's early-game prior uses current-roster talent, last-year performance,
- * returning production and transfers when MODEL_PRESEASON_V53 is loaded.
- * This prior fades entirely after five completed FBS games.
- * The base network is fitted using PRIOR seasons (see train_v5.cjs).
+/* CFMI v5.6: results-first Merit with opponent-adjusted dominance; independent
+ * neutral-field Power retains historically selected scoring coefficients.
+ * Preseason Power prior fades with opponent-weighted effective FBS evidence.
+ * Legacy V4 features are read-only research inputs; V4 final rankings are unused.
  */
 'use strict';
 const MODEL_V5={
  version:'5.6.0',name:'CFMI V5.6 — dominance-informed earned Merit, independently calibrated Power',
  meritWeights:{record:.50,qualityResidual:.20,control:.30},
- meritScale:{wabPoints:12,qualityPoints:28,controlAmplitude:32,controlMarginScale:16},
+ meritScale:{wabPoints:12,qualityPoints:28,dominancePoints:1.30},
+ meritPerformanceWeights:Object.freeze({margin:.55,control:.20,efficiency:.15,finishing:.07,discipline:.03}),
  powerScale:{indexPointsPerExpectedMarginPoint:1.6},
  calibrated:false,validation:null,
  params:{epa:0,success:0,explosive:0,finishing:0,consistency:0,control:0,offense:0,defense:0,homePoints:2.5,logisticScale:12,
@@ -131,10 +130,9 @@ function attachEfficiencyV5(teams,advRows){
      // Road and neutral difficulty already contributes through WAB; a small,
      // deliberately explicit earned-road-win bonus is an additional preference.
      // Venue is already accounted for through the result benchmark; no second road multiplier.
-     const site=1;
      // Only actual wins earn positive signature credit. Losses to good teams
      // receive no "quality-loss bonus"; WAB already accounts for difficulty.
-     const achievement=g.win?opponentCredit*site*(.75+.25*(1-g.expected)):0;
+     const achievement=g.win?opponentCredit*(.75+.25*(1-g.expected)):0;
      g.meritQualityContribution=achievement;
      qualityAchievement+=achievement;
      // FCS win by 60 earns zero extra margin recognition. A loss to an FCS
@@ -143,7 +141,7 @@ function attachEfficiencyV5(teams,advRows){
        adjustedSum+=g.adjustedMOV;eligible++;
        const a=teamAdvanced.get(String(g.id))||{};
        const margin=v5clamp(g.adjustedMOV,-30,30);
-       const parts={margin};const weights={margin:.55,control:.20,efficiency:.15,finishing:.07,discipline:.03};
+       const parts={margin};const weights=MODEL_V5.meritPerformanceWeights;
        if(Number.isFinite(a.possession_control_wp))
          parts.control=v5clamp((a.possession_control_wp-.5)*30+2*Math.tanh(g.opRating/14),-12,12);
        if(Number.isFinite(a.off_ppa)&&Number.isFinite(a.def_ppa)){
@@ -182,7 +180,7 @@ function attachEfficiencyV5(teams,advRows){
    // site-adjusted margins; capped game MOV already discounts huge blowouts.
    t.mov=t.meritMarginRaw;
    const evidence=eligible/(eligible+1.7);
-   t.meritControlScore=v5clamp(50+1.30*t.meritDominanceRaw*evidence,0,100);
+   t.meritControlScore=v5clamp(50+MODEL_V5.meritScale.dominancePoints*t.meritDominanceRaw*evidence,0,100);
    t.meritPerformanceScore=t.meritControlScore;
  }
  // This component is a transparent achievement bonus rather than a second
