@@ -74,7 +74,7 @@ const weekZeroCutoff=firstKick-1;
 const weekZero=compute(rows.map(r=>({...r,completed:'FALSE'})),advRows,weekZeroCutoff,parameters,prior,matchupParams);
 weeks.push({week:0,asOfDate:new Date(weekZeroCutoff).toISOString().slice(0,10),
  cutoffUtc:new Date(weekZeroCutoff).toISOString(),gameCount:0,
- advancedCoverage:weekZero.coverage,modelVersion:'CFMI V5.6 preseason baseline',
+ advancedCoverage:weekZero.coverage,modelVersion:'CFMI V5.7 preseason baseline',
  teams:weekZero.teams.map(summarize)});
 
 for(let week=1;week<=lastWeek;week++){
@@ -133,7 +133,7 @@ const matchups=nextWeek===null?[]:future.filter(x=>Number(x.week)===nextWeek)
   };
  }).filter(Boolean);
 const document={
- season:2026,version:'CFMI V5.6 Merit and Power / matchup secondary',
+ season:2026,version:'CFMI V5.7 Merit and Power / matchup secondary',
  generatedAtUtc:new Date().toISOString(),
  historicalMode:'RECONSTRUCTED_AS_OF_CUTOFF',
  warning:'Week 0 Power uses preseason roster talent, previous-season strength, returning production and portal evidence. Merit is provisional until adequate games are completed. Historical weekly values are reconstructed from current releases, not frozen as-original snapshots. Power uses opponent-evidence prior decay and a separately fitted historical interconference correction.',
