@@ -427,8 +427,10 @@ function makeAdvancedRows(data){
  const lookup=rows=>new Map(rows.map(x=>[String(x.game_id)+'|'+String(x.pos_team_id),x]));
  const team=lookup(data.team),sit=lookup(data.situational),turn=lookup(data.turnover);
  const lines=new Map();for(const x of data.lines){const key=String(x.game_id)+'|'+String(x.team_id);if(!lines.has(key))lines.set(key,[]);lines.get(key).push(x)}
+ const byGameId=new Map();
+ for(const row of state.raw){const key=String(row.game_id);if(!byGameId.has(key))byGameId.set(key,row);}
  const out=[];for(const g of state.games){if(!g.hfbs||!g.afbs)continue;
-   const orig=state.raw.find(x=>String(x.game_id)===String(g.id));if(!orig)continue;
+   const orig=byGameId.get(String(g.id));if(!orig)continue;
    const h=String(orig.home_id),a=String(orig.away_id),id=String(g.id);
    const keys=[id+'|'+h,id+'|'+a];
    const ph=lines.get(keys[0]),pa=lines.get(keys[1]);
