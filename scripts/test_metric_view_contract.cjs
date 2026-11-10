@@ -34,7 +34,7 @@ const advanced=parse(read('data/cfmi_advanced_2026.csv'));
 assert(rows.length>500&&advanced.length>500,'Incomplete sources');
 const result=compute(rows,advanced,parameters,prior);
 assert(result.audit.schools>=130&&result.audit.allScoresReconciled);
-assert.equal(result.audit.scoringModel,'5.5.0');
+assert.equal(result.audit.scoringModel,'5.6.0');
 for(const [key,item] of Object.entries(result.kinds))
  assert(item.field&&item.origin&&item.kind&&item.unit,'Incomplete lineage '+key);
 assert.equal(result.kinds.legacyQ.kind,'legacy-excluded');
@@ -54,10 +54,11 @@ assert(uga.merit.publishedRank<result.getView('Alabama').merit.publishedRank);
 for(const t of result.teams){
  const view=result.getView(t.name),games=result.getGames(t.name);
  assert.equal(view.record.games,games.length,'Game count '+t.name);
- for(const field of ['q','qualityScore','bestWin','qRoadWins'])
+ for(const field of ['q','qualityScore','bestWin','qRoadWins','effScore'])
   assert(!Object.hasOwn(view,field)&&games.every(g=>!Object.hasOwn(g,field)),
     'Legacy view field '+t.name+' '+field);
  const meritSum=Object.values(view.merit.componentScore).reduce((a,b)=>a+b,0);
+ assert(Number.isFinite(view.merit.dominance.raw)&&view.merit.dominance.advancedCoverage>=0,'Dominance data absent '+t.name);
  assert(Math.abs(meritSum-view.merit.score)<1e-6,'Merit score '+t.name);
  const powerSum=Object.values(view.power.components).reduce((a,b)=>a+b,0);
  assert(Math.abs(powerSum-view.power.neutralPoints)<1e-6,'Power points '+t.name);
