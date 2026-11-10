@@ -1,4 +1,4 @@
-/* CFMI v6 presentation contract, backed by v5.6 Merit and Power scoring.
+/* CFMI v6 presentation contract, backed by v5.7 Merit and unchanged Power scoring.
  * This module contains NO ranking coefficients and changes NO scoring.
  * Legacy V4 fields remain in the research objects, never in this public contract.
  * All active values are taken from the scoring model and validated before rendering.
@@ -6,17 +6,17 @@
 'use strict';
 const CFMI_PUBLIC_VIEW = Object.freeze({
  schemaVersion:'6.0.0',
- scoringVersion:'5.6.0',
+ scoringVersion:'5.7.0',
  sourceDefinitions:Object.freeze({
    meritRecord:{field:'meritRecordScore',kind:'active',origin:'model_v5.js:attachEfficiencyV5',unit:'0–100 subscore'},
    meritQuality:{field:'meritQualityScore',kind:'active',origin:'model_v5.js:attachEfficiencyV5',unit:'0–100 subscore'},
    meritPerformance:{field:'meritPerformanceScore',kind:'active',origin:'model_v5.js:attachEfficiencyV5',unit:'0–100 subscore'},
    meritDominance:{field:'meritDominanceRaw',kind:'active',origin:'model_v5.js:attachEfficiencyV5',unit:'opponent-adjusted performance points'},
-   meritH2H:{field:'meritHeadToHeadAdjustment',kind:'active',origin:'model_v5.js:attachEfficiencyV5',unit:'Merit points'},
+   meritH2H:{field:'meritHeadToHeadReasons',kind:'supporting',origin:'model_v5.js:attachEfficiencyV5',unit:'direct-matchup results (pairwise tie breaker only)'},
    meritFCS:{field:'meritFcsPerformancePenalty',kind:'active',origin:'model_v5.js:attachEfficiencyV5',unit:'Merit points'},
    opponentStrength:{field:'opRating',kind:'supporting',origin:'model_v4.js:computeV4',unit:'baseline neutral points'},
    gameWinQuality:{field:'meritQualityContribution',kind:'active',origin:'model_v5.js:attachEfficiencyV5',unit:'raw signature-win units'},
-   gameRecordAchievement:{field:'meritResultContribution',kind:'active',origin:'model_v5.js:attachEfficiencyV5',unit:'win minus expected benchmark win'},
+   gameRecordAchievement:{field:'meritResultContribution',kind:'active',origin:'model_v5.js:attachEfficiencyV5',unit:'difficulty-weighted win minus expected benchmark win'},
    gameAdjustedMargin:{field:'adjustedMOV',kind:'active',origin:'model_v5.js:attachEfficiencyV5',unit:'adjusted margin points'},
    powerPoints:{field:'powerPoints',kind:'active',origin:'model_v5.js:attachEfficiencyV5',unit:'neutral-field points'},
    powerBreakdown:{field:'powerContributionPoints',kind:'active',origin:'model_v5.js:attachEfficiencyV5',unit:'neutral-field points'},
@@ -34,7 +34,8 @@ const CFMI_PUBLIC_VIEW = Object.freeze({
      if(!this.n(team[f]))this.fail(team.name+': missing active '+f);
    const w=typeof MODEL_V5==='object'?MODEL_V5.meritWeights:{record:.50,qualityResidual:.20,control:.30};
    const sum=w.record*team.meritRecordScore+w.qualityResidual*team.meritQualityScore+
-     w.control*team.meritControlScore+team.meritHeadToHeadAdjustment+team.meritFcsPerformancePenalty;
+     w.control*team.meritControlScore+team.meritFcsPerformancePenalty;
+   if(Math.abs(team.meritHeadToHeadAdjustment)>1e-12)this.fail(team.name+': head-to-head is incorrectly added to the score');
    if(Math.abs(sum-team.score)>1e-6)this.fail(team.name+': Merit does not reconcile');
    const powerEntries=Object.values(team.powerContributionPoints||{});
    if(!powerEntries.length||!powerEntries.every(this.n))this.fail(team.name+': power components missing or invalid');
@@ -50,7 +51,7 @@ const CFMI_PUBLIC_VIEW = Object.freeze({
      if(g.win&&g.opFbs&&g.meritQualityContribution<0)this.fail(team.name+': negative win credit');
      if((!g.win||!g.opFbs)&&Math.abs(g.meritQualityContribution)>1e-8)
        this.fail(team.name+': quality win credit awarded to non-FBS win');
-     if(Math.abs(g.meritResultContribution-(g.win-g.expected))>1e-8)
+     if(Math.abs(g.meritResultContribution-(g.win-g.expected)*(g.win?(.65+.90*(1-g.expected)):(.70+.70*g.expected)))>1e-8)
        this.fail(team.name+': result achievement mismatch '+g.id);
    }
    const raw=team.played.reduce((s,g)=>s+g.meritQualityContribution,0);
@@ -67,19 +68,19 @@ const CFMI_PUBLIC_VIEW = Object.freeze({
      record:w.record*t.meritRecordScore,
      quality:w.qualityResidual*t.meritQualityScore,
      gamePerformance:w.control*t.meritPerformanceScore,
-     headToHead:t.meritHeadToHeadAdjustment,
+     headToHead:0,
      fcsPerformance:t.meritFcsPerformancePenalty
    };
-   const qualityUplift=w.qualityResidual*(t.meritQualityScore-50);
+   const qualityUplift=w.qualityResidual*(t.meritQualityScore-MODEL_V5.meritScale.qualityBase);
    const view={
-     model:'CFMI-v5.6',schema:this.schemaVersion,team:t.name,conference:t.conference,
+     model:'CFMI-v5.7',schema:this.schemaVersion,team:t.name,conference:t.conference,
      record:{wins:t.won,losses:t.lost,fbsGames:t.fbsGames,games:t.games},
      merit:{
        score:t.score,publishedRank:t.meritPublishedRank,provisional:!!t.meritProvisional,
        internalResearchRank:t.rank,componentScore,
        componentInputs:{record:t.meritRecordScore,quality:t.meritQualityScore,gamePerformance:t.meritPerformanceScore},
        dominance:{raw:t.meritDominanceRaw,advancedCoverage:t.meritDominanceCoverage,weightFraction:w.control},
-       adjustmentDetail:{headToHeadCap:3,fcsPenaltyFloor:-5,qualityAggregation:'Saturated sum with shrinkage; individual game raw signature units do not add directly to total Merit points'},
+       adjustmentDetail:{headToHeadCap:0,pairwiseTieGap:MODEL_V5.meritTieGap,fcsPenaltyFloor:-5,qualityAggregation:'Source-strength-linear with fixed early-evidence shrinkage; game quality credit is additive unless clipped at 100'},
        qualityRaw:t.meritRawQuality,qualityUplift,
        headToHeadResults:(t.meritHeadToHeadReasons||[]).map(x=>({opponent:x.opponent,won:!!x.won,gameId:String(x.gameId)})),
        wab:t.wab,sos:t.sos,adjustedMarginRaw:t.meritMarginRaw
@@ -118,7 +119,7 @@ const CFMI_PUBLIC_VIEW = Object.freeze({
    const signatureUnits=g.meritQualityContribution;
    const extra=(t.advGames||[]).find(x=>String(x.id)===String(g.id));
    const signatureUplift=t.meritRawQuality>0?
-     (MODEL_V5.meritWeights.qualityResidual*(t.meritQualityScore-50))*signatureUnits/t.meritRawQuality:0;
+     (MODEL_V5.meritWeights.qualityResidual*(t.meritQualityScore-MODEL_V5.meritScale.qualityBase))*signatureUnits/t.meritRawQuality:0;
    const dominance=(t.meritDominanceGames||[]).find(x=>x.gameId===String(g.id));
    return {
      id:String(g.id),opponent:g.op,isFbs:!!g.opFbs,site:g.site,
@@ -131,7 +132,7 @@ const CFMI_PUBLIC_VIEW = Object.freeze({
      resultAboveBenchmark:this.safeNumber(g.meritResultContribution),
      meritSignatureWinUnits:this.safeNumber(signatureUnits),
      allocatedMeritQualityUpliftPoints:this.safeNumber(signatureUplift),
-     allocatedPointsMethod:'Proportional allocation of the current team quality-subscore uplift over neutral 50; allocations sum, not independent causal marginal values',
+     allocatedPointsMethod:'Proportional allocation of quality subscore uplift above source-anchored base 30; sums reconcile but are not causal marginal values',
      adjustedMargin:this.safeNumber(g.adjustedMOV),
      dominanceScore:this.safeNumber(dominance?.dominance),
      dominanceMeasured:(dominance?.measured||[]).slice(),

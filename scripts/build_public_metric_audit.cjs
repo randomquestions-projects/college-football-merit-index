@@ -55,7 +55,7 @@ const manifest={
  caveats:[
   'Current-week and historical model values may differ from as originally published because source releases can be revised',
   'Opponent baseline estimates are season-fitted and include the game being described; never interpret them as independent pregame ratings',
-  'Raw signature-win units aggregate nonlinearly into the team quality subscore; allocated uplift is a proportional reconciliation, not causal attribution',
+  'Opponent-strength and road-weighted signature-win units aggregate linearly (except bounded subscores); allocated uplift is proportional rather than causal attribution',
   'Legacy V4 diagnostic quality score and road-multiplied q are retained in source/archive but excluded from public v6 views',
   'Predictive Power research underwent repeated historical development on 2025/2026; retrospective accuracy is not a blind independent validation',
   'In-season historical conference correction is an explicitly learned conference-based component, not a conference-free model'

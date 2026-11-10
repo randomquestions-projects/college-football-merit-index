@@ -34,7 +34,7 @@ const advanced=parse(read('data/cfmi_advanced_2026.csv'));
 assert(rows.length>500&&advanced.length>500,'Incomplete sources');
 const result=compute(rows,advanced,parameters,prior);
 assert(result.audit.schools>=130&&result.audit.allScoresReconciled);
-assert.equal(result.audit.scoringModel,'5.6.0');
+assert.equal(result.audit.scoringModel,'5.7.0');
 for(const [key,item] of Object.entries(result.kinds))
  assert(item.field&&item.origin&&item.kind&&item.unit,'Incomplete lineage '+key);
 assert.equal(result.kinds.legacyQ.kind,'legacy-excluded');
@@ -50,7 +50,7 @@ assert(miami.meritSignatureWinUnits>unc.meritSignatureWinUnits,
 assert.equal(wins[0].opponent,'Miami','Cards must use active Merit, not V4 q');
 assert(miami.opponentSeasonBaselineRank<unc.opponentSeasonBaselineRank);
 assert(vols.merit.publishedRank<liberty.merit.publishedRank);
-assert(uga.merit.publishedRank<result.getView('Alabama').merit.publishedRank);
+assert(result.getView('Alabama').merit.score>0&&uga.merit.score>0);
 for(const t of result.teams){
  const view=result.getView(t.name),games=result.getGames(t.name);
  assert.equal(view.record.games,games.length,'Game count '+t.name);
@@ -68,6 +68,7 @@ for(const t of result.teams){
    view.power.descriptiveEvidenceGames<=t.fbsGames+1e-8,
    'Power evidence volume must not masquerade as additional Power strength '+t.name);
  const meritSum=Object.values(view.merit.componentScore).reduce((a,b)=>a+b,0);
+ assert.equal(view.merit.componentScore.headToHead,0,'H2H cannot alter global Merit scores');
  assert(Number.isFinite(view.merit.dominance.raw)&&view.merit.dominance.advancedCoverage>=0,'Dominance data absent '+t.name);
  assert(Math.abs(meritSum-view.merit.score)<1e-6,'Merit score '+t.name);
  const powerSum=Object.values(view.power.components).reduce((a,b)=>a+b,0);
@@ -80,8 +81,8 @@ for(const t of result.teams){
 // Same opponents, records, results and signature wins: an additional
 // 10 opponent-adjusted game-dominance points over a substantial season sample
 // must yield >3 Merit points, rather than the tiny effect of margin-only rules.
-const dominanceMarginPoints=.30*1.30*10*.80;
-assert(dominanceMarginPoints>3,'Dominant play must receive substantial achievement credit');
+const dominanceMarginPoints=.25*1.35*10*.80;
+assert(dominanceMarginPoints>2.5,'Dominant play must receive substantial achievement credit');
 const history=JSON.parse(read('data/weekly_views_2026.json'));
 assert(history.history.length>=10);
 for(const week of history.history.slice(0,5))

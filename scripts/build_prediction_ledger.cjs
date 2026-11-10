@@ -146,7 +146,7 @@ function aggregate(games){
  return {played:n,correct:wins,incorrect:n-wins,accuracy:n?wins/n:null,
   unplayed:games.length-n,scheduled:games.length,brier,logLoss,marginMAE:mae};
 }
-const output={version:'CFMI V5.6 Merit-Power calibrated matchup ledger v1',
+const output={version:'CFMI V5.7 Merit-Power calibrated matchup ledger v1',
  matchupModel:matchupParameters?.deployCandidate?'historically_selected_matchup_interactions':'power_plus_venue_only',
  generatedAtUtc:new Date().toISOString(),
  trainingSeasons:[2024],selectionSeasons:[2025],

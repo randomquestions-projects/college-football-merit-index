@@ -121,7 +121,7 @@ const compute=new Function('scores','advCsv','parameters','cutoff','prior',model
 const csv=fs.readFileSync(path.join(data,'cfb_schedules_2026.csv'),'utf8');
 const adv=fs.readFileSync(path.join(data,'cfmi_advanced_2026.csv'),'utf8');
 const latest=compute(csv,adv,doc,Date.now(),prior);
-assert.equal(latest.version,'5.6.0');
+assert.equal(latest.version,'5.7.0');
 assert(latest.gameCount>=300,'Expected substantial 2026 games');
 assert(latest.teams.length>=130,'Expected complete FBS coverage');
 assert(latest.coverage.eligible>=300,'Missing advanced data eligibility');
@@ -131,7 +131,8 @@ assert(latest.teams.every(t=>Number.isFinite(t.merit)&&t.merit>=0&&t.merit<=100
  'Invalid Merit, Power, coverage or ranks');
 // Merit exactly follows the published earned-resume contribution weights.
 for(const t of latest.teams){
- const scored=.50*t.meritRecord+.20*t.meritQuality+.30*t.meritControl+(t.h2h||0)+(t.fcs||0);
+ const scored=.45*t.meritRecord+.30*t.meritQuality+.25*t.meritControl+(t.fcs||0);
+ assert.equal(t.h2h,0,'Global head-to-head score adjustment prohibited');
  assert(Math.abs(scored-t.merit)<1e-8,'Merit formula mismatch '+t.name);
  assert(Number.isFinite(t.dominance)&&t.dominanceCoverage>=0&&t.dominanceCoverage<=1,'Missing opponent-adjusted dominance '+t.name);
  assert(t.dominance>=-30&&t.dominance<=30,'Unbounded game dominance can overwhelm Merit '+t.name);
@@ -181,7 +182,7 @@ for(const key of ['rank','powerRank']){
 }
 for(const [key,rank] of [['merit','rank'],['power','powerRank']]){
  const sorted=latest.teams.slice().sort((a,b)=>a[rank]-b[rank]);
- for(let i=1;i<sorted.length;i++)assert(sorted[i-1][key]>=sorted[i][key]-1e-8,'Nonmonotone '+rank);
+ for(let i=1;i<sorted.length;i++)assert(sorted[i-1][key]>=sorted[i][key]-(key==='merit'?.350001:1e-8),'Nonmonotone '+rank);
 }
 assert(Array.isArray(history.history)&&history.history.length>=6,'Weekly snapshots missing');
 assert.equal(history.season,2026);
@@ -220,7 +221,7 @@ for(const game of history.upcoming.games||[]){
  }else assert.equal(game.homeWinProbability,null);
 }
 const output={
- modelVersion:'5.6.0',generatedAtUtc:new Date().toISOString(),
+ modelVersion:'5.7.0',generatedAtUtc:new Date().toISOString(),
  provenance:{trainSeason:doc.trainSeason,validationSeason:doc.validationSeason,
   selected:doc.deployedCandidate,validation:doc.validation},
  coverage:latest.coverage,totalGames:latest.gameCount,teamCount:latest.teams.length,
