@@ -248,9 +248,11 @@ def main():
         "advanced_team_game_rows": len(output),
         "advanced_source_row_counts": {name: len(rows) for name, rows in advanced.items()},
         "advanced_source_errors": errors, "game_data_source": SOURCE,
-        "model_version": "CFMI-4.0.0",
-        "weights": {"strength_of_record": 30, "adjusted_margin": 20,
-                    "quality_and_road": 15, "on_field": 35},
+        # Ingestion metadata describes the data, never claims the scoring
+        # weights or version selected by a downstream ranking build.
+        "dataset_schema_version": "2.0.0",
+        "scoring_model_declared_here": False,
+        "scoring_model_config_path": "data/model_v5_params.json",
         "data_coverage_policy": "per-metric nullable values; neutral-adjusted measured share",
     }
     (DATA / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
