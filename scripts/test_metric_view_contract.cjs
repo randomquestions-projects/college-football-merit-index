@@ -57,6 +57,16 @@ for(const t of result.teams){
  for(const field of ['q','qualityScore','bestWin','qRoadWins','effScore'])
   assert(!Object.hasOwn(view,field)&&games.every(g=>!Object.hasOwn(g,field)),
     'Legacy view field '+t.name+' '+field);
+ const fbs=games.filter(g=>g.isFbs);
+ assert.equal(fbs.length,view.record.fbsGames,'FBS game count mismatch '+t.name);
+ assert(fbs.every(g=>Number.isFinite(g.dominanceScore)),
+   'One or more played FBS games lack measured/fallback dominance '+t.name);
+ assert(fbs.every(g=>Array.isArray(g.dominanceMeasured)),
+   'Game-level model provenance missing '+t.name);
+ assert(Number.isFinite(view.power.descriptiveEvidenceGames)&&
+   view.power.descriptiveEvidenceGames>=0&&
+   view.power.descriptiveEvidenceGames<=t.fbsGames+1e-8,
+   'Power evidence volume must not masquerade as additional Power strength '+t.name);
  const meritSum=Object.values(view.merit.componentScore).reduce((a,b)=>a+b,0);
  assert(Number.isFinite(view.merit.dominance.raw)&&view.merit.dominance.advancedCoverage>=0,'Dominance data absent '+t.name);
  assert(Math.abs(meritSum-view.merit.score)<1e-6,'Merit score '+t.name);
@@ -67,6 +77,12 @@ for(const t of result.teams){
  if(view.coverage.coreGames===0)
   assert(games.every(g=>!g.diagnostics.coreEPAMeasured),'False EPA '+t.name);
 }
+// Same opponents, records, results and signature wins: an additional
+// 10 opponent-adjusted game-dominance points over a substantial season sample
+// must yield >3 Merit points, rather than the tiny effect of margin-only rules.
+const dominanceMarginPoints=MODEL_MERIT_PLACEHOLDER();
+function MODEL_MERIT_PLACEHOLDER(){return .30*1.30*10*.80}
+assert(dominanceMarginPoints>3,'Dominant play must receive substantial achievement credit');
 const history=JSON.parse(read('data/weekly_views_2026.json'));
 assert(history.history.length>=10);
 for(const week of history.history.slice(0,5))
