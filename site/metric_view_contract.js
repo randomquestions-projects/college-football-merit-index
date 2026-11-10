@@ -132,7 +132,7 @@ const CFMI_PUBLIC_VIEW = Object.freeze({
      resultAboveBenchmark:this.safeNumber(g.meritResultContribution),
      meritSignatureWinUnits:this.safeNumber(signatureUnits),
      allocatedMeritQualityUpliftPoints:this.safeNumber(signatureUplift),
-     allocatedPointsMethod:'Proportional allocation of the current team quality-subscore uplift over neutral 50; allocations sum, not independent causal marginal values',
+     allocatedPointsMethod:'Proportional allocation of quality subscore uplift above source-anchored base 30; sums reconcile but are not causal marginal values',
      adjustedMargin:this.safeNumber(g.adjustedMOV),
      dominanceScore:this.safeNumber(dominance?.dominance),
      dominanceMeasured:(dominance?.measured||[]).slice(),
