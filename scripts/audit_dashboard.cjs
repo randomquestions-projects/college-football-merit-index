@@ -10,6 +10,12 @@ if(boundary<1500)throw Error('Invalid engine boundary');
 const prelude=m[1].slice(0,boundary);
 const model=fs.readFileSync(path.join(base,'model_v4.js'),'utf8')+'\n'+fs.readFileSync(path.join(base,'opponent_network_research.js'),'utf8')+'\n'+fs.readFileSync(path.join(base,'model_v5.js'),'utf8')+'\n'+fs.readFileSync(path.join(base,'preseason_prior_v1.js'),'utf8');
 const doc=JSON.parse(fs.readFileSync(path.join(data,'model_v5_params.json'),'utf8'));
+const datasetMetadata=JSON.parse(fs.readFileSync(path.join(data,'metadata.json'),'utf8'));
+assert.equal(datasetMetadata.season,2026,'Published ingestion snapshot must be current season');
+assert.equal(datasetMetadata.dataset_schema_version,'2.0.0','Data and scoring schema must be separated');
+assert.equal(datasetMetadata.scoring_model_declared_here,false,'Ingestion must not claim ownership of ranking coefficients');
+assert(!Object.hasOwn(datasetMetadata,'model_version')&&!Object.hasOwn(datasetMetadata,'weights'),
+ 'Legacy V4 coefficients or version leaked into active data ingestion metadata');
 const history=JSON.parse(fs.readFileSync(path.join(data,'weekly_views_2026.json'),'utf8'));
 const prior=JSON.parse(fs.readFileSync(path.join(data,'preseason_prior_2026.json'),'utf8'));
 const projection=JSON.parse(fs.readFileSync(path.join(data,'preseason_playoff_forecast_2026.json'),'utf8'));
@@ -128,6 +134,7 @@ for(const t of latest.teams){
  const scored=.50*t.meritRecord+.20*t.meritQuality+.30*t.meritControl+(t.h2h||0)+(t.fcs||0);
  assert(Math.abs(scored-t.merit)<1e-8,'Merit formula mismatch '+t.name);
  assert(Number.isFinite(t.dominance)&&t.dominanceCoverage>=0&&t.dominanceCoverage<=1,'Missing opponent-adjusted dominance '+t.name);
+ assert(t.dominance>=-30&&t.dominance<=30,'Unbounded game dominance can overwhelm Merit '+t.name);
  assert(Math.abs(t.powerComponentTotal-t.powerPoints)<1e-8,'Power component total mismatch '+t.name);
 }
 // Metamorphic check: increasing an ALREADY dominant FCS victory by 60
