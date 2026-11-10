@@ -3,9 +3,17 @@ name: Refresh and publish CFMI rankings
 on:
   push:
     branches: [main]
+    paths:
+      - 'site/**'
+      - 'scripts/**'
+      - '.github/workflows/publish.yml'
   workflow_dispatch:
   pull_request:
     branches: [main]
+    paths:
+      - 'site/**'
+      - 'scripts/**'
+      - '.github/workflows/publish.yml'
   schedule:
     - cron: '0 9 * * 0'
       timezone: America/New_York
