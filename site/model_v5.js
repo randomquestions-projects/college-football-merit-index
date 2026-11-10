@@ -1,13 +1,15 @@
-/* CFMI v5.6: results-first Merit with opponent-adjusted dominance; independent
+/* CFMI v5.7: opponent-quality-first Merit with pairwise-only H2H; independent
  * neutral-field Power retains historically selected scoring coefficients.
  * Preseason Power prior fades with opponent-weighted effective FBS evidence.
  * Legacy V4 features are read-only research inputs; V4 final rankings are unused.
  */
 'use strict';
 const MODEL_V5={
- version:'5.6.0',name:'CFMI V5.6 — dominance-informed earned Merit, independently calibrated Power',
- meritWeights:{record:.50,qualityResidual:.20,control:.30},
- meritScale:{wabPoints:12,qualityPoints:28,dominancePoints:1.30},
+ version:'5.7.0',name:'CFMI V5.7 — schedule-aware earned Merit, independently calibrated Power',
+ meritWeights:{record:.45,qualityResidual:.30,control:.25},
+ // Anchored scales: fixed across weeks, not percentile re-ranking or tanh saturation.
+ meritScale:{wabPoints:11.5,qualityPoints:10.5,qualityBase:30,dominancePoints:1.35},
+ meritTieGap:0.35,
  meritPerformanceWeights:Object.freeze({margin:.55,control:.20,efficiency:.15,finishing:.07,discipline:.03}),
  powerScale:{indexPointsPerExpectedMarginPoint:1.6},
  calibrated:false,validation:null,
@@ -115,24 +117,29 @@ function attachEfficiencyV5(teams,advRows){
    return (xs.reduce((a,b)=>a+b,0)+2*centers[field])/(xs.length+2);
  };
  for(const t of teams){
-   t.meritRecordScore=v5clamp(50+MODEL_V5.meritScale.wabPoints*t.wab,0,100);
+   t.meritWeightedAchievement=0;
    t.recordTailProbability=t.games?v5PoissonBinomialTail(t.played.map(g=>g.expected),t.won):null;
    let qualityAchievement=0;
    let adjustedSum=0, dominanceSum=0, eligible=0, dominanceObserved=0;
    t.meritDominanceGames=[];
    const teamAdvanced=new Map((t.advGames||[]).map(a=>[String(a.id),a]));
    for(const g of t.played){
-     g.meritResultContribution=g.win-g.expected;
-     const hard=g.opFbs?v5sigmoid((g.opRating-(t._v5Benchmark??0))/7.5):0;
-     // Strong opponents matter disproportionately; ordinary FBS wins have
-     // only small extra signature credit beyond wins above benchmark.
-     const opponentCredit=g.opFbs?v5clamp(.10+1.10*hard,0,1.25):0;
-     // Road and neutral difficulty already contributes through WAB; a small,
-     // deliberately explicit earned-road-win bonus is an additional preference.
-     // Venue is already accounted for through the result benchmark; no second road multiplier.
-     // Only actual wins earn positive signature credit. Losses to good teams
-     // receive no "quality-loss bonus"; WAB already accounts for difficulty.
-     const achievement=g.win?opponentCredit*(.75+.25*(1-g.expected)):0;
+     // A strong-opponent win beats a weak-opponent win in the record component,
+     // while a weak-opponent loss incurs the heavier expected-win penalty.
+     // Ordinary WAB is preserved separately as an auditable supporting measure.
+     const difficultyFactor=g.win?
+       (.65+.90*(1-g.expected)):(.70+.70*g.expected);
+     g.meritResultContribution=(g.win-g.expected)*difficultyFactor;
+     t.meritWeightedAchievement+=g.meritResultContribution;
+     // A signature is an actual FBS victory against a measured strong opponent.
+     // Keep this source-anchored and approximately linear: the old tanh transform
+     // erased most separation among schools with multiple quality wins.
+     const hard=g.opFbs?v5sigmoid((g.opRating-(t._v5Benchmark??0))/5.5):0;
+     const venueCredit=g.site==='A'?1.25:g.site==='N'?1.08:1;
+     // Road premium is an explicit résumé preference, not an accidental
+     // duplicate of benchmark difficulty; FCS wins receive no bonus.
+     const achievement=g.win&&g.opFbs?
+       v5clamp((.10+2.10*Math.pow(hard,1.3))*venueCredit,0,3):0;
      g.meritQualityContribution=achievement;
      qualityAchievement+=achievement;
      // FCS win by 60 earns zero extra margin recognition. A loss to an FCS
@@ -166,11 +173,20 @@ function attachEfficiencyV5(teams,advRows){
        for(const key of ['control','efficiency','finishing','discipline'])
          dominance+=weights[key]*(Number.isFinite(parts[key])?parts[key]:margin);
        if(Object.keys(parts).length>1)dominanceObserved++;
-       dominanceSum+=dominance;
+       // Win-margin adjustments alone leave too much easy-schedule dominance.
+       // A big performance against a strong FBS opponent is more informative;
+       // discount the same output against weak opponents, and do not discount
+       // poor performances when the opponent is weak.
+       const opponentFactor=dominance>=0?
+         (.57+.90*hard):(1.12-.17*hard);
+       const weightedDominance=v5clamp(dominance*opponentFactor,-30,30);
+       dominanceSum+=weightedDominance;
        t.meritDominanceGames.push({gameId:String(g.id),opponent:g.op,
-         opponentAdjustedMargin:margin,dominance,measured:Object.keys(parts).filter(x=>x!=='margin')});
+         opponentAdjustedMargin:margin,dominance:weightedDominance,
+         rawDominance:dominance,opponentFactor,measured:Object.keys(parts).filter(x=>x!=='margin')});
      }
    }
+   t.meritRecordScore=v5clamp(50+MODEL_V5.meritScale.wabPoints*t.meritWeightedAchievement,0,100);
    rawQuality.set(t.name,qualityAchievement);
    t.meritRawQuality=qualityAchievement;
    t.meritMarginRaw=eligible?adjustedSum/eligible:0;
@@ -183,15 +199,14 @@ function attachEfficiencyV5(teams,advRows){
    t.meritControlScore=v5clamp(50+MODEL_V5.meritScale.dominancePoints*t.meritDominanceRaw*evidence,0,100);
    t.meritPerformanceScore=t.meritControlScore;
  }
- // This component is a transparent achievement bonus rather than a second
- // estimate of expected wins: only actual FBS wins against strong opponents
- // earn extra credit. The saturating transform avoids a few marquee wins
- // overwhelming the complete season-long results record.
+ // FBS signature-win quality is linear until the 100-point ceiling, with a
+ // fixed early-evidence shrink. Weak opponents carry only a small increment.
+ // No team-relative percentiles, tanh, brand or conference label is used.
  for(const t of teams){
    t.meritQualityResidual=rawQuality.get(t.name);
-   const shrink=t.fbsGames/(t.fbsGames+1.5);
-   t.meritQualityScore=v5clamp(50+MODEL_V5.meritScale.qualityPoints*
-       Math.tanh(t.meritQualityResidual/2.8)*shrink,0,100);
+   const shrink=t.fbsGames/(t.fbsGames+1);
+   t.meritQualityScore=v5clamp(MODEL_V5.meritScale.qualityBase+
+       MODEL_V5.meritScale.qualityPoints*t.meritQualityResidual*shrink,0,100);
    t.sor=t.meritRecordScore;
    t.qualityComponent=t.meritQualityScore;
    const m=MODEL_V5.meritWeights;
@@ -204,35 +219,14 @@ function attachEfficiencyV5(teams,advRows){
        t.meritFcsPerformancePenalty;
    t.meritScore=t.score;
  }
- // A direct FBS win resolves a closely rated pair only when the winner
- // has at least as many total wins and no more losses. Each eligible direct
- // result applies a symmetric bounded adjustment, avoiding cyclic sort rules.
- const byTeam=new Map(teams.map(t=>[t.name,t]));
- const seen=new Set();
+ // Head-to-head NEVER modifies Merit points. Keep factual direct results
+ // solely for close-score pairwise explanation/rank resolution.
  for(const t of teams){
    t.meritScoreBeforeH2H=t.score;
    t.meritHeadToHeadAdjustment=0;
-   t.meritHeadToHeadReasons=[];
- }
- for(const winner of teams){
-   if(winner.fbsGames<3)continue;
-   for(const g of winner.fbsG){
-     if(!g.win||seen.has(String(g.id)))continue;
-     const loser=byTeam.get(g.op);
-     if(!loser||loser.fbsGames<3)continue;
-     if(Math.abs(winner.meritScoreBeforeH2H-loser.meritScoreBeforeH2H)>3)continue;
-     if(winner.won<loser.won||winner.lost>loser.lost)continue;
-     seen.add(String(g.id));
-     winner.meritHeadToHeadAdjustment+=1.5;
-     loser.meritHeadToHeadAdjustment-=1.5;
-     winner.meritHeadToHeadReasons.push({opponent:loser.name,won:true,gameId:String(g.id)});
-     loser.meritHeadToHeadReasons.push({opponent:winner.name,won:false,gameId:String(g.id)});
-   }
- }
- for(const t of teams){
-   t.meritHeadToHeadAdjustment=v5clamp(t.meritHeadToHeadAdjustment,-3,3);
-   t.score=t.meritScoreBeforeH2H+t.meritHeadToHeadAdjustment;
-   t.meritScore=t.score;
+   t.meritHeadToHeadReasons=t.fbsG.map(g=>({
+     opponent:g.op,won:!!g.win,gameId:String(g.id)
+   }));
  }
  // A one-game or two-game résumé is not a credible national ranking.
  // Keep internal ordering for research; show 'Provisional' publicly until
@@ -247,7 +241,17 @@ function attachEfficiencyV5(teams,advRows){
  }
  v5percentiles(teams,'sor');v5percentiles(teams,'qualityComponent');
  v5percentiles(teams,'meritControlScore');v5percentiles(teams,'mov');
- teams.sort((a,b)=>b.score-a.score||b.wab-a.wab||a.name.localeCompare(b.name));
+ teams.sort((a,b)=>b.score-a.score||b.meritWeightedAchievement-a.meritWeightedAchievement||a.name.localeCompare(b.name));
+ // Only adjacent, nearly identical scores may be reordered by their own
+ // actual direct game. This does not transfer credit to unrelated teams.
+ for(let i=1;i<teams.length;i++){
+   const higher=teams[i-1],lower=teams[i];
+   if(higher.score-lower.score>MODEL_V5.meritTieGap)continue;
+   const head=lower.fbsG.filter(g=>g.op===higher.name);
+   if(head.length===1&&head[0].win){
+     teams[i-1]=lower;teams[i]=higher;
+   }
+ }
  teams.forEach((t,i)=>{t.rank=i+1;t.meritPublishedRank=t.meritProvisional?null:t.rank;});
 
  // Power considers the complete sustainable performance profile, but every
