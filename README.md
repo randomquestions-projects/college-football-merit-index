@@ -1,7 +1,7 @@
 # College Football Merit Index — CFMI V5.7 candidate (earned Merit and neutral-field Power; Matchups secondary)
 
 **Live dashboard:** https://randomquestions-projects.github.io/college-football-merit-index/  
-**Methodology:** [V5.7 Merit redesign](docs/CFMI_V5_7_merit_redesign.md) · [V5.6 Merit, Power diagnostics and validation](docs/CFMI_V5_6_merit_power_research.md) · [Frozen v5.5 comparison](docs/CFMI_V5_5_merit_power_recalibration.md) · [V5.3 preseason sources](docs/CFMI_V5_3_talent_prior_research.md) · [V5.2 on-field opponent adjustments](docs/CFMI_V5_2_opponent_adjustment.md)
+**Methodology:** [V5.6 Merit, Power diagnostics and validation](docs/CFMI_V5_6_merit_power_research.md) · [Frozen v5.5 comparison](docs/CFMI_V5_5_merit_power_recalibration.md) · [V5.3 preseason sources](docs/CFMI_V5_3_talent_prior_research.md) · [V5.2 on-field opponent adjustments](docs/CFMI_V5_2_opponent_adjustment.md)
 
 ## V5.7 candidate — opponent-quality-first Merit and unchanged predictive Power
 
