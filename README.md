@@ -1,15 +1,15 @@
-# College Football Merit Index — CFMI V5.5 (earned Merit and neutral-field Power; Matchups secondary)
+# College Football Merit Index — CFMI V5.6 (earned Merit and neutral-field Power; Matchups secondary)
 
 **Live dashboard:** https://randomquestions-projects.github.io/college-football-merit-index/  
-**Methodology:** [V5.5 Merit and Power recalibration](docs/CFMI_V5_5_merit_power_recalibration.md) · [V5.3 preseason sources](docs/CFMI_V5_3_talent_prior_research.md) · [V5.2 on-field opponent adjustments](docs/CFMI_V5_2_opponent_adjustment.md)
+**Methodology:** [V5.6 Merit, Power diagnostics and validation](docs/CFMI_V5_6_merit_power_research.md) · [Frozen v5.5 comparison](docs/CFMI_V5_5_merit_power_recalibration.md) · [V5.3 preseason sources](docs/CFMI_V5_3_talent_prior_research.md) · [V5.2 on-field opponent adjustments](docs/CFMI_V5_2_opponent_adjustment.md)
 
-## V5.5 — why Merit and Power are the main product
+## V5.6 — independent Merit and Power are the main product
 
-**Merit Index:** an independently earned-resume model, now with stronger quality-win separation, bounded head-to-head resolution for close teams with comparable overall records, and a meaningful penalty for narrow FCS escapes. From Week 0 until national FBS game evidence becomes sufficiently broad, *published Merit ranks are provisional*: one or two early games cannot establish a credible national #1.
+**Merit Index:** an earned-résumé model combining completed-game results with quality wins and sustainable opponent-adjusted dominance. Bounded head-to-head resolution and FCS-performance evidence remain active. From Week 0 until national FBS game evidence becomes sufficiently broad, *published Merit ranks are provisional*: one or two early games cannot establish a credible national #1.
 
 **Power Index:** a predictive neutral-field point-strength model built from the opponent network and preseason talent/returning-production inputs. The prior now fades according to opponent-adjusted **effective FBS games** rather than an abrupt calendar-game counter. A conservatively shrunken cross-conference calibration is fitted using **2024 game results** and applied after teams begin playing current-season FBS competition. It is an explicitly disclosed learned conference-based term, not an arbitrary Power Four label-based boost; sparse/reorganized league categories are excluded.
 
-V5.5 reconstructed pre-week predictions improved modestly relative to frozen V5.4 on the identical games: 2025 **556/762 → 558/762 (73.2%)**, 2026 through Week 10 **397/562 → 398/562 (70.8%)**; Brier, log loss, and point-margin error also improved slightly in both periods. **These years have informed development and are not untouched prospective validation samples.** The current challenge remains to test future outcomes on saved, source-frozen pregame ratings.
+The unchanged neutral-field Power equation in V5.6 retains v5.5's reconstructed pre-week benchmark improvements relative to frozen v5.4 on the identical games: 2025 **556/762 → 558/762 (73.2%)**, 2026 through Week 10 **397/562 → 398/562 (70.8%)**; Brier, log loss, and point-margin error also improved slightly in both periods. **These years have informed development and are not untouched prospective validation samples.** The current challenge remains to test future outcomes on saved, source-frozen pregame ratings.
 
 ## Secondary metric: CFMI Matchup Score
 
@@ -35,7 +35,7 @@ The **Preseason** tab includes independent **Week 0 Power rankings for all 138 F
 
 The points-scale Power prior combines measured current-roster talent and blue-chip mix, previous-season opponent-adjusted on-field results, returning offense/defense production and net transfer talent. We deliberately do not assign hidden points for P4 membership, preseason polls or school reputation. A complete 2026 source covers **137/138** FBS talent composites and **138/138** returning-production/portal records; the single missing roster talent value uses explicitly flagged lower-quartile **FBS** imputation. All source files are retained with year-specific hashes and lineage.
 
-Preseason prior weight follows the **100%/55%/35%/20%/8%/0%** curve at **0/1/2/3/4/5 effective FBS games**. Effective evidence gives each completed FBS contest 0.85–1.00 games, scaled using the opponent’s current-season on-field strength. The prior is zero after sufficient evidence (all teams with six or more FBS games). Merit remains achievement-based, with 55% record, 25% quality/road wins, 20% adjusted margin, plus bounded head-to-head and FCS performance adjustments.
+Preseason prior weight follows the **100%/55%/35%/20%/8%/0%** curve at **0/1/2/3/4/5 effective FBS games**. Effective evidence gives each completed FBS contest 0.85–1.00 games, scaled using the opponent’s current-season on-field strength. The prior is zero after sufficient evidence (all teams with six or more FBS games). Merit is achievement-based, with 50% record achievement, 20% quality wins, 30% opponent-adjusted game performance, plus bounded head-to-head and FCS adjustments.
 
 In 2026 reconstructed same-week evaluation, the early-game (Weeks 1–4) winner accuracy improved **159/215 → 169/215**; all Weeks 1–10 **386/562 → 396/562**. Historical season-specific data sources can contain retrospective revisions; the source release timestamps are not verified original preseason snapshots, and 2026 observations motivated the design. These figures are **research evidence, not independently preregistered prospective proof**.
 
@@ -51,7 +51,7 @@ See [full results, data lineage, imputation and simulator caveats](docs/CFMI_V5_
 
 The new Power engine simultaneously estimates team offense and defense versus opponents across the completed-game graph for EPA/PPA, successful plays and explosive gains; high performance against weak defenses is no longer treated as equivalent to the same performance against strong defenses. Additional schedule-support corrections are only accepted when historical future-game validation supports them. Narrow FCS wins add cautious negative evidence; blowing out FCS opponents cannot generate extra Power points. Merit separately adds head-to-head and bounded FCS-performance adjustments to its 55/25/20 baseline.
 
-The team Power breakdown exposes active point contributions from the baseline, jointly adjusted EPA/success/explosiveness, schedule strength, weak-schedule uncertainty, FCS evidence, the fading preseason prior and the small empirical cross-conference environment adjustment.
+Power's candidate consistency, finishing and possession-control contributions remain zero unless a prospective performance gate proves their benefit. Descriptive opponent evidence is reported separately from neutral-field strength. The team Power breakdown exposes active point contributions from the baseline, jointly adjusted EPA/success/explosiveness, schedule strength, weak-schedule uncertainty, FCS evidence, the fading preseason prior and the small empirical cross-conference environment adjustment.
 
 **Benchmark limitations:** 2025 comparisons are from a reused model-selection season; 2026 is out of coefficient training. Differences in predictive accuracy are small. This upgrade is *not* a claim that CFMI now outpredicts FPI, SP+ or FEI, nor does it force Power Four schools above independently strong non-P4 teams.
 
@@ -59,15 +59,17 @@ The team Power breakdown exposes active point contributions from the baseline, j
 
 ## Merit — what the team has earned
 
+**Current v5.6 formula**: 50% record achievement, 20% signature quality wins, and 30% opponent-adjusted game dominance, with additional bounded head-to-head/FCS adjustments.
+
 | Component | Weight | Behavior |
 |---|---:|---|
-| **Record versus expected** | **55%** | Actual wins vs. benchmark top-25-strength team facing exactly the same schedule and venues, with opponent and game-location adjustments |
-| **Quality and road wins** | **25%** | Additional earned credit for *actual wins* against excellent FBS opponents; smaller extra 20% multiplier for road wins, 8% for neutral-site wins; weak wins contribute much less |
-| **Opponent-adjusted victory margins** | **20%** | Game margin with diminishing blowout returns, opponent strength, and home/away context; FBS games only; a 60-point victory over an FCS team adds no margin bonus |
+| **Record vs. benchmark** | **50%** | Earned wins relative to what a top-25-caliber benchmark is expected to achieve against the same opponents and venues |
+| **Signature wins** | **20%** | Actual victories against strong FBS opponents. Venue is reflected in expected-win difficulty and is **not** multiplied a second time in win credit |
+| **Opponent-adjusted game performance** | **30%** | Diminishing-return, opponent- and venue-adjusted margins plus sustainable game-control and offensive/defensive signals: possession control, opponent-corrected EPA, drive finishing and a small discipline term |
 
-**Key philosophy:** a win against a strong opponent earns more than a weak win. Winning at a strong opponent's stadium is especially impressive. A convincing victory over a high-quality opponent matters. A close loss against an elite team is still a loss, but opponent-adjusted margins acknowledge that team's performance without granting quality-win credit.
+A team that convincingly dominates a set of good opponents now earns meaningfully more than one that narrowly survives similarly difficult games. Wins and opponent quality remain dominant. When an advanced observation is missing, that game's component falls back to its observed opponent-adjusted margin rather than inventing a zero, perfect performance or missing game. Merit continues to exclude recruiting, preseason priors, external polls and Power's final predictive rank.
 
-The quality/road component intentionally gives an *additional achievement bonus* beyond wins-above-benchmark. That is a transparent normative preference, not an assertion that schedule difficulty can be statistically disentangled perfectly into nonoverlapping components. The total Merit remains wins-first. Direct FBS wins resolve only closely rated, comparably accomplished résumés (not every upset); narrow FCS outcomes subtract bounded performance points. Technical details: `site/model_v5.js`.
+The v5.5 baseline is frozen in Git history. Head-to-head resolution and FCS underperformance stay bounded. The v5.6 change is a **normative résumé scoring refinement**, not an improvement measured by predicting future games. Per-game evidence is reconstructed from game results available through the selected date and must never be confused with pregame prediction input.
 
 ## Power — the team most likely to win a future matchup
 
