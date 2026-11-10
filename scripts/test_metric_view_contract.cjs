@@ -80,8 +80,7 @@ for(const t of result.teams){
 // Same opponents, records, results and signature wins: an additional
 // 10 opponent-adjusted game-dominance points over a substantial season sample
 // must yield >3 Merit points, rather than the tiny effect of margin-only rules.
-const dominanceMarginPoints=MODEL_MERIT_PLACEHOLDER();
-function MODEL_MERIT_PLACEHOLDER(){return .30*1.30*10*.80}
+const dominanceMarginPoints=.30*1.30*10*.80;
 assert(dominanceMarginPoints>3,'Dominant play must receive substantial achievement credit');
 const history=JSON.parse(read('data/weekly_views_2026.json'));
 assert(history.history.length>=10);
