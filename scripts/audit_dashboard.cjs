@@ -10,6 +10,12 @@ if(boundary<1500)throw Error('Invalid engine boundary');
 const prelude=m[1].slice(0,boundary);
 const model=fs.readFileSync(path.join(base,'model_v4.js'),'utf8')+'\n'+fs.readFileSync(path.join(base,'opponent_network_research.js'),'utf8')+'\n'+fs.readFileSync(path.join(base,'model_v5.js'),'utf8')+'\n'+fs.readFileSync(path.join(base,'preseason_prior_v1.js'),'utf8');
 const doc=JSON.parse(fs.readFileSync(path.join(data,'model_v5_params.json'),'utf8'));
+const datasetMetadata=JSON.parse(fs.readFileSync(path.join(data,'metadata.json'),'utf8'));
+assert.equal(datasetMetadata.season,2026,'Published ingestion snapshot must be current season');
+assert.equal(datasetMetadata.dataset_schema_version,'2.0.0','Data and scoring schema must be separated');
+assert.equal(datasetMetadata.scoring_model_declared_here,false,'Ingestion must not claim ownership of ranking coefficients');
+assert(!Object.hasOwn(datasetMetadata,'model_version')&&!Object.hasOwn(datasetMetadata,'weights'),
+ 'Legacy V4 coefficients or version leaked into active data ingestion metadata');
 const history=JSON.parse(fs.readFileSync(path.join(data,'weekly_views_2026.json'),'utf8'));
 const prior=JSON.parse(fs.readFileSync(path.join(data,'preseason_prior_2026.json'),'utf8'));
 const projection=JSON.parse(fs.readFileSync(path.join(data,'preseason_playoff_forecast_2026.json'),'utf8'));
@@ -108,14 +114,14 @@ const body=prelude+[
 "return {gameCount:games.length,coverage:{measured:state.advCovered,eligible:state.advExpected,full:state.fullModel},",
 "teams:teams.map(t=>({name:t.name,rank:t.rank,merit:t.score,power:t.powerScore,",
 "powerPoints:t.powerPoints,powerRank:t.powerRank,won:t.won,lost:t.lost,wab:t.wab,",
-"residual:t.meritQualityResidual,meritRecord:t.meritRecordScore,meritQuality:t.meritQualityScore,meritControl:t.meritControlScore,h2h:t.meritHeadToHeadAdjustment,fcs:t.meritFcsPerformancePenalty,meritProvisional:t.meritProvisional,meritPublishedRank:t.meritPublishedRank,effectiveGames:t.preseasonEffectiveGames,conferenceContext:t.powerConferenceCalibration,powerComponentTotal:Object.values(t.powerContributionPoints).reduce((z,v)=>z+v,0),",
+"residual:t.meritQualityResidual,meritRecord:t.meritRecordScore,meritQuality:t.meritQualityScore,meritControl:t.meritControlScore,dominance:t.meritDominanceRaw,dominanceCoverage:t.meritDominanceCoverage,h2h:t.meritHeadToHeadAdjustment,fcs:t.meritFcsPerformancePenalty,meritProvisional:t.meritProvisional,meritPublishedRank:t.meritPublishedRank,effectiveGames:t.preseasonEffectiveGames,conferenceContext:t.powerConferenceCalibration,powerComponentTotal:Object.values(t.powerContributionPoints).reduce((z,v)=>z+v,0),",
 "advanced:t.advCoreGames,fbsGames:t.fbsGames,priorWeight:t.preseasonPriorWeight||0,mode:t.powerMode||'reference'})),version:MODEL_V5.version};"
 ].join('\n');
 const compute=new Function('scores','advCsv','parameters','cutoff','prior',model+'\n'+body);
 const csv=fs.readFileSync(path.join(data,'cfb_schedules_2026.csv'),'utf8');
 const adv=fs.readFileSync(path.join(data,'cfmi_advanced_2026.csv'),'utf8');
 const latest=compute(csv,adv,doc,Date.now(),prior);
-assert.equal(latest.version,'5.5.0');
+assert.equal(latest.version,'5.6.0');
 assert(latest.gameCount>=300,'Expected substantial 2026 games');
 assert(latest.teams.length>=130,'Expected complete FBS coverage');
 assert(latest.coverage.eligible>=300,'Missing advanced data eligibility');
@@ -125,8 +131,10 @@ assert(latest.teams.every(t=>Number.isFinite(t.merit)&&t.merit>=0&&t.merit<=100
  'Invalid Merit, Power, coverage or ranks');
 // Merit exactly follows the published earned-resume contribution weights.
 for(const t of latest.teams){
- const scored=.55*t.meritRecord+.25*t.meritQuality+.20*t.meritControl+(t.h2h||0)+(t.fcs||0);
+ const scored=.50*t.meritRecord+.20*t.meritQuality+.30*t.meritControl+(t.h2h||0)+(t.fcs||0);
  assert(Math.abs(scored-t.merit)<1e-8,'Merit formula mismatch '+t.name);
+ assert(Number.isFinite(t.dominance)&&t.dominanceCoverage>=0&&t.dominanceCoverage<=1,'Missing opponent-adjusted dominance '+t.name);
+ assert(t.dominance>=-30&&t.dominance<=30,'Unbounded game dominance can overwhelm Merit '+t.name);
  assert(Math.abs(t.powerComponentTotal-t.powerPoints)<1e-8,'Power component total mismatch '+t.name);
 }
 // Metamorphic check: increasing an ALREADY dominant FCS victory by 60
@@ -212,7 +220,7 @@ for(const game of history.upcoming.games||[]){
  }else assert.equal(game.homeWinProbability,null);
 }
 const output={
- modelVersion:'5.5.0',generatedAtUtc:new Date().toISOString(),
+ modelVersion:'5.6.0',generatedAtUtc:new Date().toISOString(),
  provenance:{trainSeason:doc.trainSeason,validationSeason:doc.validationSeason,
   selected:doc.deployedCandidate,validation:doc.validation},
  coverage:latest.coverage,totalGames:latest.gameCount,teamCount:latest.teams.length,

@@ -94,6 +94,14 @@ jobs:
         run: node scripts/build_weekly_views.cjs
       - name: Reconstruct game-ahead CFMI Matchup Score predictions for 2025 and 2026
         run: node scripts/build_prediction_ledger.cjs
+      - name: Compare frozen Power against non-promoting consistency/finishing/control candidates
+        run: node scripts/research_v56_power_ablation.cjs
+      - name: Retain candidate evaluation separately from the public site
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfmi-power-v56-shadow-${{ github.run_id }}
+          path: research_results/power_v56_shadow.json
+          retention-days: 30
       - name: Research original-dated 2025 weekly FPI and FEI rating archives
         run: |
           python -m pip install beautifulsoup4==4.14.2

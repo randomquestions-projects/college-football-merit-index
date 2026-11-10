@@ -1,15 +1,14 @@
-/* CFMI V5.2 season-only Power engine + optional V5.3 Week0 prior overlay.
- * Merit never includes recruiting, preseason, AP/CFP, external indices or conference labels.
- * Power's early-game prior uses current-roster talent, last-year performance,
- * returning production and transfers when MODEL_PRESEASON_V53 is loaded.
- * This prior fades entirely after five completed FBS games.
- * The base network is fitted using PRIOR seasons (see train_v5.cjs).
+/* CFMI v5.6: results-first Merit with opponent-adjusted dominance; independent
+ * neutral-field Power retains historically selected scoring coefficients.
+ * Preseason Power prior fades with opponent-weighted effective FBS evidence.
+ * Legacy V4 features are read-only research inputs; V4 final rankings are unused.
  */
 'use strict';
 const MODEL_V5={
- version:'5.5.0',name:'CFMI V5.5 — quality-weighted earned Merit and historical cross-schedule calibrated Power',
- meritWeights:{record:.55,qualityResidual:.25,control:.20},
- meritScale:{wabPoints:12,qualityPoints:28,controlAmplitude:32,controlMarginScale:16},
+ version:'5.6.0',name:'CFMI V5.6 — dominance-informed earned Merit, independently calibrated Power',
+ meritWeights:{record:.50,qualityResidual:.20,control:.30},
+ meritScale:{wabPoints:12,qualityPoints:28,dominancePoints:1.30},
+ meritPerformanceWeights:Object.freeze({margin:.55,control:.20,efficiency:.15,finishing:.07,discipline:.03}),
  powerScale:{indexPointsPerExpectedMarginPoint:1.6},
  calibrated:false,validation:null,
  params:{epa:0,success:0,explosive:0,finishing:0,consistency:0,control:0,offense:0,defense:0,homePoints:2.5,logisticScale:12,
@@ -100,11 +99,28 @@ function attachEfficiencyV5(teams,advRows){
  // recognizes an opponent-adjusted convincing win. Outcomes remain the majority.
  // FCS blowout margins do not count as proof of superiority.
  const rawQuality=new Map();
+ // Game-level dominance is measured within the observed season snapshot only:
+ // opponent and venue-adjusted margin + independent possession and play quality.
+ // No game-state feature is ever used to predict that same game pre-kickoff.
+ const byName=new Map(teams.map(t=>[t.name,t]));
+ const leagueMean=field=>{
+   const xs=teams.flatMap(t=>(t.advGames||[]).map(a=>a[field]).filter(Number.isFinite));
+   return xs.length?xs.reduce((a,b)=>a+b,0)/xs.length:0;
+ };
+ const centers={off_ppa:leagueMean('off_ppa'),def_ppa:leagueMean('def_ppa'),
+   off_finish_pp40:leagueMean('off_finish_pp40'),def_finish_pp40:leagueMean('def_finish_pp40')};
+ const opponentMean=(opp,id,field)=>{
+   const xs=(byName.get(opp)?.advGames||[]).filter(a=>String(a.id)!==String(id))
+     .map(a=>a[field]).filter(Number.isFinite);
+   return (xs.reduce((a,b)=>a+b,0)+2*centers[field])/(xs.length+2);
+ };
  for(const t of teams){
    t.meritRecordScore=v5clamp(50+MODEL_V5.meritScale.wabPoints*t.wab,0,100);
    t.recordTailProbability=t.games?v5PoissonBinomialTail(t.played.map(g=>g.expected),t.won):null;
    let qualityAchievement=0;
-   let adjustedSum=0, eligible=0;
+   let adjustedSum=0, dominanceSum=0, eligible=0, dominanceObserved=0;
+   t.meritDominanceGames=[];
+   const teamAdvanced=new Map((t.advGames||[]).map(a=>[String(a.id),a]));
    for(const g of t.played){
      g.meritResultContribution=g.win-g.expected;
      const hard=g.opFbs?v5sigmoid((g.opRating-(t._v5Benchmark??0))/7.5):0;
@@ -113,25 +129,59 @@ function attachEfficiencyV5(teams,advRows){
      const opponentCredit=g.opFbs?v5clamp(.10+1.10*hard,0,1.25):0;
      // Road and neutral difficulty already contributes through WAB; a small,
      // deliberately explicit earned-road-win bonus is an additional preference.
-     const site=g.site==='A'?1.20:g.site==='N'?1.08:1;
+     // Venue is already accounted for through the result benchmark; no second road multiplier.
      // Only actual wins earn positive signature credit. Losses to good teams
      // receive no "quality-loss bonus"; WAB already accounts for difficulty.
-     const achievement=g.win?opponentCredit*site*(.75+.25*(1-g.expected)):0;
+     const achievement=g.win?opponentCredit*(.75+.25*(1-g.expected)):0;
      g.meritQualityContribution=achievement;
      qualityAchievement+=achievement;
      // FCS win by 60 earns zero extra margin recognition. A loss to an FCS
      // school is a meaningful bad result, handled predominantly by WAB.
-     if(g.opFbs){adjustedSum+=g.adjustedMOV;eligible++;}
+     if(g.opFbs){
+       adjustedSum+=g.adjustedMOV;eligible++;
+       const a=teamAdvanced.get(String(g.id))||{};
+       const margin=v5clamp(g.adjustedMOV,-30,30);
+       const parts={margin};const weights=MODEL_V5.meritPerformanceWeights;
+       if(Number.isFinite(a.possession_control_wp))
+         parts.control=v5clamp((a.possession_control_wp-.5)*30+2*Math.tanh(g.opRating/14),-12,12);
+       if(Number.isFinite(a.off_ppa)&&Number.isFinite(a.def_ppa)){
+         const off=a.off_ppa+.60*(centers.def_ppa-opponentMean(g.op,g.id,'def_ppa'));
+         const def=a.def_ppa+.60*(centers.off_ppa-opponentMean(g.op,g.id,'off_ppa'));
+         parts.efficiency=v5clamp((off-def)*7,-10,10);
+       }
+       if(Number.isFinite(a.off_finish_pp40)&&Number.isFinite(a.def_finish_pp40)){
+         const off=a.off_finish_pp40+.50*(centers.def_finish_pp40-opponentMean(g.op,g.id,'def_finish_pp40'));
+         const def=a.def_finish_pp40+.50*(centers.off_finish_pp40-opponentMean(g.op,g.id,'off_finish_pp40'));
+         parts.finishing=v5clamp((off-def)*2,-8,8);
+       }
+       let clean=0,cleanMeasured=false;
+       if(Number.isFinite(a.expected_turnover_margin)){clean+=1.6*v5clamp(a.expected_turnover_margin,-3,3);cleanMeasured=true;}
+       if(Number.isFinite(a.penalty_yards)&&Number.isFinite(a.opp_penalty_yards)){
+         clean+=.025*v5clamp(a.opp_penalty_yards-a.penalty_yards,-100,100);cleanMeasured=true;
+       }
+       if(cleanMeasured)parts.discipline=v5clamp(clean,-7,7);
+       // Missing metrics fall back to neutral margin evidence; they never
+       // silently become a perfect or zero observed football performance.
+       let dominance=weights.margin*margin;
+       for(const key of ['control','efficiency','finishing','discipline'])
+         dominance+=weights[key]*(Number.isFinite(parts[key])?parts[key]:margin);
+       if(Object.keys(parts).length>1)dominanceObserved++;
+       dominanceSum+=dominance;
+       t.meritDominanceGames.push({gameId:String(g.id),opponent:g.op,
+         opponentAdjustedMargin:margin,dominance,measured:Object.keys(parts).filter(x=>x!=='margin')});
+     }
    }
    rawQuality.set(t.name,qualityAchievement);
    t.meritRawQuality=qualityAchievement;
    t.meritMarginRaw=eligible?adjustedSum/eligible:0;
+   t.meritDominanceRaw=eligible?dominanceSum/eligible:0;
+   t.meritDominanceCoverage=eligible?dominanceObserved/eligible:0;
    // This deliberately excludes FCS blowouts, and uses opponent quality and
    // site-adjusted margins; capped game MOV already discounts huge blowouts.
    t.mov=t.meritMarginRaw;
    const evidence=eligible/(eligible+1.7);
-   t.meritControlScore=v5clamp(50+MODEL_V5.meritScale.controlAmplitude*
-       Math.tanh(t.meritMarginRaw/MODEL_V5.meritScale.controlMarginScale)*evidence,0,100);
+   t.meritControlScore=v5clamp(50+MODEL_V5.meritScale.dominancePoints*t.meritDominanceRaw*evidence,0,100);
+   t.meritPerformanceScore=t.meritControlScore;
  }
  // This component is a transparent achievement bonus rather than a second
  // estimate of expected wins: only actual FBS wins against strong opponents
@@ -228,7 +278,14 @@ function attachEfficiencyV5(teams,advRows){
    t.powerModelStatus=state.fullModel&&p.source!=='untrained_baseline_only'?
        'regularized_margin_plus_full_spectrum_performance':'neutral_start_margin_baseline';
    t.powerMethod=t.powerModelStatus;
-   t.powerEvidence=t.fbsGames<4?'low':t.fbsGames<8?'moderate':'season_sample';
+   // Descriptive strength-of-evidence is kept separate from predicted strength.
+   // This is NOT a calibrated statistical confidence interval.
+   t.powerEvidenceEffectiveGames=t.fbsG.reduce((sum,g)=>{
+     const rating=byName.get(g.op)?.power;
+     return sum+(.35+.65*v5sigmoid((Number.isFinite(rating)?rating:0)/8));
+   },0);
+   t.powerEvidence=t.powerEvidenceEffectiveGames<2.5?'limited':
+      t.powerEvidenceEffectiveGames<5?'developing':'broad';
    t.matchupCalibrationStatus=MODEL_V5.calibrated?'historically_calibrated':'uncalibrated';
  }
 

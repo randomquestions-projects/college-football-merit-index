@@ -49,7 +49,7 @@ const summarize=t=>{
   name:t.name,conference:t.conference,rank:t.rank,meritPublishedRank:t.meritPublishedRank,meritProvisional:t.meritProvisional,meritEvidenceGames:t.meritEvidenceGames,powerRank:t.powerRank,
   score:t.score,powerScore:t.powerScore,won:t.won,lost:t.lost,
   wab:t.wab,sor:t.sor,sos:t.sos,mov:t.mov,
-  quality:t.qualityComponent,eff:t.effScore,meritRecordScore:t.meritRecordScore,meritQualityResidual:t.meritQualityResidual,meritQualityScore:t.meritQualityScore,meritControlScore:t.meritControlScore,meritHeadToHeadAdjustment:t.meritHeadToHeadAdjustment,meritHeadToHeadReasons:t.meritHeadToHeadReasons,meritFcsPerformancePenalty:t.meritFcsPerformancePenalty,powerPoints:t.powerPoints,powerEvidence:t.powerEvidence,powerMode:t.powerMode||'reference',opponentSupportRisk:t.powerOpponentSupportRisk||0,fcsUnderperformance:t.powerFcsUnderperformance||0,powerBreakdown:t.powerContributionPoints,
+  quality:t.qualityComponent,meritRecordScore:t.meritRecordScore,meritQualityResidual:t.meritQualityResidual,meritQualityScore:t.meritQualityScore,meritControlScore:t.meritControlScore,meritPerformanceScore:t.meritPerformanceScore,meritDominanceRaw:t.meritDominanceRaw,meritDominanceCoverage:t.meritDominanceCoverage,powerEvidenceEffectiveGames:t.powerEvidenceEffectiveGames,meritHeadToHeadAdjustment:t.meritHeadToHeadAdjustment,meritHeadToHeadReasons:t.meritHeadToHeadReasons,meritFcsPerformancePenalty:t.meritFcsPerformancePenalty,powerPoints:t.powerPoints,powerEvidence:t.powerEvidence,powerMode:t.powerMode||'reference',opponentSupportRisk:t.powerOpponentSupportRisk||0,fcsUnderperformance:t.powerFcsUnderperformance||0,powerBreakdown:t.powerContributionPoints,
   preseasonPriorWeight:t.preseasonPriorWeight||0,preseasonEffectiveGames:t.preseasonEffectiveGames??null,powerConferenceCalibration:t.powerConferenceCalibration??0,powerConferenceCalibrationVersion:t.powerConferenceCalibrationVersion||null,preseasonPriorPoints:t.preseasonPriorPoints??null,preseasonTalentIndex:t.preseasonTalentIndex??null,preseasonTalentRank:t.preseasonTalentRank??null,
   opponentStrength:t.power,baselineRank:t.baselinePowerRank,
   ppaNet:t.ppaNet,successNet:t.successNet,explosiveNet:t.explosiveNet,
@@ -74,7 +74,7 @@ const weekZeroCutoff=firstKick-1;
 const weekZero=compute(rows.map(r=>({...r,completed:'FALSE'})),advRows,weekZeroCutoff,parameters,prior,matchupParams);
 weeks.push({week:0,asOfDate:new Date(weekZeroCutoff).toISOString().slice(0,10),
  cutoffUtc:new Date(weekZeroCutoff).toISOString(),gameCount:0,
- advancedCoverage:weekZero.coverage,modelVersion:'CFMI V5.5 preseason baseline',
+ advancedCoverage:weekZero.coverage,modelVersion:'CFMI V5.6 preseason baseline',
  teams:weekZero.teams.map(summarize)});
 
 for(let week=1;week<=lastWeek;week++){
@@ -133,7 +133,7 @@ const matchups=nextWeek===null?[]:future.filter(x=>Number(x.week)===nextWeek)
   };
  }).filter(Boolean);
 const document={
- season:2026,version:'CFMI V5.5 Merit and Power / matchup secondary',
+ season:2026,version:'CFMI V5.6 Merit and Power / matchup secondary',
  generatedAtUtc:new Date().toISOString(),
  historicalMode:'RECONSTRUCTED_AS_OF_CUTOFF',
  warning:'Week 0 Power uses preseason roster talent, previous-season strength, returning production and portal evidence. Merit is provisional until adequate games are completed. Historical weekly values are reconstructed from current releases, not frozen as-original snapshots. Power uses opponent-evidence prior decay and a separately fitted historical interconference correction.',
