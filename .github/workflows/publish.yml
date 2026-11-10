@@ -112,8 +112,6 @@ jobs:
         run: node scripts/analyze_power_misses.cjs
       - name: Audit V5 model, weekly data quality and season cutoff invariants
         run: node scripts/audit_dashboard.cjs
-      - name: Enforce v5.7 quality, difficulty, and non-scoring pairwise H2H properties
-        run: node scripts/test_merit_v57_properties.cjs
       - name: Enforce v6 public metric lineage and full-FBS reconciliation
         run: node scripts/test_metric_view_contract.cjs
       - name: Build independently reproducible public Merit-Power audit dataset
