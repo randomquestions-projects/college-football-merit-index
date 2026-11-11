@@ -1,6 +1,8 @@
 # College Football Merit Index — CFMI V5.6 (earned Merit and neutral-field Power; Matchups secondary)
 
 **Live dashboard:** https://randomquestions-projects.github.io/college-football-merit-index/  
+**Temporary, opt-in Merit Research Lab:** https://randomquestions-projects.github.io/college-football-merit-index/?research=1#research (visible only through this special URL). Displays the **frozen November 10, 2026 A–F v5.8.7 experimental output scores**, all 138 teams, and reuses the normal v5.6 schedule and advanced audit popup. **Not official, not current after November 10, not an authentication boundary.** The score/output JSON is publicly readable when deployed, but private formulas and private datasets are not published. Remove `site/merit_research_lab.js`, `site/merit_research_lab.css`, `site/data/merit_research_2026_11_10.json` and the optional navigation to retire the temporary review view.\n
+
 **Methodology:** [V5.6 Merit, Power diagnostics and validation](docs/CFMI_V5_6_merit_power_research.md) · [Frozen v5.5 comparison](docs/CFMI_V5_5_merit_power_recalibration.md) · [V5.3 preseason sources](docs/CFMI_V5_3_talent_prior_research.md) · [V5.2 on-field opponent adjustments](docs/CFMI_V5_2_opponent_adjustment.md)
 
 ## V5.6 — independent Merit and Power are the main product
