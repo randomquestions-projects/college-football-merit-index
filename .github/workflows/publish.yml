@@ -114,6 +114,8 @@ jobs:
         run: node scripts/audit_dashboard.cjs
       - name: Enforce v6 public metric lineage and full-FBS reconciliation
         run: node scripts/test_metric_view_contract.cjs
+      - name: Validate static, output-only temporary Merit A–F research tab snapshot
+        run: node scripts/test_merit_research_lab.cjs
       - name: Build independently reproducible public Merit-Power audit dataset
         run: node scripts/build_public_metric_audit.cjs
       - name: Historical V4 versus V3 walk-forward benchmark (reference only)
@@ -125,6 +127,7 @@ jobs:
           npm install --no-save playwright@1.61.0
           npx playwright install --with-deps chromium
           node scripts/smoke_dashboard.cjs
+          node scripts/smoke_merit_research_lab.cjs
       - name: Remove raw historical feeds from the public site
         run: rm -rf site/data/history
       - name: Upload validated site artifact
