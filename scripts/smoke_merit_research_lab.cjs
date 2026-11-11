@@ -20,7 +20,7 @@ async function up(){
  let browser;
  try{
   await up();
-  browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+  browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage'],...(process.env.CFMI_CHROMIUM_EXECUTABLE?{executablePath:process.env.CFMI_CHROMIUM_EXECUTABLE}:{})});
   const desktop=await browser.newPage({viewport:{width:1440,height:900}});
   const errs=[];desktop.on('pageerror',e=>errs.push(String(e)));
   await desktop.goto(url,{waitUntil:'domcontentloaded'});
