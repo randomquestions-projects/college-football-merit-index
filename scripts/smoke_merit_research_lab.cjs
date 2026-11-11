@@ -48,7 +48,8 @@ async function up(){
   await desktop.locator('#researchLimit').selectOption('138');
   assert.equal(await desktop.locator('#researchRankBody td.research-team').count(),138);
   await desktop.locator('#researchSearch').fill('Georgia');
-  assert.equal(await desktop.locator('#researchRankBody td.research-team').count(),1);
+  assert(await desktop.locator('#researchRankBody td.research-team').count()>=1,'Team search must return matching schools');
+  assert.equal(await desktop.locator('#researchRankBody [data-research-team="Georgia"]').count(),1,'Exact Georgia team must remain discoverable');
   await desktop.locator('#researchRankBody [data-research-team="Georgia"]').click();
   await desktop.locator('#detailScrim.open .research-popup').waitFor({timeout:12000});
   const diag=await desktop.locator('#detailBody').innerText();
