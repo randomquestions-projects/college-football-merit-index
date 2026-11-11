@@ -20,7 +20,7 @@ async function waitForServer(){
  let browser;
  try{
   await waitForServer();
-  browser=await chromium.launch({headless:true,args:["--no-sandbox","--disable-dev-shm-usage"]});
+  browser=await chromium.launch({headless:true,args:["--no-sandbox","--disable-dev-shm-usage"],...(process.env.CFMI_CHROMIUM_EXECUTABLE?{executablePath:process.env.CFMI_CHROMIUM_EXECUTABLE}:{})});
   const page=await browser.newPage({viewport:{width:1360,height:900}});
   const errors=[];page.on("pageerror",error=>errors.push(String(error)));
   await page.goto(url,{waitUntil:"domcontentloaded"});

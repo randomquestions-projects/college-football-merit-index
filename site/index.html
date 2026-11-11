@@ -105,14 +105,15 @@ body.cfmi-matchups #rankings,body.cfmi-matchups #comparison,body.cfmi-matchups #
 @media(max-width:800px){.purpose-credibility{padding:23px 21px}.purpose-credibility-list{grid-template-columns:1fr}}
 @media(max-width:480px){.purpose-credibility{padding:20px 17px}}
 </style>
+<link rel="stylesheet" href="./merit_research_lab.css">
 </head>
 <body>
-<header class="top"><div class="wrap top-inner"><div class="brand"><span class="logo">C</span> CFMI <span class="muted" style="font-weight:400;font-size:11px">/ 2026</span></div><nav class="nav"><a href="#rankings" id="navRanks">Rankings</a><a href="#comparison" id="navComparison">Compare rankings</a><a href="#resume" id="navResume">Compare teams</a><a href="#history" id="navHistory">History</a><a href="#preseason" id="navPreseason">Preseason</a><a href="#matchups" id="navMatchups">Matchups</a><a href="#methodology" id="navMethodology">Purpose &amp; Methodology</a><button id="refreshTop" type="button">↻ Reload snapshot</button></nav></div></header>
+<header class="top"><div class="wrap top-inner"><div class="brand"><span class="logo">C</span> CFMI <span class="muted" style="font-weight:400;font-size:11px">/ 2026</span></div><nav class="nav"><a href="#rankings" id="navRanks">Rankings</a><a href="#comparison" id="navComparison">Compare rankings</a><a href="#resume" id="navResume">Compare teams</a><a href="#history" id="navHistory">History</a><a href="#preseason" id="navPreseason">Preseason</a><a href="#matchups" id="navMatchups">Matchups</a><a href="#methodology" id="navMethodology">Purpose &amp; Methodology</a><a href="#research" id="navResearchLab" hidden>Research Lab</a><button id="refreshTop" type="button">↻ Reload snapshot</button></nav></div></header>
 <main class="wrap">
 <section class="hero home-intro"><div class="eyebrow">Independent college football analysis · 2026</div><h1>Earned merit. Measured strength<span style="color:#6ac5e6">.</span></h1>
 <p class="lead">Two core rankings, built for different questions. <strong>Merit Index</strong> evaluates which teams have earned the strongest résumé through their results and quality of competition. <strong>Power Index</strong> estimates which teams are strongest based on their on-field performance. The <strong>Matchup Predictor</strong> applies Power to individual games without changing either ranking.</p>
 <div class="home-purpose"><div><strong>Merit / résumé</strong><span>Who earned the strongest season? Quality wins, road results and achievement.</span></div><div><strong>Power / neutral-field</strong><span>Who is strongest overall, independent of venue and opponent style?</span></div></div><div class="stamp"><span id="healthDot" class="dot"></span><span id="stamp">Loading 2026 completed-game feed…</span></div></section>
-<div class="page-switch" id="pageSwitch" role="tablist" aria-label="Dashboard pages"><button type="button" class="selected" data-page="rankings" aria-selected="true">Merit &amp; Power</button><button type="button" data-page="comparison" aria-selected="false">Compare Rankings</button><button type="button" data-page="resume" aria-selected="false">Compare Teams</button><button type="button" data-page="history" aria-selected="false">Historical Results</button><button type="button" data-page="preseason" aria-selected="false">Preseason</button><button type="button" data-page="matchups" aria-selected="false">Matchups</button><button type="button" data-page="methodology" aria-selected="false">Purpose &amp; Methodology</button></div>
+<div class="page-switch" id="pageSwitch" role="tablist" aria-label="Dashboard pages"><button type="button" class="selected" data-page="rankings" aria-selected="true">Merit &amp; Power</button><button type="button" data-page="comparison" aria-selected="false">Compare Rankings</button><button type="button" data-page="resume" aria-selected="false">Compare Teams</button><button type="button" data-page="history" aria-selected="false">Historical Results</button><button type="button" data-page="preseason" aria-selected="false">Preseason</button><button type="button" data-page="matchups" aria-selected="false">Matchups</button><button type="button" data-page="methodology" aria-selected="false">Purpose &amp; Methodology</button><button type="button" id="researchNavTab" data-page="research" aria-selected="false" hidden>Merit Research Lab</button></div>
 <section id="rankings"><div class="subhead"><div><h2 id="rankTitle">2026 FBS Merit Rankings</h2><p id="rankingSub">Calculated from completed games on or before the selected as-of cutoff.</p></div><span class="pill" id="dataBadge">Awaiting source</span></div>
 <div class="rank-lens"><div><h3 id="lensTitle">MERIT · Who has earned the strongest season?</h3><p id="lensSummary">Earned results: 50% schedule-adjusted record, 20% signature wins, and 30% opponent-adjusted performance (including efficiency, sustained control and finishing).</p></div><div class="rank-lens-controls" id="rankingLens" role="group" aria-label="Select ranking purpose"><button type="button" class="selected" data-lens="merit" aria-pressed="true">Merit Ranking</button><button type="button" data-lens="power" aria-pressed="false">Power Ranking</button></div></div>
 <div class="panel"><div class="toolbar"><div class="tabs" id="viewTabs"><button class="tab" data-view="25">Top 25</button><button class="tab active" data-view="50">Top 50</button><button class="tab" data-view="all">All FBS</button></div><div class="search"><input id="q" type="search" aria-label="Search teams" placeholder="Search teams…"></div><select id="conference"><option value="">All conferences</option></select><select id="cutoff" aria-label="Game cutoff"><option value="live">Latest completed games</option></select><div class="actions"><button id="reset" class="action" title="Reset search and filters">Reset</button><button id="export" class="action" disabled>Export ranking CSV</button><button id="refresh" class="action">↻ Reload snapshot</button></div></div>
@@ -307,6 +308,35 @@ body.cfmi-matchups #rankings,body.cfmi-matchups #comparison,body.cfmi-matchups #
     <p class="purpose-disclaimer">CFMI is an independent research project, not an official NCAA or College Football Playoff ranking. The indices are estimates, not certainties. AP, CFP, FPI, SP+ and FEI are comparison baselines, not scoring inputs. Power includes a small, historically estimated cross-conference correction based on game evidence—not an automatic conference-prestige bonus.</p>
   </div>
 </div>
+<section id="researchPage" class="cfmi-page" aria-labelledby="researchTitle">
+ <div class="research-intro">
+  <div class="research-eyebrow">Temporary review workspace · unreleased Merit experiments</div>
+  <h2 id="researchTitle">Merit Research Lab · Six ranking candidates</h2>
+  <p>Explore the <strong>frozen November 10, 2026</strong> experimental v5.8.7 Merit results across A–F. Click any team to inspect its victory portfolio, remaining loss budget and strength-adjusted performance, then scroll through the existing detailed schedule and opponent diagnostics. This tab is a brainstorming tool, <strong>not the official Merit ranking</strong>.</p>
+  <div class="research-note"><strong>Important:</strong> Official v5.6 Merit and Power stay unchanged. Research scores are from a static as-of-November-10 snapshot; team schedule, opponent strength, EPA and game-credit figures shown in the existing popup are the official v5.6 audit, not the experimental per-game scoring ledger. The research model's code and private datasets are not hosted here.</div>
+ </div>
+ <div class="research-controls">
+  <div><div class="research-eyebrow">Sort ranking by</div><div class="research-variant-buttons" id="researchVariantPicker" role="group" aria-label="Rank by research model"></div></div>
+  <div class="research-filters"><label><span class="visually-hidden">Search teams</span><input type="search" id="researchSearch" aria-label="Search teams in research rankings" placeholder="Search team…"></label><label><span class="visually-hidden">Number of teams</span><select id="researchLimit" aria-label="Number of research teams to show"><option value="25">Top 25</option><option value="50">Top 50</option><option value="138">All 138 teams</option></select></label></div>
+ </div>
+ <p class="research-note" id="researchLoadStatus" role="status">Load the frozen research snapshot to review all six options.</p>
+ <div class="research-table-wrap">
+  <table class="research-table" aria-label="Experimental CFMI Merit rankings A through F">
+   <thead><tr id="researchRankHeaders">
+    <th scope="col">Team · Record</th>
+    <th scope="col" data-research-candidate-column="A" aria-sort="none">A<small> · 50/15/35</small></th>
+    <th scope="col" data-research-candidate-column="B" aria-sort="none">B<small> · 60/15/25</small></th>
+    <th scope="col" data-research-candidate-column="C" aria-sort="none">C<small> · 40/30/30</small></th>
+    <th scope="col" data-research-candidate-column="D" aria-sort="none">D<small> · 40/25/35</small></th>
+    <th scope="col" data-research-candidate-column="E" aria-sort="none">E<small> · 40/20/40</small></th>
+    <th scope="col" data-research-candidate-column="F" aria-sort="none">F<small> · 50/25/25</small></th>
+    <th scope="col">Selected win / loss / performance pts</th>
+   </tr></thead>
+   <tbody id="researchRankBody"><tr><td colspan="8">Loading experimental rankings…</td></tr></tbody>
+  </table>
+ </div>
+ <p class="research-note" style="margin-top:15px"><strong>Reading the columns:</strong> Each A–F cell shows the candidate rank and Merit score (out of 100). Selecting a candidate sorts the teams by that research rank. Clicking a team opens the complete score comparison and the original schedule audit. To remove this temporary view later, remove the opt-in tab, frozen output JSON, and research-only CSS/JS.</p>
+</section>
 <div class="bottom">CFMI V5.6 · Separate Merit and predictive Power rankings · 2026 regular season through selected as-of snapshot · Scores recalculated from the latest published weekly data snapshot, with separate verification of advanced-stat coverage. <br>Independent data analysis. Not affiliated with NCAA, CFP, AP, or SportsDataverse.</div>
 </main>
 <input style="display:none" type="file" id="fileInput" accept=".csv,text/csv"><input style="display:none" type="file" id="advancedInput" accept=".csv,text/csv">
@@ -742,15 +772,16 @@ $('preseasonSearch').addEventListener('input',e=>{
 });
 
 function switchDashboardPage(page){
- const current=['rankings','comparison','resume','history','preseason','matchups','methodology'].includes(page)?page:'rankings';
+ const current=['rankings','comparison','resume','history','preseason','matchups','methodology','research'].includes(page)?page:'rankings';
  document.body.classList.toggle('cfmi-compare',current==='comparison');
  document.body.classList.toggle('cfmi-resume',current==='resume');
  document.body.classList.toggle('cfmi-methodology',current==='methodology');
  document.body.classList.toggle('cfmi-history',current==='history');
  document.body.classList.toggle('cfmi-preseason',current==='preseason');
  document.body.classList.toggle('cfmi-matchups',current==='matchups');
- for(const id of ['rankings','comparison','resume','history','preseason','matchups','methodology']){
-   const el=$(id==='methodology'?'methodologyPage':id==='history'?'historyPage':id==='preseason'?'preseasonPage':id==='matchups'?'matchupsPage':id);
+ document.body.classList.toggle('cfmi-research',current==='research');
+ for(const id of ['rankings','comparison','resume','history','preseason','matchups','methodology','research']){
+   const el=$(id==='methodology'?'methodologyPage':id==='history'?'historyPage':id==='preseason'?'preseasonPage':id==='matchups'?'matchupsPage':id==='research'?'researchPage':id);
    el?.classList.toggle('page-active',id===current);
  }
  document.querySelectorAll('#pageSwitch [data-page]').forEach(el=>{
@@ -763,6 +794,7 @@ function switchDashboardPage(page){
  if(current==='history')renderHistory();
  if(current==='preseason')renderPreseason();
  if(current==='matchups')renderMatchups();
+ if(current==='research')window.CFMI_RESEARCH_LAB?.load();
  const nextHash=current==='rankings'?'':'#'+current;
  if(location.hash!==nextHash)history.replaceState(null,'',location.pathname+location.search+nextHash);
  if(current!=='rankings')window.scrollTo({top:0,behavior:'instant'});
@@ -1260,13 +1292,14 @@ loadPreseasonView();
 load();
 loadPollComparison();
 loadExternalComparison();
-const initialPage=location.hash==='#comparison'?'comparison':location.hash==='#resume'?'resume':location.hash==='#history'?'history':location.hash==='#preseason'?'preseason':location.hash==='#matchups'?'matchups':
+const initialPage=location.hash==='#comparison'?'comparison':location.hash==='#resume'?'resume':location.hash==='#history'?'history':location.hash==='#preseason'?'preseason':location.hash==='#matchups'?'matchups':location.hash==='#research'?'research':
  ['#method','#variables','#sources','#methodology'].includes(location.hash)?'methodology':'rankings';
 switchDashboardPage(initialPage);
 window.addEventListener('hashchange',()=>{
  const h=location.hash;
- switchDashboardPage(h==='#comparison'?'comparison':h==='#resume'?'resume':h==='#history'?'history':h==='#preseason'?'preseason':h==='#matchups'?'matchups':
+ switchDashboardPage(h==='#comparison'?'comparison':h==='#resume'?'resume':h==='#history'?'history':h==='#preseason'?'preseason':h==='#matchups'?'matchups':h==='#research'?'research':
    ['#method','#variables','#sources','#methodology'].includes(h)?'methodology':'rankings');
 });
 </script>
+<script src="./merit_research_lab.js"></script>
 </body></html>

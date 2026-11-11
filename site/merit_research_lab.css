@@ -1,0 +1,62 @@
+/* Temporary CFMI research comparison UI — deliberately not the official Merit. */
+#researchNavTab[hidden],#navResearchLab[hidden]{display:none!important}
+body.cfmi-research .home-intro,
+body.cfmi-research #rankings,
+body.cfmi-research #comparison,
+body.cfmi-research #resume,
+body.cfmi-research #methodologyPage,
+body.cfmi-research #preseasonPage,
+body.cfmi-research #historyPage,
+body.cfmi-research #matchupsPage{display:none!important}
+body.cfmi-research #researchPage{display:block!important}
+.research-intro{border:1px solid #3c6575;border-radius:15px;padding:22px;background:linear-gradient(145deg,#172e44,#112033);margin:4px 0 16px}
+.research-eyebrow{font-size:11px;font-weight:900;letter-spacing:.09em;color:#78dbdc;text-transform:uppercase}
+.research-intro h2{margin:6px 0 7px;font-size:26px;letter-spacing:-.025em}
+.research-intro p{color:#b7cadd;line-height:1.7;max-width:1040px;margin:8px 0}
+.research-note{color:#c2d2e4;background:#1a293d;border:1px solid #334d65;border-radius:10px;padding:12px 15px;font-size:12px}
+.research-controls{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin:18px 0 14px}
+.research-variant-buttons{display:flex;flex-wrap:wrap;gap:7px}
+.research-choice{min-width:105px;display:flex;flex-direction:column;gap:2px;align-items:center;justify-content:center;padding:10px 12px;border:1px solid #41536f;border-radius:10px;color:#d6e5f7;background:#15253b;font-weight:850}
+.research-choice span{font-size:10px;font-weight:650;color:#a0bbd5}
+.research-choice.research-selected{background:#34799c;border-color:#70c3df;color:#fff}
+.research-choice.research-selected span{color:#e0f9ff}
+.research-filters{display:flex;gap:9px;flex-wrap:wrap}
+.research-filters input,.research-filters select{background:#101e31;border:1px solid #426079;border-radius:9px;color:#e5f1fc;padding:11px}
+.research-filters input{width:220px;max-width:65vw}
+.research-table-wrap{border:1px solid #2c425b;border-radius:13px;overflow:auto;background:#132033;max-height:70vh}
+.research-table{width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums;min-width:890px}
+.research-table thead th{position:sticky;top:0;z-index:2;padding:12px 9px;text-align:center;color:#c5dbed;background:#203149;white-space:nowrap;border-bottom:1px solid #38516c}
+.research-table thead th:first-child{text-align:left;left:0;z-index:4}
+.research-table thead th[data-research-candidate-column]{cursor:pointer}
+.research-table tbody tr:nth-child(even){background:#17273c}
+.research-table tbody tr:hover{background:#203c54}
+.research-table td{padding:8px 10px;text-align:center;border-bottom:1px solid #26384d;white-space:nowrap}
+.research-table .research-team{text-align:left;position:sticky;left:0;background:#14243a;z-index:1;min-width:180px}
+.research-table tbody tr:nth-child(even) .research-team{background:#17273c}
+.research-team button{padding:4px 2px;border:0;background:none;color:#a6defb;font-weight:850;text-align:left}
+.research-team button:hover{text-decoration:underline}
+.research-team small{display:block;color:#a4b5c7}
+.research-rank-number{display:block;font-weight:850;font-size:14px;color:#eaf5ff}
+.research-rank small{display:block;font-size:10px;color:#9caec3}
+.research-table td.research-active-column,.research-table th.research-active-column{background:#234d61!important}
+.research-selected-score{font-weight:750;color:#9fe4d4}
+.research-table tbody tr:nth-child(even) td.research-active-column{background:#21475b!important}
+.research-popup{border:1px solid #4b8192;background:linear-gradient(145deg,#142e43,#112338);border-radius:13px;padding:19px;margin:0 0 19px}
+.research-popup-head small{font-size:10px;color:#85d9de;font-weight:850;letter-spacing:.08em}
+.research-popup-head h3{font-size:18px;margin:4px 0}
+.research-popup-head p{font-size:12px;color:#bed4e6;margin:2px 0 14px}
+.research-component-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.research-component{background:#102135;border:1px solid #3b5872;border-radius:11px;padding:12px}
+.research-component small{display:block;font-size:11px;color:#aac1d4}
+.research-component strong{font-size:22px}
+.research-component strong span{font-size:12px;font-weight:600;color:#a1b9cd}
+.research-progress{height:7px;margin-top:8px;border-radius:9px;background:#30425b;overflow:hidden}
+.research-progress i{display:block;background:#69c6cc;height:100%}
+.research-detail-variants{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:13px 0}
+.research-detail-card{padding:9px 10px;background:#132941;color:#e4f4ff;border:1px solid #344e68;border-radius:9px;text-align:left;display:flex;flex-direction:column;gap:4px}
+.research-detail-card small{color:#a0c1d6;font-size:10px}
+.research-detail-card strong{font-size:14px}
+.research-detail-card span{font-size:10px;color:#b4c8d8;line-height:1.5}
+.research-detail-card.research-active-card{border-color:#70d4dc;background:#1b4356}
+.research-context{font-size:11px;color:#aec4d8;line-height:1.7;border-top:1px solid #36576b;padding-top:12px}
+@media(max-width:680px){.research-detail-variants{grid-template-columns:repeat(2,minmax(0,1fr))}.research-component-grid{grid-template-columns:1fr}.research-intro{padding:15px}}

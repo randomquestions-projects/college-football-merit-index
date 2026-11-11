@@ -114,6 +114,8 @@ jobs:
         run: node scripts/audit_dashboard.cjs
       - name: Enforce v6 public metric lineage and full-FBS reconciliation
         run: node scripts/test_metric_view_contract.cjs
+      - name: Validate static, output-only temporary Merit A–F research tab snapshot
+        run: node scripts/test_merit_research_lab.cjs
       - name: Build independently reproducible public Merit-Power audit dataset
         run: node scripts/build_public_metric_audit.cjs
       - name: Historical V4 versus V3 walk-forward benchmark (reference only)
@@ -123,8 +125,17 @@ jobs:
       - name: Verify all seven dashboard tabs in Chromium
         run: |
           npm install --no-save playwright@1.61.0
-          npx playwright install --with-deps chromium
+          # Prefer the runner's preinstalled browser. Browser tests do not need
+          # optional font packages; apt mirrors can be unavailable in CI.
+          if command -v google-chrome >/dev/null 2>&1; then
+            export CFMI_CHROMIUM_EXECUTABLE="$(command -v google-chrome)"
+          elif command -v chromium >/dev/null 2>&1; then
+            export CFMI_CHROMIUM_EXECUTABLE="$(command -v chromium)"
+          else
+            npx playwright install chromium
+          fi
           node scripts/smoke_dashboard.cjs
+          node scripts/smoke_merit_research_lab.cjs
       - name: Remove raw historical feeds from the public site
         run: rm -rf site/data/history
       - name: Upload validated site artifact
