@@ -128,9 +128,9 @@ jobs:
           # Prefer the runner's preinstalled browser. Browser tests do not need
           # optional font packages; apt mirrors can be unavailable in CI.
           if command -v google-chrome >/dev/null 2>&1; then
-            echo "CFMI_CHROMIUM_EXECUTABLE=$(command -v google-chrome)" >> "$GITHUB_ENV"
+            export CFMI_CHROMIUM_EXECUTABLE="$(command -v google-chrome)"
           elif command -v chromium >/dev/null 2>&1; then
-            echo "CFMI_CHROMIUM_EXECUTABLE=$(command -v chromium)" >> "$GITHUB_ENV"
+            export CFMI_CHROMIUM_EXECUTABLE="$(command -v chromium)"
           else
             npx playwright install chromium
           fi
