@@ -1,0 +1,12 @@
+# Private data and reproducibility artifacts should never be added to public repo
+/data/
+/raw/
+/research_results/
+/archives/
+/datasets/
+*.parquet
+*.duckdb
+*.sqlite
+.env
+.env.*
+__pycache__/
