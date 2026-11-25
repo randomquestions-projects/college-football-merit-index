@@ -118,10 +118,8 @@ jobs:
         run: node scripts/test_merit_research_lab.cjs
       - name: Build independently reproducible public Merit-Power audit dataset
         run: node scripts/build_public_metric_audit.cjs
-      - name: Historical V4 versus V3 walk-forward benchmark (reference only)
-        run: |
-          node scripts/backtest_v4.cjs
-          node scripts/evaluate_power_candidates.cjs
+      # Historical V3/V4 reference research is archived in the private repository.
+      # Production V5/V6 validation above and browser smoke tests below remain mandatory.
       - name: Verify all seven dashboard tabs in Chromium
         run: |
           npm install --no-save playwright@1.61.0
